@@ -10,10 +10,11 @@ import numpy as np
 
 # TODO try another kind of normalization, unit-normal etc.
 def normalize(df, by="ID"):
+    dfN = df.copy()
     titles = ["Debit", "Credit"]
-    groups = df.groupby(by)
+    groups = dfN.groupby(by)
     sums = groups[titles].transform(np.sum)
     for column in titles:
-        df[column] = df[column] / sums[column]
-    df["from"] = df["Credit"] > 0.0
-    return df
+        dfN[column] = dfN[column] / sums[column]
+    dfN["from"] = dfN["Credit"] > 0.0
+    return dfN

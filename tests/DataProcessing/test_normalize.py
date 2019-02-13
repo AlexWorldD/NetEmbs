@@ -10,7 +10,7 @@ from NetEmbs.DataProcessing.normalize import normalize
 
 
 def test_normalize():
-    raw_data = pd.read_csv("data/t1.csv", delimiter=";").fillna(0.0)
+    raw_data = pd.read_csv("tests/DataProcessing/data/sample.csv", delimiter=";").fillna(0.0)
     data = normalize(raw_data)
     # Credit-debit equation
     assert data["Debit"].sum() - data["Credit"].sum() < 1e-5
