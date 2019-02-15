@@ -399,7 +399,7 @@ class BussinessSimulation(object):
 		env.process(fixedAssetsProcess.start())
 		env.process(depreciationProcess.start())
 
-		env.run(until=120)
+		env.run(until=1000)
 
 
 		return statement
