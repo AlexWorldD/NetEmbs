@@ -1,6 +1,9 @@
 # NetEmbs
 [![Build Status](https://travis-ci.com/AlexWorldD/NetEmbs.svg?token=KxxnGy2fzypoq5mv4Y2J&branch=master)](https://travis-ci.com/AlexWorldD/NetEmbs) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
+### TODO before next meeting
+- [ ] Mathematical definition of node's context. Compare it with context definition for words
+- [ ] Modify RandomWalk procedure according to new definition of context
+- [ ] Fix simulation code
 ### Initial steps
 - [x] Install *simpy*. Fix Marcel's model. Get sample dataset
 - [x] Install *networkx*, play with it.
@@ -10,8 +13,7 @@
 - [x] Implement visualisation of neighbors (highlight IN/OUT context).
 - [ ] Define the architecture of Python module
 ### Questions (15.02.2019)
-- [ ] Is it possible that the same financial account could be debited during one set of BPs and credited during another set of BP?
-- [ ] According to the paper (p.15) AvgDegree of BP nodes is ~7,5. Does it mean that typical BP encapsulated ~7.5 financial accounts?
+- [x] Is it possible that the same financial account could be debited during one set of BPs and credited during another set of BP? // **YES**
 -----
 ## Literature
 1. Boersma M. et al. Financial statement networks: an application of network theory in the audit // Draft of paper. 2019. P. 1–33.
