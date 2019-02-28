@@ -1,0 +1,19 @@
+,ID,Name,Journal,Date,Debit,Credit,from
+0,0,Revenue,Sales ledger,01/01/2017,0.0,0.9433962264150944,True
+1,0,Tax,Sales ledger,01/01/2017,0.0,0.05660377358490566,True
+2,0,Trade Receivables,Sales ledger,01/01/2017,1.0,0.0,False
+3,1,Revenue,Sales ledger,01/01/2017,0.0,0.9433962264150944,True
+4,1,Tax,Sales ledger,01/01/2017,0.0,0.05660377358490566,True
+5,1,Trade Receivables,Sales ledger,01/01/2017,1.0,0.0,False
+6,2,Revenue,Sales ledger,01/01/2017,0.0,0.8333333333333334,True
+7,2,Tax,Sales ledger,01/01/2017,0.0,0.16666666666666669,True
+8,2,Trade Receivables,Sales ledger,01/01/2017,1.0,0.0,False
+9,3,Revenue,Sales ledger,01/01/2017,0.0,0.8333333333333333,True
+10,3,Tax,Sales ledger,01/01/2017,0.0,0.16666666666666669,True
+11,3,Trade Receivables,Sales ledger,01/01/2017,1.0,0.0,False
+12,4,Revenue,Sales ledger,01/01/2017,0.0,0.7407407407407407,True
+13,4,Tax,Sales ledger,01/01/2017,0.0,0.25925925925925924,True
+14,4,Trade Receivables,Sales ledger,01/01/2017,1.0,0.0,False
+15,5,Revenue,Sales ledger,01/01/2017,0.0,0.7407407407407408,True
+16,5,Tax,Sales ledger,01/01/2017,0.0,0.25925925925925924,True
+17,5,Trade Receivables,Sales ledger,01/01/2017,1.0,0.0,False
