@@ -5,17 +5,16 @@ __author__ = 'Aleksei Maliutin'
 experiments.py
 Last modified by lex at 2019-02-11.
 """
-import tensorflow as tf
+from NetEmbs.GenerateData import *
 
-
-class SquareTest(tf.test.TestCase):
-
-    def testSquare(self):
-        with self.test_session():
-            x = tf.square([2, 3])
-            self.assertAllEqual(x.eval(), [4, 9])
+# class SquareTest(tf.test.TestCase):
+#
+#     def testSquare(self):
+#         with self.test_session():
+#             x = tf.square([2, 3])
+#             self.assertAllEqual(x.eval(), [4, 9])
 
 
 
 if __name__ == '__main__':
-    tf.test.main()
+    sales_collections()

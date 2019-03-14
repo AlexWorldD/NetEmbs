@@ -4,7 +4,6 @@ __author__ = 'Aleksei Maliutin'
 normalize.py
 Last modified by lex at 2019-02-13.
 """
-import pandas as pd
 import numpy as np
 
 
