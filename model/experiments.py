@@ -5,7 +5,7 @@ __author__ = 'Aleksei Maliutin'
 experiments.py
 Last modified by lex at 2019-02-11.
 """
-from NetEmbs.GenerateData import *
+from NetEmbs.GenerateData.complex_df import sales_collections
 
 # class SquareTest(tf.test.TestCase):
 #
@@ -13,7 +13,6 @@ from NetEmbs.GenerateData import *
 #         with self.test_session():
 #             x = tf.square([2, 3])
 #             self.assertAllEqual(x.eval(), [4, 9])
-
 
 
 if __name__ == '__main__':

@@ -28,3 +28,54 @@ class FSN(nx.DiGraph):
         self.add_weighted_edges_from(
             [(row['ID'], row['Name'], row["Debit"]) for idx, row in df[df["from"] == False].iterrows()],
             weight='weight', type="DEBIT")
+
+    def build_default(self):
+        """
+        Construct Financial Statement Network (FSN) with example Sales-Collection business processes
+        :return:
+        """
+        from NetEmbs.GenerateData.complex_df import sales_collections
+        from NetEmbs.DataProcessing.normalize import normalize
+        df = normalize(sales_collections())
+        self.build(df)
+
+    def get_financial_accounts(self):
+        """
+        Return the set of Financial Account (FA) nodes in network
+        :return: set of Financial Account (FA) nodes
+        """
+        return [n for n, d in self.nodes(data=True) if d['bipartite'] == 1]
+
+    def get_FA(self):
+        """
+        Return the set of Financial Account (FA) nodes in network
+        :return: set of Financial Account (FA) nodes
+        """
+        return self.get_financial_accounts()
+
+    def get_business_processes(self):
+        """
+        Return the set of Business Process (BP) nodes in network
+        :return: set of Business Process (BP)  nodes
+        """
+        return [n for n, d in self.nodes(data=True) if d['bipartite'] == 0]
+
+    def get_BP(self):
+        """
+        Return the set of Business Process (BP) nodes in network
+        :return: set of Business Process (BP)  nodes
+        """
+        return self.get_business_processes()
+
+    def projection(self, on="BP"):
+        """
+        Returns the projection of original FSN onto chosen set of nodes
+        :param on: type of nodes to project onto
+        :return: Projection
+        """
+        from networkx.algorithms import bipartite
+        if on == "BP":
+            project_to = [n for n, d in self.nodes(data=True) if d['bipartite'] == 0]
+        elif on == "FA":
+            project_to = [n for n, d in self.nodes(data=True) if d['bipartite'] == 1]
+        return bipartite.weighted_projected_graph(self, project_to)
