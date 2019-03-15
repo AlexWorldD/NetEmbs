@@ -6,6 +6,7 @@ experiments.py
 Last modified by lex at 2019-02-11.
 """
 from NetEmbs.GenerateData.complex_df import sales_collections
+from NetEmbs.Vis.plots import plotFSN
 
 # class SquareTest(tf.test.TestCase):
 #
