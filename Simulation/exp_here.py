@@ -6,7 +6,8 @@ Created by lex at 2019-03-24.
 """
 
 from Simulation.CreateDB import *
-from Simulation.Transaction import *
+from Simulation.Abstract.Transaction import *
+
 connectDB()
 tr = Transaction(1, 2)
 tr.addRecord("TestAAA", "Test", 100, 1)

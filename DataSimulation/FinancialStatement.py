@@ -1,4 +1,4 @@
-from Observer import * 
+from Observer import *
 import matplotlib.pyplot as plt
 
 #General ledger

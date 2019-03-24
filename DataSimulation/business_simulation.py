@@ -1,13 +1,10 @@
 import simpy
 import random
 
-from simpy.util import start_delayed
-
 from FinancialStatement import *
 
 from Observer import *
-from Process import * 
-from Transaction import *
+from Process import *
 from Account import *
 from Event import *
 
@@ -20,11 +17,7 @@ from FixedAssets import *
 from Purchases import *
 from Periodics import *
 from Tax import *	
-from Payroll import * 
-
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.stats import gamma
+from Payroll import *
 
 
 ## NOTICE: Yield from is a python 3.0 feature therefore use
