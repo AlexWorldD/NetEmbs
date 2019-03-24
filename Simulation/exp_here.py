@@ -4,10 +4,14 @@ __author__ = 'Aleksei Maliutin'
 exp_here.py
 Created by lex at 2019-03-24.
 """
-
+import simpy
 from Simulation.CreateDB import *
 from Simulation.Abstract.Transaction import *
+from Simulation.BusinessProcesses.Sale import *
 
 connectDB()
-tr = Transaction(1, 2)
-tr.addRecord("TestAAA", "Test", 100, 1)
+cleanDB()
+env = simpy.Environment()
+sale = SalesTransaction("Test", 0.2, env)
+for _ in range(10):
+    sale.newTransaction()

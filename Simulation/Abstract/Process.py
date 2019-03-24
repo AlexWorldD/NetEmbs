@@ -19,7 +19,7 @@ class Process(object):
             for obs in Observable.notifyObservers(self, args):
                 yield obs
 
-    class TransactionNotifee(Observer):
+    class TransactionNotifier(Observer):
         def __init__(self, outer):
             self.outer = outer
 
