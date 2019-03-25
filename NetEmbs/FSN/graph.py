@@ -15,18 +15,20 @@ class FSN(nx.DiGraph):
     def __init__(self):
         super().__init__()
 
-    def build(self, df):
+    def build(self, df, name_column="Name"):
         """
         Construct Financial Statement Network (FSN) from DataFrame
         :param df: DataFrame with JournalEntities
+        :param name_column: Title of column with FA names: Name or FA_Name
         """
+
         self.add_nodes_from(df['ID'], bipartite=0)
-        self.add_nodes_from(df['Name'], bipartite=1)
+        self.add_nodes_from(df[name_column], bipartite=1)
         self.add_weighted_edges_from(
-            [(row['Name'], row['ID'], row["Credit"]) for idx, row in df[df["from"] == True].iterrows()],
+            [(row[name_column], row['ID'], row["Credit"]) for idx, row in df[df["from"] == True].iterrows()],
             weight='weight', type="CREDIT")
         self.add_weighted_edges_from(
-            [(row['ID'], row['Name'], row["Debit"]) for idx, row in df[df["from"] == False].iterrows()],
+            [(row['ID'], row[name_column], row["Debit"]) for idx, row in df[df["from"] == False].iterrows()],
             weight='weight', type="DEBIT")
 
     def build_default(self):
