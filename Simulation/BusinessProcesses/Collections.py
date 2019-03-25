@@ -19,24 +19,21 @@ class CollectionsTransaction(Transaction):
         self.cash = 0.0
 
     def newTransaction(self, salesTransaction):
+        self.trade_rec, revenue, tax, noise, u_id = salesTransaction
+        self.cash = self.trade_rec + np.sum(list(noise["right"].values()))
+        noise["right"].pop("def")
         unique_id = random.choice(VARIANTS)
         cur_transaction = self.new(postfix=unique_id)
         #         Generating amounts
-        self.revenue = random.randint(TRANSACTIONS_LIMITS[0], TRANSACTIONS_LIMITS[1])
-        self.tax = self.revenue * self.tax_rate
-        # Add noise of type 1 when small diffs in amounts
-        if random.random() < NOISE_Type1["freq"]:
-            self.tax *= np.random.choice([-1.0, 1.0]) * random.uniform(1, 1 + NOISE_Type1["amplitude"])
-        self.addRecord("Revenue_" + str(unique_id), "Revenue", -self.revenue, cur_transaction)
-        self.addRecord("Tax_" + str(unique_id), "Tax", -self.tax, cur_transaction)
-        # Add noise of type 2 when noisy financial accounts with very small amounts
-        noise = super().noise(self.revenue, unique_id, cur_transaction)
 
-        self.trade_rec = self.revenue + self.tax + np.sum(noise["left"]) - np.sum(noise["right"])
-        self.addRecord("TradeReceivables" + str(unique_id), "TradeReceivables", self.trade_rec, cur_transaction)
+        self.addRecord("TradeReceivables_" + u_id, "TradeReceivables", -self.trade_rec, cur_transaction)
+        for key, item in noise["right"].items():
+            self.addRecord(key, key, -item, cur_transaction)
+
+        self.addRecord("Cash" + str(unique_id), "Cash", self.cash, cur_transaction)
 
         if PRINT:
             self.printTransaction()
 
     def printTransaction(self):
-        print("SalesTransaction: TR=", self.trade_rec, " -> Cash=", self.cash)
+        print("CollectionTransaction: TR=", self.trade_rec, " -> Cash=", self.cash)

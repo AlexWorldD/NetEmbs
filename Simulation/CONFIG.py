@@ -11,5 +11,6 @@ PRINT = False
 VARIANTS = list(range(13))
 TRANSACTIONS_LIMITS = (10, 1000)
 # Transaction Noises
-NOISE_Type1 = {"freq": 0.5, "amplitude": 0.01}
+NOISE = {"Sales": True, "Collections": False}
+NOISE_Type1 = {"freq": 0.9, "amplitude": 0.01}
 NOISE_Type2 = {"freq": 0.9, "proportion": 0.5, "num_amplitude": 5.0, "noise_amplitude": 0.01}
