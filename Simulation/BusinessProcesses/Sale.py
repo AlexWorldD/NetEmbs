@@ -9,7 +9,6 @@ import numpy as np
 from Abstract.Transaction import Transaction
 from Abstract.Process import Process
 from CONFIG import *
-from Simulation.utils import randomString
 
 
 class SalesTransaction(Transaction):
