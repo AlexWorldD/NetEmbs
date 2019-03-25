@@ -9,8 +9,8 @@ import numpy as np
 DB_PATH = "FSN_Data.db"
 PRINT = False
 VARIANTS = list(range(13))
-TRANSACTIONS_LIMITS = (10, 1000)
+TRANSACTIONS_LIMITS = {"Sales": (10, 1000), "Depreciation": (10, 100)}
 # Transaction Noises
-NOISE = {"Sales": True, "Collections": False, "GoodsDelivery": True}
+NOISE = {"Sales": True, "Collections": False, "GoodsDelivery": True, "Depreciation": True}
 NOISE_Type1 = {"freq": 0.9, "amplitude": 0.01}
 NOISE_Type2 = {"freq": 0.9, "proportion": 0.5, "num_amplitude": 5.0, "noise_amplitude": 0.01}

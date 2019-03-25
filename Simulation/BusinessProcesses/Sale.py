@@ -23,7 +23,7 @@ class SalesTransaction(Transaction):
         unique_id = random.choice(VARIANTS)
         cur_transaction = self.new(postfix=unique_id)
         #         Generating amounts
-        self.revenue = random.randint(TRANSACTIONS_LIMITS[0], TRANSACTIONS_LIMITS[1])
+        self.revenue = random.randint(TRANSACTIONS_LIMITS["Sales"][0], TRANSACTIONS_LIMITS["Sales"][1])
         self.tax = self.revenue * self.tax_rate
         # Add noise of type 1 when small diffs in amounts
         if NOISE["Sales"] and random.random() < NOISE_Type1["freq"]:
