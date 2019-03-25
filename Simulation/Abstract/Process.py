@@ -11,7 +11,7 @@ from Abstract.Observer import *
 class Process(object):
     class TransactionNotifier(Observable):
         def __init__(self, outer):
-            Observable.__init__(self)
+            super().__init__()
             self.outer = outer
 
         def notifyObservers(self, args=None):
@@ -19,7 +19,7 @@ class Process(object):
             for obs in Observable.notifyObservers(self, args):
                 yield obs
 
-    class TransactionNotifier(Observer):
+    class TransactionObserver(Observer):
         def __init__(self, outer):
             self.outer = outer
 

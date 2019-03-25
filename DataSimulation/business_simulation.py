@@ -9,14 +9,14 @@ from Account import *
 from Event import *
 
 from Sales import *
-from CostOfSales import * 
+from CostOfSales import *
 from Collections import *
 from Depreciations import *
 from Disbursements import *
 from FixedAssets import *
 from Purchases import *
 from Periodics import *
-from Tax import *	
+from Tax import *
 from Payroll import *
 
 
@@ -26,381 +26,370 @@ from Payroll import *
 # which is similar as yield from yielfromfunction()
 
 
-	
-#event is an object that triggers a process. 	
-#stock to low triggers purchase event
-#order triggers purchase event
+# event is an object that triggers a process.
+# stock to low triggers purchase event
+# order triggers purchase event
 
 class PayrollDisbursementEvent(Event):
 
-	def __init__(self, env, averageDisbursementTerm):
-		self.env = env
-		self.averageDisbursementTerm = averageDisbursementTerm
-		self.payrolls = []
+    def __init__(self, env, averageDisbursementTerm):
+        self.env = env
+        self.averageDisbursementTerm = averageDisbursementTerm
+        self.payrolls = []
 
+        self.payrollObserver = PayrollDisbursementEvent.PayrollDisbursementEventObserver(self)
+        self.payrollObservable = PayrollDisbursementEvent.PayrollDisbursementEventObservable(self)
 
-		self.payrollObserver 	= PayrollDisbursementEvent.PayrollDisbursementEventObserver(self)
-		self.payrollObservable 	= PayrollDisbursementEvent.PayrollDisbursementEventObservable(self)
+    def start(self):
+        while True:
+            # check if there are any disbursements ready?
+            yield self.env.timeout(self.averageDisbursementTerm)
+            if len(self.payrolls) > 0:
+                eb_c = 0
+                eb_w = 0
+                for c, w in self.payrolls:
+                    eb_c += c
+                    eb_w += w
 
+                if eb_c > 0:
+                    del self.payrolls[:]  # empty list
 
-	def start(self):
-		while True:
-			#check if there are any disbursements ready?
-			yield self.env.timeout(self.averageDisbursementTerm)
-			if len(self.payrolls) > 0 :
-				eb_c = 0
-				eb_w = 0
-				for c,w in self.payrolls:
-					eb_c += c
-					eb_w += w
+                    self.payrollObservable.setChanged()
 
-				if eb_c > 0:
-					del self.payrolls[:] #empty list
+                    for obs in self.payrollObservable.notifyObservers([eb_c, eb_w]):
+                        yield obs
 
-					self.payrollObservable.setChanged()
+    def processPayroll(self, transaction):
 
-					for obs in self.payrollObservable.notifyObservers([eb_c, eb_w]):
-						yield obs
+        [sal, sal_w, eb, eb_w, tax, tax_w] = transaction
+        tot = [eb, eb_w]
+        self.payrolls.append(tot)
+        yield self.env.timeout(0)
 
+    class PayrollDisbursementEventObservable(Observable):
 
-	def processPayroll(self, transaction):
+        def __init__(self, outer):
+            Observable.__init__(self)
+            self.outer = outer
 
-		[sal, sal_w, eb, eb_w, tax, tax_w] = transaction
-		tot = [eb, eb_w]
-		self.payrolls.append(tot)
-		yield self.env.timeout(0)
+    class PayrollDisbursementEventObserver(Observer):
 
+        def __init__(self, outer):
+            self.outer = outer
 
-	class PayrollDisbursementEventObservable(Observable):
-
-		def __init__(self, outer):
-			Observable.__init__(self)
-			self.outer = outer
-
-	class PayrollDisbursementEventObserver(Observer):
-
-		def __init__(self, outer):
-			self.outer = outer
-
-		def update(self, observable, args):
-			for obs in  self.outer.processPayroll(args):
-				yield obs
+        def update(self, observable, args):
+            for obs in self.outer.processPayroll(args):
+                yield obs
 
 
 class SalesCollectionEvent(Event):
-	def __init__(self, env, paymentTermInDays):
-		self.env = env
-		self.paymentTermInDays 		= paymentTermInDays
-		self.collectionsObserver 	= SalesCollectionEvent.CollectionsObserver(self)
-		self.collectionsObservable 	= SalesCollectionEvent.CollectionsObservable(self) 
-		self.transactionsQueue 		= []
+    def __init__(self, env, paymentTermInDays):
+        self.env = env
+        self.paymentTermInDays = paymentTermInDays
+        self.collectionsObserver = SalesCollectionEvent.CollectionsObserver(self)
+        self.collectionsObservable = SalesCollectionEvent.CollectionsObservable(self)
+        self.transactionsQueue = []
 
-	def start(self):
-		yield self.env.timeout(14)
-		while True:
-			yield self.env.timeout(random.expovariate(1.0/self.paymentTermInDays))
+    def start(self):
+        yield self.env.timeout(14)
+        while True:
+            yield self.env.timeout(random.expovariate(1.0 / self.paymentTermInDays))
 
-			if len(self.transactionsQueue) > 0:
-				#get the first transaction in the queue
-				lastTransactionDetails = self.transactionsQueue[0]
+            if len(self.transactionsQueue) > 0:
+                # get the first transaction in the queue
+                lastTransactionDetails = self.transactionsQueue[0]
 
-				self.transactionsQueue.remove(lastTransactionDetails)
-				#Notif others that the transaction is ready to be processed
-				yield self.env.process(self.notify(lastTransactionDetails))
+                self.transactionsQueue.remove(lastTransactionDetails)
+                # Notif others that the transaction is ready to be processed
+                yield self.env.process(self.notify(lastTransactionDetails))
 
-	def notify(self, salesTransactionDetails):
+    def notify(self, salesTransactionDetails):
 
-		self.collectionsObservable.setChanged()
+        self.collectionsObservable.setChanged()
 
-		for obs in self.collectionsObservable.notifyObservers(salesTransactionDetails):
-			yield obs
+        for obs in self.collectionsObservable.notifyObservers(salesTransactionDetails):
+            yield obs
 
-	def processNewSalesDelay(self, salesTransactionDetails):
-		#Add new transaction to the queue
-		yield self.env.timeout(0)
+    def processNewSalesDelay(self, salesTransactionDetails):
+        # Add new transaction to the queue
+        yield self.env.timeout(0)
 
-		self.transactionsQueue.append(salesTransactionDetails)
+        self.transactionsQueue.append(salesTransactionDetails)
 
+    class CollectionsObservable(Observable):
 
-	class CollectionsObservable(Observable):
+        def __init__(self, outer):
+            Observable.__init__(self)
+            self.outer = outer
 
-		def __init__(self, outer):
-			Observable.__init__(self)
-			self.outer = outer
+    class CollectionsObserver(Observer):
 
-	class CollectionsObserver(Observer):
+        def __init__(self, outer):
+            self.outer = outer
 
-		def __init__(self, outer):
-			self.outer = outer
-
-		def update(self, observable, args):
-			for obs in self.outer.processNewSalesDelay(observable.outer.lastTransactionDetails):
-				yield obs
+        def update(self, observable, args):
+            for obs in self.outer.processNewSalesDelay(observable.outer.lastTransactionDetails):
+                yield obs
 
 
 class ManualInventoryPurchaseEvent(Event):
 
-	def __init__(self, env):
-		self.env = env
-		self.observable = ManualInventoryPurchaseEvent.ManualInventoryPurchaseEventObservable(self)
-		self.observer 	= ManualInventoryPurchaseEvent.ManualInventoryPurchaseEventObserver(self)
+    def __init__(self, env):
+        self.env = env
+        self.observable = ManualInventoryPurchaseEvent.ManualInventoryPurchaseEventObservable(self)
+        self.observer = ManualInventoryPurchaseEvent.ManualInventoryPurchaseEventObserver(self)
 
-	class ManualInventoryPurchaseEventObservable(Observable):
-		def __init__(self, outer):
-			Observable.__init__(self)
-			self.outer = outer
+    class ManualInventoryPurchaseEventObservable(Observable):
+        def __init__(self, outer):
+            Observable.__init__(self)
+            self.outer = outer
 
+    def start(self):
+        while True:
+            # maybe this shouldn't be a time out but rather a probability of occurance.
+            yield self.env.timeout(random.expovariate(1.0 / 2))
+            self.observable.setChanged()
 
-	def start(self):
-		while True:
-			#maybe this shouldn't be a time out but rather a probability of occurance. 
-			yield self.env.timeout(random.expovariate(1.0/2))
-			self.observable.setChanged()
+            for obs in self.observable.notifyObservers():
+                yield obs
 
-			for obs in self.observable.notifyObservers():
-				yield obs
+    class ManualInventoryPurchaseEventObserver(Observer):
 
-	class ManualInventoryPurchaseEventObserver(Observer):
+        def __init__(self, outer):
+            self.outer = outer
 
-		def __init__(self, outer):
-			self.outer = outer
-
-		def update(self, observable, args):
-			print "dummy"
-
-
-		
+        def update(self, observable, args):
+            print
+            "dummy"
 
 
 class stockToLowEvent(Event):
 
-	def __init__(self, env, criticalLevel):
-		self.criticalLevel 			= criticalLevel
-		self.stockToLowObservable 	= stockToLowEvent.stockToLowObservable(self)
-		self.stockToLowObservee   	= stockToLowEvent.stockToLowObservee(self)
-		self.env 					= env
+    def __init__(self, env, criticalLevel):
+        self.criticalLevel = criticalLevel
+        self.stockToLowObservable = stockToLowEvent.stockToLowObservable(self)
+        self.stockToLowObservee = stockToLowEvent.stockToLowObservee(self)
+        self.env = env
 
+    def processLevel(self, level):
+        if level < self.criticalLevel:
+            self.stockToLowObservable.setChanged()
+            for obs in self.stockToLowObservable.notifyObservers():
+                yield obs
 
-	def processLevel(self, level):
-		if level < self.criticalLevel:
-			self.stockToLowObservable.setChanged()
-			for obs in self.stockToLowObservable.notifyObservers():
-				yield obs
+    class stockToLowObservable(Observable):
+        def __init__(self, outer):
+            Observable.__init__(self)
+            self.outer = outer
 
-	class stockToLowObservable(Observable):
-		def __init__(self, outer):
-			Observable.__init__(self)
-			self.outer = outer
+    class stockToLowObservee(Observer):
 
+        def __init__(self, outer):
+            self.outer = outer
 
-	class stockToLowObservee(Observer):
+        def update(self, observable, args):
+            for obs in self.outer.processLevel(observable.containerCorrect.level):
+                yield self.outer.env.timeout(0)
 
-		def __init__(self, outer):
-			self.outer = outer
-
-		def update(self, observable, args):
-			for obs in self.outer.processLevel(observable.containerCorrect.level):
-				yield self.outer.env.timeout(0)
 
 class BussinessSimulation(object):
 
-	def simulate(self):
+    def simulate(self):
+        env = simpy.Environment()
 
-		env 					= simpy.Environment()
+        revenueAccount = RevenueAccount(env, simpy, "Revenue")
+        cosAccount = CostOfSalesAccount(env, simpy, "Cost of Sales")
+        taxPayablesAccount = TaxPayablesAccount(env, simpy, "Tax Payables")
+        tradeReceivablesAccount = TradeReceivablesAccount(env, simpy, "Trade receivables")
+        inventoriesAccount = InventoriesAccount(env, simpy, "Inventories", 1200)
+        EBPayableAccount = EBPayablesAccount(env, simpy, "EB Payables")
+        personnelAccount = PersonnelExpensesAccount(env, simpy, "Personnel Expenses")
+        cashAccount = CashAccount(env, simpy, "Cash")
+        deprExpenseAccount = DepreciationAccount(env, simpy, "Depreciation Expense")
+        fixedAssetsAccount = FixedAssetsAccount(env, simpy, "Fixed Assets")
+        tradePayablesAccount = TradePayablesAccount(env, simpy, "Trade Payables")
+        otherExpensesAccount = OtherExpensesAccount(env, simpy, "Other Expenses")
+        prepaidExpensesAccount = PrepaidExpensesAccount(env, simpy, "Prepaid Expenses")
+        accrualsAccount = Account(env, simpy, "Accruals")
+        LTDebtAccount = Account(env, simpy, "LT Debt")
+        interestExpense = Account(env, simpy, "Interest expense")
 
-		revenueAccount 			= RevenueAccount(env, simpy, "Revenue")
-		cosAccount				= CostOfSalesAccount(env, simpy, "Cost of Sales")
-		taxPayablesAccount 		= TaxPayablesAccount(env, simpy, "Tax Payables")
-		tradeReceivablesAccount = TradeReceivablesAccount(env, simpy, "Trade receivables")
-		inventoriesAccount		= InventoriesAccount(env, simpy, "Inventories", 1200)
-		EBPayableAccount 		= EBPayablesAccount(env, simpy, "EB Payables")
-		personnelAccount		= PersonnelExpensesAccount(env, simpy, "Personnel Expenses")
-		cashAccount 			= CashAccount(env, simpy, "Cash")
-		deprExpenseAccount 		= DepreciationAccount(env, simpy, "Depreciation Expense")
-		fixedAssetsAccount 		= FixedAssetsAccount(env, simpy, "Fixed Assets")
-		tradePayablesAccount 	= TradePayablesAccount(env, simpy, "Trade Payables")
-		otherExpensesAccount 	= OtherExpensesAccount(env, simpy, "Other Expenses")
-		prepaidExpensesAccount 	= PrepaidExpensesAccount(env, simpy, "Prepaid Expenses")
-		accrualsAccount 		= Account(env, simpy, "Accruals")
-		LTDebtAccount			= Account(env, simpy, "LT Debt")
-		interestExpense 		= Account(env, simpy, "Interest expense")
+        salesTransactionHigh = SalesTransaction("Sales 21 btw", 0.21, env)  # Sales with high tax percentage
+        salesTransactionLow = SalesTransaction("Sales 6 btw", 0.06, env)  # sales with low tax percentage
 
+        disbursementTransactionTax = TaxDisbursementTransaction("Tax disbursement", env, taxPayablesAccount)
 
-		salesTransactionHigh	= SalesTransaction("Sales 21 btw", 0.21, env) #Sales with high tax percentage
-		salesTransactionLow		= SalesTransaction("Sales 6 btw", 0.06, env) #sales with low tax percentage
+        cosTransaction = CosTransaction("Cost of Sales", env)
+        collectionTransaction = CollectionsTransaction("Collections", env)
+        payrollTransaction = PayrollTransaction("Payroll", env, 1500)
+        payrollDisbursementTransaction = PayrollDisbursementTransaction("Payroll Disbursement", env, EBPayableAccount)
+        purchaseTransaction = PurchaseTransaction("Purchase", env)
+        disbursementTransaction = DisbursementTransaction("Disbursement", env, tradePayablesAccount)
+        fixesAssetsTransaction = FixedAssetsTransaction("Fixed Assets", env)
+        depreciationTransaction = DepreciationTransaction("Depreciation", env)
 
-		disbursementTransactionTax			= TaxDisbursementTransaction("Tax disbursement", env, taxPayablesAccount)
+        salesHigh = SalesProcess(env, "Sales high", salesTransactionHigh)
+        salesLow = SalesProcess(env, "Sales low", salesTransactionLow)
 
-		cosTransaction 			= CosTransaction("Cost of Sales", env)
-		collectionTransaction	= CollectionsTransaction("Collections", env)
-		payrollTransaction		= PayrollTransaction("Payroll", env, 1500)
-		payrollDisbursementTransaction = PayrollDisbursementTransaction("Payroll Disbursement", env, EBPayableAccount)
-		purchaseTransaction = PurchaseTransaction("Purchase", env)
-		disbursementTransaction = DisbursementTransaction("Disbursement", env, tradePayablesAccount)
-		fixesAssetsTransaction = FixedAssetsTransaction("Fixed Assets", env)
-		depreciationTransaction = DepreciationTransaction("Depreciation", env)
+        cos = CosProcess(env, "Cost of Sales", cosTransaction)
 
+        salesTax = SalesTaxProcess(env, "Sales tax")
 
-		salesHigh 		= SalesProcess(env, "Sales high", salesTransactionHigh)
-		salesLow 		= SalesProcess(env, "Sales low", salesTransactionLow)
+        salesTaxDisbur = TaxDisbursementsProcess(env, "Tax Disbursement", disbursementTransactionTax, 2)
 
-		cos 			= CosProcess(env, "Cost of Sales", cosTransaction)
+        purchaseInv = PurchaseInventoryProcess(env, "Purchase inventory Process")
 
-		salesTax 		= SalesTaxProcess(env, "Sales tax")
+        collections = CollectionsProcess(env, "Collections Process", collectionTransaction)
 
-		salesTaxDisbur	= TaxDisbursementsProcess(env, "Tax Disbursement", disbursementTransactionTax, 2)
+        payroll = PayrollProcess(env, "Payroll Process", payrollTransaction)
 
+        payrollDisbursement = PayrollDisbursementsProcess(env, "Payroll Disbursement Process",
+                                                          payrollDisbursementTransaction)
 
-		purchaseInv 	= PurchaseInventoryProcess(env, "Purchase inventory Process")
+        purchaseProcess = PuchaseProcess(env, "Purchanse Process", 20, purchaseTransaction)
 
-		collections 	= CollectionsProcess(env, "Collections Process", collectionTransaction)
+        disbursementProcess = DisbursementProcess(env, "Disbursement Process", 10, disbursementTransaction)
 
-		payroll 		= PayrollProcess(env, "Payroll Process", payrollTransaction)
+        fixedAssetsProcess = AddToFixedAssetsProcess(env, "Fixed assets", 10, fixesAssetsTransaction)
+
+        depreciationProcess = DepreciationProcess(env, "Depreciation Process", 10, depreciationTransaction)
 
-		payrollDisbursement = PayrollDisbursementsProcess(env, "Payroll Disbursement Process", payrollDisbursementTransaction)
+        # events stock to low triggers purchase process
+        stockToLow = stockToLowEvent(env, 1000)
+        # observe the current stock
+        inventoriesAccount.addObserver(stockToLow.stockToLowObservee)
+
+        # send to low signal to purchase inventory
+        stockToLow.stockToLowObservable.addObserver(purchaseInv.lowStockTrigger)
+
+        # manual inventory purchase random irregular
+        # manualOrderEvent = ManualInventoryPurchaseEvent(env)
+        # manualOrderEvent.observable.addObserver(purchaseInv.manualOrderTrigger)
+
+        # the revenue accounts wants to be observer of all processes that changes the revenue, i.e., sales
+        salesLow.transactionNotifier.addObserver(revenueAccount.salesObserver)
+        salesHigh.transactionNotifier.addObserver(revenueAccount.salesObserver)
+
+        salesLow.transactionNotifier.addObserver(taxPayablesAccount.salesObserver)
+        salesHigh.transactionNotifier.addObserver(taxPayablesAccount.salesObserver)
+
+        salesLow.transactionNotifier.addObserver(tradeReceivablesAccount.salesObserver)
+        salesHigh.transactionNotifier.addObserver(tradeReceivablesAccount.salesObserver)
 
-		purchaseProcess = PuchaseProcess(env, "Purchanse Process", 20, purchaseTransaction)
-
-		disbursementProcess = DisbursementProcess(env, "Disbursement Process", 10, disbursementTransaction)
-
-		fixedAssetsProcess = AddToFixedAssetsProcess(env, "Fixed assets", 10, fixesAssetsTransaction)
-
-		depreciationProcess = DepreciationProcess(env, "Depreciation Process", 10, depreciationTransaction)
-
-
-		#events stock to low triggers purchase process
-		stockToLow 				= stockToLowEvent(env, 1000)
-		#observe the current stock
-		inventoriesAccount.addObserver(stockToLow.stockToLowObservee) 
-
-
-		#send to low signal to purchase inventory
-		stockToLow.stockToLowObservable.addObserver(purchaseInv.lowStockTrigger) 
-
-
-
-		#manual inventory purchase random irregular
-		# manualOrderEvent = ManualInventoryPurchaseEvent(env)
-		# manualOrderEvent.observable.addObserver(purchaseInv.manualOrderTrigger)
-
-
-
-		#the revenue accounts wants to be observer of all processes that changes the revenue, i.e., sales
-		salesLow.transactionNotifier.addObserver(revenueAccount.salesObserver)
-		salesHigh.transactionNotifier.addObserver(revenueAccount.salesObserver)
-
-		salesLow.transactionNotifier.addObserver(taxPayablesAccount.salesObserver)
-		salesHigh.transactionNotifier.addObserver(taxPayablesAccount.salesObserver)
-
-		salesLow.transactionNotifier.addObserver(tradeReceivablesAccount.salesObserver)
-		salesHigh.transactionNotifier.addObserver(tradeReceivablesAccount.salesObserver)
-
-
-
-
-		# Sales is done, book the Cost of Sales to Inventory
-		cos.transactionNotifier.addObserver(cosAccount.salesObserver)
-		cos.transactionNotifier.addObserver(inventoriesAccount.salesObserver)
-
-		#the inventories account is an observer of any new purchase transaction
-		purchaseInv.transactionNotifier.addObserver(inventoriesAccount.purchaseObserver)
-
-		#observe for new inventory purchase orders, if so then update the tradePayables account
-		purchaseInv.transactionNotifier.addObserver(tradePayablesAccount.purchaseInventoryObserver)
-
-		#sale with payment term triggers collections (14 days payment term)
-		collectionsEvent 		= SalesCollectionEvent(env, 2)
-		#observe the sales process for new sales
-		salesLow.transactionNotifier.addObserver(collectionsEvent.collectionsObserver)
-		salesHigh.transactionNotifier.addObserver(collectionsEvent.collectionsObserver)
-
-		#add the collections process as an observer of the collectionsEvent (time-delayed sales)
-		collectionsEvent.collectionsObservable.addObserver(collections.collectionsProcessObserver)
-
-		collections.transactionNotifier.addObserver(cashAccount.collectionsObserver)
-		collections.transactionNotifier.addObserver(tradeReceivablesAccount.collectionsObserver)
-
-
-		# add observer for the sales transactions
-		salesHigh.transactionNotifier.addObserver(cos.transactionNotifee)
-		salesLow.transactionNotifier.addObserver(cos.transactionNotifee)
-
-		salesHigh.transactionNotifier.addObserver(salesTax.transactionNotifee)
-		salesLow.transactionNotifier.addObserver(salesTax.transactionNotifee)
-
-
-		#Tax disbursement process
-		salesTaxDisbur.transactionNotifier.addObserver(cashAccount.taxDisbursementObserver)
-		salesTaxDisbur.transactionNotifier.addObserver(taxPayablesAccount.taxDisbursementObserver)
-
-
-		#Payroll observers
-		payroll.transactionNotifier.addObserver(EBPayableAccount.payrollObserver)
-		payroll.transactionNotifier.addObserver(personnelAccount.payrollObserver)
-		payroll.transactionNotifier.addObserver(taxPayablesAccount.payrollObserver)
-
-		payrollDisbursementEvent = PayrollDisbursementEvent(env, 2)
-		payroll.transactionNotifier.addObserver(payrollDisbursementEvent.payrollObserver) #is a payroll transaction takes place the delayed event wants to be notified
-		payrollDisbursementEvent.payrollObservable.addObserver(payrollDisbursement.payrollObserver) #notify the payroll disbursement process if the event happened
-
-		payrollDisbursement.transactionNotifier.addObserver(cashAccount.payrollObserver) #cash is observer for payroll disbursements
-		payrollDisbursement.transactionNotifier.addObserver(EBPayableAccount.payrollDisbursementObserver)
-
-
-		#purchase observers
-
-		purchaseProcess.transactionNotifier.addObserver(tradePayablesAccount.purchaseObserver)
-		purchaseProcess.transactionNotifier.addObserver(otherExpensesAccount.purchaseObserver)
-		purchaseProcess.transactionNotifier.addObserver(prepaidExpensesAccount.purchaseObserver)
-		purchaseProcess.transactionNotifier.addObserver(personnelAccount.purchaseObserver)
-
-
-		#fixed assets
-		fixedAssetsProcess.transactionNotifier.addObserver(tradePayablesAccount.fixedAssetsObserver)
-		fixedAssetsProcess.transactionNotifier.addObserver(fixedAssetsAccount.fixedAssetsObserver)
-
-		#depreciation
-		depreciationProcess.transactionNotifier.addObserver(fixedAssetsAccount.depreciationObserver)
-		depreciationProcess.transactionNotifier.addObserver(deprExpenseAccount.depreciationObserver)
-
-		statement = FinancialStatement("Test & Co.", env)
-		statement.addAccount(revenueAccount)
-		statement.addAccount(tradeReceivablesAccount)
-		statement.addAccount(taxPayablesAccount)
-		statement.addAccount(cosAccount)
-		statement.addAccount(inventoriesAccount)
-		statement.addAccount(cashAccount)
-		statement.addAccount(EBPayableAccount)
-		statement.addAccount(personnelAccount)
-		statement.addAccount(otherExpensesAccount)
-		statement.addAccount(prepaidExpensesAccount)
-		statement.addAccount(fixedAssetsAccount)
-		statement.addAccount(deprExpenseAccount)
-
-
-
-
-		env.process(salesHigh.randomTransactions(1000, collections))
-		env.process(salesLow.randomTransactions(1000, collections))
-		# env.process(manualOrderEvent.start()) #generate random periodic orders
-		env.process(collectionsEvent.start()) #payment received 
-		env.process(salesTaxDisbur.start()) #collect periodically all the taxes
-		env.process(payroll.start()) #start monthly personnel payment
-		env.process(payrollDisbursementEvent.start())
-		env.process(purchaseProcess.start())
-		env.process(disbursementProcess.start())
-		env.process(fixedAssetsProcess.start())
-		env.process(depreciationProcess.start())
-
-		env.run(until=30)
-
-
-		return statement
-
-
+        # Sales is done, book the Cost of Sales to Inventory
+        cos.transactionNotifier.addObserver(cosAccount.salesObserver)
+        cos.transactionNotifier.addObserver(inventoriesAccount.salesObserver)
+
+        # the inventories account is an observer of any new purchase transaction
+        purchaseInv.transactionNotifier.addObserver(inventoriesAccount.purchaseObserver)
+
+        # observe for new inventory purchase orders, if so then update the tradePayables account
+        purchaseInv.transactionNotifier.addObserver(tradePayablesAccount.purchaseInventoryObserver)
+
+        # sale with payment term triggers collections (14 days payment term)
+        collectionsEvent = SalesCollectionEvent(env, 2)
+        # observe the sales process for new sales
+        salesLow.transactionNotifier.addObserver(collectionsEvent.collectionsObserver)
+        salesHigh.transactionNotifier.addObserver(collectionsEvent.collectionsObserver)
+
+        # add the collections process as an observer of the collectionsEvent (time-delayed sales)
+        collectionsEvent.collectionsObservable.addObserver(collections.collectionsProcessObserver)
+
+        collections.transactionNotifier.addObserver(cashAccount.collectionsObserver)
+        collections.transactionNotifier.addObserver(tradeReceivablesAccount.collectionsObserver)
+
+        # add observer for the sales transactions
+        salesHigh.transactionNotifier.addObserver(cos.transactionNotifee)
+        salesLow.transactionNotifier.addObserver(cos.transactionNotifee)
+
+        salesHigh.transactionNotifier.addObserver(salesTax.transactionNotifee)
+        salesLow.transactionNotifier.addObserver(salesTax.transactionNotifee)
+
+        # Tax disbursement process
+        salesTaxDisbur.transactionNotifier.addObserver(cashAccount.taxDisbursementObserver)
+        salesTaxDisbur.transactionNotifier.addObserver(taxPayablesAccount.taxDisbursementObserver)
+
+        # Payroll observers
+        payroll.transactionNotifier.addObserver(EBPayableAccount.payrollObserver)
+        payroll.transactionNotifier.addObserver(personnelAccount.payrollObserver)
+        payroll.transactionNotifier.addObserver(taxPayablesAccount.payrollObserver)
+
+        payrollDisbursementEvent = PayrollDisbursementEvent(env, 2)
+        payroll.transactionNotifier.addObserver(
+            payrollDisbursementEvent.payrollObserver)  # is a payroll transaction takes place the delayed event wants to be notified
+        payrollDisbursementEvent.payrollObservable.addObserver(
+            payrollDisbursement.payrollObserver)  # notify the payroll disbursement process if the event happened
+
+        payrollDisbursement.transactionNotifier.addObserver(
+            cashAccount.payrollObserver)  # cash is observer for payroll disbursements
+        payrollDisbursement.transactionNotifier.addObserver(EBPayableAccount.payrollDisbursementObserver)
+
+        # purchase observers
+
+        purchaseProcess.transactionNotifier.addObserver(tradePayablesAccount.purchaseObserver)
+        purchaseProcess.transactionNotifier.addObserver(otherExpensesAccount.purchaseObserver)
+        purchaseProcess.transactionNotifier.addObserver(prepaidExpensesAccount.purchaseObserver)
+        purchaseProcess.transactionNotifier.addObserver(personnelAccount.purchaseObserver)
+
+        # fixed assets
+        fixedAssetsProcess.transactionNotifier.addObserver(tradePayablesAccount.fixedAssetsObserver)
+        fixedAssetsProcess.transactionNotifier.addObserver(fixedAssetsAccount.fixedAssetsObserver)
+
+        # depreciation
+        depreciationProcess.transactionNotifier.addObserver(fixedAssetsAccount.depreciationObserver)
+        depreciationProcess.transactionNotifier.addObserver(deprExpenseAccount.depreciationObserver)
+
+        statement = FinancialStatement("Test & Co.", env)
+        statement.addAccount(revenueAccount)
+        statement.addAccount(tradeReceivablesAccount)
+        statement.addAccount(taxPayablesAccount)
+        statement.addAccount(cosAccount)
+        statement.addAccount(inventoriesAccount)
+        statement.addAccount(cashAccount)
+        statement.addAccount(EBPayableAccount)
+        statement.addAccount(personnelAccount)
+        statement.addAccount(otherExpensesAccount)
+        statement.addAccount(prepaidExpensesAccount)
+        statement.addAccount(fixedAssetsAccount)
+        statement.addAccount(deprExpenseAccount)
+
+        env.process(salesHigh.randomTransactions(1000, collections))
+        env.process(salesLow.randomTransactions(1000, collections))
+        # env.process(manualOrderEvent.start()) #generate random periodic orders
+        env.process(collectionsEvent.start())  # payment received
+        env.process(salesTaxDisbur.start())  # collect periodically all the taxes
+        env.process(payroll.start())  # start monthly personnel payment
+        env.process(payrollDisbursementEvent.start())
+        env.process(purchaseProcess.start())
+        env.process(disbursementProcess.start())
+        env.process(fixedAssetsProcess.start())
+        env.process(depreciationProcess.start())
+
+        env.run(until=10)
+
+        return statement
+
+
+import sqlite3
+from sqlite3 import Error
+
+
+def cleanDB(db_file="Sample.db"):
+    try:
+        conn = sqlite3.connect(db_file)
+        c = conn.cursor()
+        c.execute('''DELETE FROM EntryRecords''')
+        c.execute('''DELETE FROM JournalEntries''')
+        c.execute('''DELETE FROM sqlite_sequence ''')
+        conn.commit()
+    except Error as e:
+        print(e)
+    finally:
+        conn.close()
+
+cleanDB()
 b = BussinessSimulation()
 financialStatement = b.simulate()
-
 
 # misstatement_factions = []
 #
@@ -420,7 +409,6 @@ financialStatement = b.simulate()
 # plt.show()
 
 
-
 # statement.showStatement()
 
 # statement.plotAll()
@@ -429,9 +417,6 @@ financialStatement = b.simulate()
 # [x2, y2, x3, y3] = statement.historyOfTR()
 
 
-
 # plt.plot(x,y, '-', x, y2, '-.', x, y3, "--" )
 # plt.legend(["Total Misstatement", "TR Correct", "TR Wrong"])
 # plt.show()
-
-

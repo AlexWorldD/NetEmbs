@@ -9,6 +9,7 @@ import random
 import numpy as np
 from Abstract.Transaction import Transaction
 from Abstract.Process import Process
+from Abstract.Observer import Observer
 from CONFIG import *
 
 
@@ -37,3 +38,30 @@ class CollectionsTransaction(Transaction):
 
     def printTransaction(self):
         print("CollectionsTransaction: TR=", self.trade_rec, " -> Cash=", self.cash)
+
+
+class CollectionsProcess(Process):
+    def __init__(self, name, env, transaction):
+        self.name = name
+        self.env = env
+        self.Transaction = transaction
+        if PRINT:
+            print("Process ", self.name)
+        #     Add Notifier for process and Observer
+        self.transactionNotifier = super().TransactionNotifier()
+        # TODO refactoring that part!!
+        self.Observer = CollectionsProcess.CollectionsProcessObserver(self)
+
+    def SalesCollection(self, last_transaction):
+        cur_transaction = self.Transaction.newTransaction(last_transaction)
+        self.transactionNotifier.setChanged()
+        for obs in self.transactionNotifier.notifyObservers(cur_transaction):
+            yield obs
+
+    class CollectionsProcessObserver(Observer):
+        def __init__(self, outer):
+            self.outer = outer
+
+        def update(self, observable, args):
+            for obs in self.outer.processSalesCollection(args):
+                yield obs

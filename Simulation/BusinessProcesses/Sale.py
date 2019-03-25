@@ -33,7 +33,8 @@ class SalesTransaction(Transaction):
         # Add noise of type 2 when noisy financial accounts with very small amounts
         if NOISE["Sales"]:
             noise = super().noise(self.revenue, unique_id, cur_transaction)
-
+        else:
+            noise = {"left": {"def": 0.0}, "right": {"def": 0.0}}
         self.trade_rec = self.revenue + self.tax + np.sum(list(noise["left"].values())) - np.sum(
             list(noise["right"].values()))
         self.addRecord("TradeReceivables_" + str(unique_id), "TradeReceivables", self.trade_rec, cur_transaction)
@@ -44,3 +45,30 @@ class SalesTransaction(Transaction):
 
     def printTransaction(self):
         print("SalesTransaction: Revenue=", self.revenue, ", Tax=", self.tax, " -> TR=", self.trade_rec)
+
+
+class SalesProcess(Process):
+    def __init__(self, name, env, transaction):
+        """
+        Initialize SalesProcess with name and SciPy environment
+        :param name: Process name
+        :param env: SciPy environment
+        :param transaction: SalesTransaction instance
+        """
+        self.name = name
+        self.Transaction = transaction
+        self.env = env
+        if PRINT:
+            print("Process ", self.name)
+        #     Add Notifier for process and Observer
+        self.transactionNotifier = super().TransactionNotifier()
+        self.transactionObserver = super().TransactionObserver()
+        self.lastTransactionData = None
+
+    def getTransactions(self, number):
+        for _ in range(number):
+            yield self.env.timeout(random.expovariate(1 / 4.0))
+            self.lastTransactionData = self.Transaction.newTransaction()
+            self.TransactionNotifier.setChanged()
+            for obs in self.transactionNotifier.notifyObservers(self.lastTransactionData):
+                yield obs

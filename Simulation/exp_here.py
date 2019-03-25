@@ -14,8 +14,8 @@ from Simulation.BusinessProcesses.GoodsDelivery import *
 connectDB()
 cleanDB()
 env = simpy.Environment()
-sale = SalesTransaction("Test", 0.2, env)
-col = CollectionsTransaction("ColTest", env)
+sale = SalesTransaction("Sales", 0.2, env)
+col = CollectionsTransaction("Collection", env)
 delivery = GoodsDeliveryTransaction("Delivery", env)
 for _ in range(10):
     d = sale.newTransaction()

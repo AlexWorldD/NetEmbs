@@ -22,7 +22,10 @@ class GoodsDeliveryTransaction(Transaction):
         cur_transaction = self.new(postfix=unique_id)
         #         Generating amounts
         if NOISE["GoodsDelivery"]:
-            noise = super().noise(self.cost_of_sales, unique_id, cur_transaction)
+            noise = super().noise(cost_of_sales, unique_id, cur_transaction)
+        else:
+            noise = {"left": {"def": 0.0}, "right": {"def": 0.0}}
+        #     Update core processes regard the noisy FAs
         self.cost_of_sales = cost_of_sales - np.sum(list(noise["right"].values()))
         self.inventory = cost_of_sales - np.sum(list(noise["left"].values()))
 

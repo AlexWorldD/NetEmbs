@@ -27,7 +27,7 @@ class DisbursementProcess(Process):
 				yield obs
 
 
-class DisbursementTrnsaction(Transaction):
+class DisbursementTransaction(Transaction):
 
 	def __init__(self, name, env, tradepayables):
 		Transaction.__init__(self, name, env)
