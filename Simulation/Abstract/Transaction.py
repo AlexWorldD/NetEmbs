@@ -32,7 +32,7 @@ class Transaction(object):
         # return 1
 
     def noise(self, base_amount, id, tid):
-        noise = {"left": [0.0], "right": [0.0]}
+        noise = {"left": {"def": 0.0}, "right": {"def": 0.0}}
         # Add noise of type 2 when noisy financial accounts with very small amounts
         if random.random() < NOISE_Type2["freq"]:
             # TODO check other distribution for number of noisy FAs per BP
@@ -43,11 +43,11 @@ class Transaction(object):
                                               p=[NOISE_Type2["proportion"], 1.0 - NOISE_Type2["proportion"]])
                 if noise_side == "left":
                     # Add noise for credited side
-                    noise["left"].append(noise_amount)
+                    noise["left"][noise_name] = noise_amount
                     self.addRecord(noise_name + "_" + str(id), noise_name, -noise_amount, tid)
                 elif noise_side == "right":
                     self.addRecord(noise_name + "_" + str(id), noise_name, noise_amount, tid)
-                    noise["right"].append(noise_amount)
+                    noise["right"][noise_name] = noise_amount
         return noise
 
     def new(self, postfix):
