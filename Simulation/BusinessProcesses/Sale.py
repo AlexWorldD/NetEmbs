@@ -36,7 +36,7 @@ class SalesTransaction(Transaction):
 
         self.trade_rec = self.revenue + self.tax + np.sum(list(noise["left"].values())) - np.sum(
             list(noise["right"].values()))
-        self.addRecord("TradeReceivables" + str(unique_id), "TradeReceivables", self.trade_rec, cur_transaction)
+        self.addRecord("TradeReceivables_" + str(unique_id), "TradeReceivables", self.trade_rec, cur_transaction)
 
         if PRINT:
             self.printTransaction()

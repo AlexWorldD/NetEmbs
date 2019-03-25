@@ -17,3 +17,4 @@ sale = SalesTransaction("Test", 0.2, env)
 col = CollectionsTransaction("ColTest", env)
 for _ in range(10):
     d = sale.newTransaction()
+    col.newTransaction(d)
