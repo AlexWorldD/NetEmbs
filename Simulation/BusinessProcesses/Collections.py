@@ -36,4 +36,4 @@ class CollectionsTransaction(Transaction):
             self.printTransaction()
 
     def printTransaction(self):
-        print("CollectionTransaction: TR=", self.trade_rec, " -> Cash=", self.cash)
+        print("CollectionsTransaction: TR=", self.trade_rec, " -> Cash=", self.cash)
