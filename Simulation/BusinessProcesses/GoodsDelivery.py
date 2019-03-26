@@ -32,7 +32,7 @@ class GoodsDeliveryTransaction(Transaction):
         self.inventory = cost_of_sales - np.sum(list(noise["left"].values()))
 
         self.addRecord("CostOfSales_" + str(unique_id), "CostOfSales", self.cost_of_sales, cur_transaction)
-        self.addRecord("inventory_" + str(unique_id), "Inventory", -self.inventory, cur_transaction)
+        self.addRecord("Inventory_" + str(unique_id), "Inventory", -self.inventory, cur_transaction)
 
         if PRINT:
             self.printTransaction()
@@ -51,7 +51,7 @@ class GoodsDeliveryProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier()
+        self.transactionNotifier = super().TransactionNotifier(self)
         self.Observer = GoodsDeliveryProcess.GoodsDeliveryProcessObserver(self)
 
     def IncomingTransaction(self, last_transaction):

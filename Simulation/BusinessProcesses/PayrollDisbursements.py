@@ -50,7 +50,7 @@ class PayrollDisbursementsProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier()
+        self.transactionNotifier = super().TransactionNotifier(self)
         self.Observer = PayrollDisbursementsProcess.PayrollObserver(self)
 
     def processPayrollDisbursement(self, transaction):

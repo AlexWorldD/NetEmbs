@@ -68,7 +68,7 @@ class PurchaseProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier()
+        self.transactionNotifier = super().TransactionNotifier(self)
 
     def start(self):
         while True:
@@ -93,7 +93,7 @@ class PurchaseInventoryProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier()
+        self.transactionNotifier = super().TransactionNotifier(self)
         self.lowStockTrigger = PurchaseInventoryProcess.Trigger(self)
         self.manualOrderTrigger = PurchaseInventoryProcess.ManualTrigger(self)
 

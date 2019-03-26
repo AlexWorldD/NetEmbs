@@ -7,11 +7,8 @@ Created by lex at 2019-03-26.
 import simpy
 from Simulation.CreateDB import *
 from Simulation.Abstract.Transaction import *
-from Simulation.BusinessProcesses.Sale import *
-from Simulation.BusinessProcesses.Collections import *
-from Simulation.BusinessProcesses.GoodsDelivery import *
-from Simulation.BusinessProcesses.Purchase import *
-from Abstract.Observer import Observer, Observable
+from Simulation.BusinessProcesses import *
+from Simulation.FinancialAccounts import *
 
 
 class PayrollDisbursementEvent:
@@ -50,7 +47,7 @@ class PayrollDisbursementEvent:
     class PayrollDisbursementEventObservable(Observable):
 
         def __init__(self, outer):
-            super().__init__(self)
+            super().__init__()
             self.outer = outer
 
     class PayrollDisbursementEventObserver(Observer):
@@ -100,7 +97,7 @@ class SalesCollectionEvent:
     class CollectionsObservable(Observable):
 
         def __init__(self, outer):
-            super().__init__(self)
+            super().__init__()
             self.outer = outer
 
     class CollectionsObserver(Observer):
@@ -140,7 +137,7 @@ class ManualInventoryPurchaseEvent:
             self.outer = outer
 
         def update(self, observable, args):
-            print("DummeManual")
+            print("DummyManual")
 
 
 class stockToLowEvent:
@@ -159,7 +156,7 @@ class stockToLowEvent:
 
     class stockToLowObservable(Observable):
         def __init__(self, outer):
-            super.__init__(self)
+            super().__init__()
             self.outer = outer
 
     class stockToLowObservee(Observer):
@@ -168,8 +165,9 @@ class stockToLowEvent:
             self.outer = outer
 
         def update(self, observable, args):
-            for obs in self.outer.processLevel(observable.containerCorrect.level):
+            for obs in self.outer.processLevel(observable.container.level):
                 yield self.outer.env.timeout(0)
+
 
 # //////////////// \\\\\\\\\\\\\\\
 
@@ -178,45 +176,45 @@ class FSN_Simulation(object):
     def simulate(self):
         env = simpy.Environment()
 
-        revenueAccount = RevenueAccount(env, simpy, "Revenue")
-        cosAccount = CostOfSalesAccount(env, simpy, "Cost of Sales")
-        taxPayablesAccount = TaxPayablesAccount(env, simpy, "Tax Payables")
-        tradeReceivablesAccount = TradeReceivablesAccount(env, simpy, "Trade receivables")
-        inventoriesAccount = InventoriesAccount(env, simpy, "Inventories", 1200)
-        EBPayableAccount = EBPayablesAccount(env, simpy, "EB Payables")
-        personnelAccount = PersonnelExpensesAccount(env, simpy, "Personnel Expenses")
-        cashAccount = CashAccount(env, simpy, "Cash")
-        deprExpenseAccount = DepreciationAccount(env, simpy, "Depreciation Expense")
-        fixedAssetsAccount = FixedAssetsAccount(env, simpy, "Fixed Assets")
-        tradePayablesAccount = TradePayablesAccount(env, simpy, "Trade Payables")
-        otherExpensesAccount = OtherExpensesAccount(env, simpy, "Other Expenses")
-        prepaidExpensesAccount = PrepaidExpensesAccount(env, simpy, "Prepaid Expenses")
-        accrualsAccount = Account(env, simpy, "Accruals")
-        LTDebtAccount = Account(env, simpy, "LT Debt")
-        interestExpense = Account(env, simpy, "Interest expense")
+        revenueAccount = RevenueAccount(env, "Revenue")
+        cosAccount = CostOfSalesAccount(env, "Cost of Sales")
+        taxPayablesAccount = TaxPayablesAccount(env, "Tax Payables")
+        tradeReceivablesAccount = TradeReceivablesAccount(env, "Trade receivables")
+        inventoriesAccount = InventoriesAccount(env, "Inventories", 1200)
+        EBPayableAccount = EBPayablesAccount(env, "EB Payables")
+        personnelAccount = PersonnelExpensesAccount(env, "Personnel Expenses")
+        cashAccount = CashAccount(env, "Cash")
+        deprExpenseAccount = DepreciationAccount(env, "Depreciation Expense")
+        fixedAssetsAccount = FixedAssetsAccount(env, "Fixed Assets")
+        tradePayablesAccount = TradePayablesAccount(env, "Trade Payables")
+        otherExpensesAccount = OtherExpensesAccount(env, "Other Expenses")
+        prepaidExpensesAccount = PrepaidExpensesAccount(env, "Prepaid Expenses")
+        accrualsAccount = Account(env, "Accruals")
+        LTDebtAccount = Account(env, "LT Debt")
+        interestExpense = Account(env, "Interest expense")
 
         salesTransactionHigh = SalesTransaction("Sales 21 btw", 0.21, env)  # Sales with high tax percentage
         salesTransactionLow = SalesTransaction("Sales 6 btw", 0.06, env)  # sales with low tax percentage
 
-        disbursementTransactionTax = TaxDisbursementTransaction("Tax disbursement", env, taxPayablesAccount)
+        disbursementTransactionTax = TaxDisbursementsTransaction("Tax disbursement", env, taxPayablesAccount)
 
-        cosTransaction = CosTransaction("Cost of Sales", env)
+        cosTransaction = GoodsDeliveryTransaction("Cost of Sales", env)
         collectionTransaction = CollectionsTransaction("Collections", env)
         payrollTransaction = PayrollTransaction("Payroll", env, 1500)
-        payrollDisbursementTransaction = PayrollDisbursementTransaction("Payroll Disbursement", env, EBPayableAccount)
+        payrollDisbursementTransaction = PayrollDisbursementsTransaction("Payroll Disbursement", env, EBPayableAccount)
         purchaseTransaction = PurchaseTransaction("Purchase", env)
-        disbursementTransaction = DisbursementTransaction("Disbursement", env, tradePayablesAccount)
-        fixesAssetsTransaction = FixedAssetsTransaction("Fixed Assets", env)
+        disbursementTransaction = PayrollDisbursementsProcess("Disbursement", env, tradePayablesAccount)
+        fixesAssetsTransaction = AddFixedAssetsTransaction("Fixed Assets", env)
         depreciationTransaction = DepreciationTransaction("Depreciation", env)
 
         salesHigh = SalesProcess(env, "Sales high", salesTransactionHigh)
         salesLow = SalesProcess(env, "Sales low", salesTransactionLow)
 
-        cos = CosProcess(env, "Cost of Sales", cosTransaction)
+        cos = GoodsDeliveryProcess(env, "Cost of Sales", cosTransaction)
 
         salesTax = SalesTaxProcess(env, "Sales tax")
 
-        salesTaxDisbur = TaxDisbursementsProcess(env, "Tax Disbursement", disbursementTransactionTax, 2)
+        salesTaxDisbur = TaxDisbursementProcess(env, "Tax Disbursement", disbursementTransactionTax, 2)
 
         purchaseInv = PurchaseInventoryProcess(env, "Purchase inventory Process")
 
@@ -227,11 +225,11 @@ class FSN_Simulation(object):
         payrollDisbursement = PayrollDisbursementsProcess(env, "Payroll Disbursement Process",
                                                           payrollDisbursementTransaction)
 
-        purchaseProcess = PuchaseProcess(env, "Purchanse Process", 20, purchaseTransaction)
+        purchaseProcess = PurchaseProcess(env, "Purchanse Process", 20, purchaseTransaction)
 
         disbursementProcess = DisbursementProcess(env, "Disbursement Process", 10, disbursementTransaction)
 
-        fixedAssetsProcess = AddToFixedAssetsProcess(env, "Fixed assets", 10, fixesAssetsTransaction)
+        fixedAssetsProcess = AddFixedAssetsProcess(env, "Fixed assets", 10, fixesAssetsTransaction)
 
         depreciationProcess = DepreciationProcess(env, "Depreciation Process", 10, depreciationTransaction)
 
@@ -274,17 +272,17 @@ class FSN_Simulation(object):
         salesHigh.transactionNotifier.addObserver(collectionsEvent.collectionsObserver)
 
         # add the collections process as an observer of the collectionsEvent (time-delayed sales)
-        collectionsEvent.collectionsObservable.addObserver(collections.collectionsProcessObserver)
+        collectionsEvent.collectionsObservable.addObserver(collections.Observer)
 
         collections.transactionNotifier.addObserver(cashAccount.collectionsObserver)
         collections.transactionNotifier.addObserver(tradeReceivablesAccount.collectionsObserver)
 
         # add observer for the sales transactions
-        salesHigh.transactionNotifier.addObserver(cos.transactionNotifee)
-        salesLow.transactionNotifier.addObserver(cos.transactionNotifee)
+        salesHigh.transactionNotifier.addObserver(cos.Observer)
+        salesLow.transactionNotifier.addObserver(cos.Observer)
 
-        salesHigh.transactionNotifier.addObserver(salesTax.transactionNotifee)
-        salesLow.transactionNotifier.addObserver(salesTax.transactionNotifee)
+        salesHigh.transactionNotifier.addObserver(salesTax.Observer)
+        salesLow.transactionNotifier.addObserver(salesTax.Observer)
 
         # Tax disbursement process
         salesTaxDisbur.transactionNotifier.addObserver(cashAccount.taxDisbursementObserver)
@@ -299,7 +297,7 @@ class FSN_Simulation(object):
         payroll.transactionNotifier.addObserver(
             payrollDisbursementEvent.payrollObserver)  # is a payroll transaction takes place the delayed event wants to be notified
         payrollDisbursementEvent.payrollObservable.addObserver(
-            payrollDisbursement.payrollObserver)  # notify the payroll disbursement process if the event happened
+            payrollDisbursement.Observer)  # notify the payroll disbursement process if the event happened
 
         payrollDisbursement.transactionNotifier.addObserver(
             cashAccount.payrollObserver)  # cash is observer for payroll disbursements
@@ -320,22 +318,22 @@ class FSN_Simulation(object):
         depreciationProcess.transactionNotifier.addObserver(fixedAssetsAccount.depreciationObserver)
         depreciationProcess.transactionNotifier.addObserver(deprExpenseAccount.depreciationObserver)
 
-        statement = FinancialStatement("Test & Co.", env)
-        statement.addAccount(revenueAccount)
-        statement.addAccount(tradeReceivablesAccount)
-        statement.addAccount(taxPayablesAccount)
-        statement.addAccount(cosAccount)
-        statement.addAccount(inventoriesAccount)
-        statement.addAccount(cashAccount)
-        statement.addAccount(EBPayableAccount)
-        statement.addAccount(personnelAccount)
-        statement.addAccount(otherExpensesAccount)
-        statement.addAccount(prepaidExpensesAccount)
-        statement.addAccount(fixedAssetsAccount)
-        statement.addAccount(deprExpenseAccount)
+        # statement = FinancialStatement("Test & Co.", env)
+        # statement.addAccount(revenueAccount)
+        # statement.addAccount(tradeReceivablesAccount)
+        # statement.addAccount(taxPayablesAccount)
+        # statement.addAccount(cosAccount)
+        # statement.addAccount(inventoriesAccount)
+        # statement.addAccount(cashAccount)
+        # statement.addAccount(EBPayableAccount)
+        # statement.addAccount(personnelAccount)
+        # statement.addAccount(otherExpensesAccount)
+        # statement.addAccount(prepaidExpensesAccount)
+        # statement.addAccount(fixedAssetsAccount)
+        # statement.addAccount(deprExpenseAccount)
 
-        env.process(salesHigh.getTransactions(1000, collections))
-        env.process(salesLow.getTransactions(1000, collections))
+        env.process(salesHigh.getTransactions(1000))
+        env.process(salesLow.getTransactions(1000))
         # env.process(manualOrderEvent.start()) #generate random periodic orders
         env.process(collectionsEvent.start())  # payment received
         env.process(salesTaxDisbur.start())  # collect periodically all the taxes
@@ -346,6 +344,6 @@ class FSN_Simulation(object):
         env.process(fixedAssetsProcess.start())
         env.process(depreciationProcess.start())
 
-        env.run(until=10)
+        env.run(until=100)
 
-        return statement
+        return True

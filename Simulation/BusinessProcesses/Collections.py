@@ -49,7 +49,7 @@ class CollectionsProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier()
+        self.transactionNotifier = super().TransactionNotifier(self)
         # TODO refactoring that part!!
         self.Observer = CollectionsProcess.CollectionsProcessObserver(self)
 

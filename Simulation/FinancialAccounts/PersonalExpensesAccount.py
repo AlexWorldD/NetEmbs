@@ -9,7 +9,7 @@ from Simulation.Abstract.Account import *
 
 class PersonnelExpensesAccount(Account):
     def __init__(self, env, name, initialStock=None):
-        super().__init__(env, name, name, initialStock)
+        super().__init__(env, name, initialStock)
         self.payrollObserver = PersonnelExpensesAccount.PayrollObserver(self)
         self.purchaseObserver = PersonnelExpensesAccount.PurchaseObserver(self)
 

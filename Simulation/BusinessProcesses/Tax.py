@@ -52,7 +52,7 @@ class TaxDisbursementProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier()
+        self.transactionNotifier = super().TransactionNotifier(self)
 
     def start(self):
         while True:
@@ -73,7 +73,7 @@ class SalesTaxProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = SalesTaxProcess.TransactionNotifeeTax(self)
+        self.Observer = SalesTaxProcess.TransactionNotifeeTax(self)
 
     class TransactionNotifeeTax(Observer):
         def __init__(self, outer):

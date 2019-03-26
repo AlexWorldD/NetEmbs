@@ -61,8 +61,8 @@ class SalesProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier()
-        self.transactionObserver = super().TransactionObserver()
+        self.transactionNotifier = super().TransactionNotifier(self)
+        self.transactionObserver = super().TransactionObserver(self)
         self.lastTransactionData = None
 
     def getTransactions(self, number):

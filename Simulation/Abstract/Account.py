@@ -9,7 +9,7 @@ import simpy
 
 
 class Account(Observable):
-    def __init__(self, env, name, fa_name, initial_stock=None):
+    def __init__(self, env, name, initial_stock=None):
         """
         :param env: Environment of simpy simulation
         :param name: Unique FA name
@@ -18,14 +18,13 @@ class Account(Observable):
         """
         Observable.__init__(self)
 
-        print("Initialize container with name: ", name, "(", fa_name, ")")
-        if initial_stock is None:
+        print("Initialize container with name: ", name)
+        if initial_stock is not None:
             self.container = simpy.Container(env, init=initial_stock)
         else:
             self.container = simpy.Container(env)
         self.env = env
         self.name = name
-        self.fa_name = fa_name
 
     def __str__(self):
         return "Account name: %s \t\t level correct: %d wrong: %d" % (self.name, self.container.level)

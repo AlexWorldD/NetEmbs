@@ -9,7 +9,7 @@ from Simulation.Abstract.Account import *
 
 class TaxPayablesAccount(Account):
     def __init__(self, env, name, initialStock=None):
-        super().__init__(self, env, name, initialStock)
+        super().__init__(env, name, initialStock)
         self.salesObserver = TaxPayablesAccount.SalesObserver(self)
         self.taxDisbursementObserver = TaxPayablesAccount.TaxDisbursementObserver(self)
         self.payrollObserver = TaxPayablesAccount.PayrollObserver(self)

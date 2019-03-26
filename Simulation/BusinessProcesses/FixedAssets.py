@@ -61,7 +61,7 @@ class AddFixedAssetsProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier()
+        self.transactionNotifier = super().TransactionNotifier(self)
 
     def start(self):
         while True:
