@@ -207,31 +207,31 @@ class FSN_Simulation(object):
         fixesAssetsTransaction = AddFixedAssetsTransaction("Fixed Assets", env)
         depreciationTransaction = DepreciationTransaction("Depreciation", env)
 
-        salesHigh = SalesProcess(env, "Sales high", salesTransactionHigh)
-        salesLow = SalesProcess(env, "Sales low", salesTransactionLow)
+        salesHigh = SalesProcess("Sales high", env, salesTransactionHigh)
+        salesLow = SalesProcess("Sales low", env, salesTransactionLow)
 
-        cos = GoodsDeliveryProcess(env, "Cost of Sales", cosTransaction)
+        cos = GoodsDeliveryProcess("Cost of Sales", env, cosTransaction)
 
-        salesTax = SalesTaxProcess(env, "Sales tax")
+        salesTax = SalesTaxProcess("Sales tax", env)
 
-        salesTaxDisbur = TaxDisbursementProcess(env, "Tax Disbursement", disbursementTransactionTax, 2)
+        salesTaxDisbur = TaxDisbursementProcess("Tax Disbursement", env, disbursementTransactionTax, 2)
 
-        purchaseInv = PurchaseInventoryProcess(env, "Purchase inventory Process")
+        purchaseInv = PurchaseInventoryProcess("Purchase inventory Process", env)
 
-        collections = CollectionsProcess(env, "Collections Process", collectionTransaction)
+        collections = CollectionsProcess("Collections Process", env, collectionTransaction)
 
-        payroll = PayrollProcess(env, "Payroll Process", payrollTransaction)
+        payroll = PayrollProcess("Payroll Process", env, payrollTransaction)
 
-        payrollDisbursement = PayrollDisbursementsProcess(env, "Payroll Disbursement Process",
+        payrollDisbursement = PayrollDisbursementsProcess("Payroll Disbursement Process", env,
                                                           payrollDisbursementTransaction)
 
-        purchaseProcess = PurchaseProcess(env, "Purchanse Process", 20, purchaseTransaction)
+        purchaseProcess = PurchaseProcess("Purchanse Process", env, purchaseTransaction, 20)
 
-        disbursementProcess = DisbursementProcess(env, "Disbursement Process", 10, disbursementTransaction)
+        disbursementProcess = DisbursementProcess("Disbursement Process", env, disbursementTransaction, 10)
 
-        fixedAssetsProcess = AddFixedAssetsProcess(env, "Fixed assets", 10, fixesAssetsTransaction)
+        fixedAssetsProcess = AddFixedAssetsProcess("Fixed assets", env, fixesAssetsTransaction, 10)
 
-        depreciationProcess = DepreciationProcess(env, "Depreciation Process", 10, depreciationTransaction)
+        depreciationProcess = DepreciationProcess("Depreciation Process", env, depreciationTransaction, 10)
 
         # events stock to low triggers purchase process
         stockToLow = stockToLowEvent(env, 1000)

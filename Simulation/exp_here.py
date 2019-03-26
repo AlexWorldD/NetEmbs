@@ -22,6 +22,6 @@ purchase = PurchaseTransaction("Purchase", env)
 
 for _ in range(10):
     d = sale.newTransaction()
-    # col.newTransaction(d)
-    # delivery.newTransaction(d)
+    col.newTransaction(d)
+    delivery.newTransaction(d)
     purchase.newTransaction()
