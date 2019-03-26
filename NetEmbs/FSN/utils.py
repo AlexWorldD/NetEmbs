@@ -93,7 +93,7 @@ def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debu
         return -1
 
 
-def diffFunction(prev_edge, new_edges, pressure):
+def diff_function(prev_edge, new_edges, pressure):
     """
     Function for calculation transition probabilities based on Differences between previous edge and candidate edge
     :param prev_edge: Monetary amount on previous edge
@@ -102,6 +102,24 @@ def diffFunction(prev_edge, new_edges, pressure):
     :return: array of transition probabilities
     """
     return softmax((1.0 - abs(new_edges - prev_edge)) * pressure)
+
+
+def make_pairs(sampled_seq, window=3, debug=False):
+    """
+    Helper function for construction pairs from sequence of nodes with given window size
+    :param sampled_seq: Original sequence of nodes (output of RandomWalk procedure)
+    :param window: window size, how much predecessors and successors one takes into account
+    :param debug: print intermediate stages
+    :return:
+    """
+    if debug:
+        print(sampled_seq)
+    output = list()
+    for cur_idx in range(len(sampled_seq)):
+        for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
+            if drift != cur_idx:
+                output.append((sampled_seq[cur_idx], sampled_seq[drift]))
+    return output
 
 
 def step(G, vertex, direction="IN", mode=2, allow_back=False, return_full_step=False, pressure=20, debug=False):
@@ -164,7 +182,7 @@ def step(G, vertex, direction="IN", mode=2, allow_back=False, return_full_step=F
         ws = np.array(ws)
         if mode == 2:
             # Transition probability depends on the difference between monetary flows
-            ws = diffFunction(tmp_weight, ws, pressure)
+            ws = diff_function(tmp_weight, ws, pressure)
             if debug:
                 print(list(zip(outs, ws)))
             tmp_vertex = np.random.choice(outs, p=ws)
@@ -216,6 +234,7 @@ def randomWalk(G, vertex=None, lenght=3, direction="IN", version="MetaDiff", ret
                 new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
             attempts -= 1
         except nx.NetworkXError:
+            # TODO modify to more robust behaviour
             break
         if new_v == -1:
             if debug: print("Cannot continue walking... Termination.")
@@ -226,3 +245,22 @@ def randomWalk(G, vertex=None, lenght=3, direction="IN", version="MetaDiff", ret
             context.append(new_v)
         cur_v = context[-1]
     return context
+
+
+def get_pairs(fsn, walk_length=10, walks_per_node=10, direction="IN", drop_duplicates=True):
+    """
+    Construction a pairs (skip-grams) of nodes according to sampled sequences
+    :param fsn: Researched FSN
+    :param walk_length: max length of RandomWalk
+    :param walks_per_node: max number of RandomWalks per each node in FSN
+    :param direction: initial direction
+    :param drop_duplicates: True, delete pairs with equal elements
+    :return: array of pairs(joint appearance of two BP nodes)
+    """
+    pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction)) for _ in range(walks_per_node) for node
+             in range(1, fsn.number_of_BP() + 1)]
+    if drop_duplicates:
+        pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
+    else:
+        pairs = [item for sublist in pairs for item in sublist]
+    return pairs

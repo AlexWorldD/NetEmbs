@@ -69,6 +69,13 @@ class FSN(nx.DiGraph):
         """
         return self.get_business_processes()
 
+    def number_of_BP(self):
+        """
+        Return total number of Business Process (BP) nodes in network
+        :return: integer value
+        """
+        return len(self.get_BP())
+
     def projection(self, on="BP"):
         """
         Returns the projection of original FSN onto chosen set of nodes
