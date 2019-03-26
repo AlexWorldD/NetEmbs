@@ -35,6 +35,7 @@ class CollectionsTransaction(Transaction):
 
         if PRINT:
             self.printTransaction()
+        return self.trade_rec
 
     def printTransaction(self):
         print("CollectionsTransaction: TR=", self.trade_rec, " -> Cash=", self.cash)
