@@ -1,54 +1,59 @@
 # encoding: utf-8
 __author__ = 'Aleksei Maliutin'
 """
-Disbursements.py
-Created by lex at 2019-03-25.
+Payroll.py
+Created by lex at 2019-03-26.
 """
 
 import random
 import numpy as np
 from Abstract.Transaction import Transaction
 from Abstract.Process import Process
+from Abstract.Observer import Observer
 from CONFIG import *
 
 
-class DisbursementsTransaction(Transaction):
-    def __init__(self, name, env, trade_payables):
+class PayrollTransaction(Transaction):
+    def __init__(self, name, env, monthly_salary):
         super().__init__(name, env)
-        self.cash = 0.0
-        self.trade_pay = 0.0
-        self.__trade_payables = trade_payables
+        self.tax = 0.0
+        self.EB = 0.0
+        self.salary = monthly_salary
 
     def newTransaction(self):
+        """
+        Create Payroll transaction (add values to DB)
+        :return: salary, EB, tax
+        """
         unique_id = random.choice(VARIANTS)
         cur_transaction = self.new(postfix=unique_id)
         #         Generating amounts
-        self.trade_pay = self.__trade_payables.container.level * 0.75
-        self.cash = -1.0 * self.trade_pay
-        self.addRecord("TradePayables_" + str(unique_id), "TradePayables", -self.trade_pay, cur_transaction)
-        self.addRecord("Cash" + str(unique_id), "Cash", self.cash, cur_transaction)
+        # TODO constant coefficients?
+        self.tax = 0.21 * self.salary
+        self.EB = 0.79 * self.salary
+        self.addRecord("Tax_" + str(unique_id), "Tax", -self.tax, cur_transaction)
+        self.addRecord("EBPayables_" + str(unique_id), "EBPayables", -self.EB, cur_transaction)
+        self.addRecord("PersonnelExpenses_" + str(unique_id), "PersonnelExpenses", self.salary, cur_transaction)
 
         if PRINT:
             self.printTransaction()
-        return self.trade_pay, self.cash
+        return self.salary, self.EB, self.tax
 
     def printTransaction(self):
-        print("DisbursementTransaction: Cash=", self.cash, " -> TradePayables=", self.trade_pay)
+        print("PersonalExpenses: EBPayables=", self.EB, ", Tax=", self.tax, " -> PersonalExpenses=", self.salary)
 
 
-class DisbursementProcess(Process):
-    def __init__(self, name, env, transaction, term):
+class PayrollProcess(Process):
+    def __init__(self, name, env, transaction):
         """
-        Initialize DisbursementProcess
+        Initialize PayrollDisbursementProcess
         :param name: Process name
         :param env: SciPy environment
         :param transaction: SalesTransaction instance
-        :param term: Term of depreciation procedure
         """
         self.name = name
         self.Transaction = transaction
         self.env = env
-        self.term = term
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
@@ -56,11 +61,10 @@ class DisbursementProcess(Process):
 
     def start(self):
         while True:
-            yield self.env.timeout(random.expovariate(1.0 / self.term))
+            yield self.env.timeout(4)
 
             last_transaction = self.Transaction.newTransaction()
 
             self.transactionNotifier.setChanged()
-
             for obs in self.transactionNotifier.notifyObservers(last_transaction):
                 yield obs
