@@ -26,7 +26,7 @@ class AddFixedAssetsTransaction(Transaction):
                                         TRANSACTIONS_LIMITS["FixedAssets"][1])
 
         # Add noise of type 2 when noisy financial accounts with very small amounts
-        if NOISE["FixedAsstes"]:
+        if NOISE["FixedAssets"]:
             noise = super().noise(self.trade_pay, unique_id, cur_transaction)
         else:
             noise = {"left": {"def": 0.0}, "right": {"def": 0.0}}
