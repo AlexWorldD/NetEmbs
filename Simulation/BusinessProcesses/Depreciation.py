@@ -73,11 +73,3 @@ class DepreciationProcess(Process):
 
             for obs in self.transactionNotifier.notifyObservers(last_transaction):
                 yield obs
-
-    def getTransactions(self, number):
-        for _ in range(number):
-            yield self.env.timeout(random.expovariate(1 / 4.0))
-            self.lastTransactionData = self.Transaction.newTransaction()
-            self.TransactionNotifier.setChanged()
-            for obs in self.transactionNotifier.notifyObservers(self.lastTransactionData):
-                yield obs
