@@ -15,5 +15,4 @@ def normalize(df, by="ID"):
     sums = groups[titles].transform(np.sum)
     for column in titles:
         dfN[column] = dfN[column] / sums[column]
-    dfN["from"] = dfN["Credit"] > 0.0
     return dfN
