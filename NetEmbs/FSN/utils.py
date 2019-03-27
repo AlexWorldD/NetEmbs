@@ -10,6 +10,8 @@ import random
 import networkx as nx
 from networkx.algorithms import bipartite
 from NetEmbs.CONFIG import *
+from collections import Counter
+import pandas as pd
 
 
 def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debug=False):
@@ -247,20 +249,41 @@ def randomWalk(G, vertex=None, lenght=3, direction="IN", version="MetaDiff", ret
     return context
 
 
-def get_pairs(fsn, walk_length=10, walks_per_node=10, direction="IN", drop_duplicates=True):
+def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN", drop_duplicates=True):
     """
     Construction a pairs (skip-grams) of nodes according to sampled sequences
     :param fsn: Researched FSN
+    :param version: Applying version of step method
     :param walk_length: max length of RandomWalk
     :param walks_per_node: max number of RandomWalks per each node in FSN
     :param direction: initial direction
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
-    pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction)) for _ in range(walks_per_node) for node
+    pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
+             range(walks_per_node) for node
              in range(1, fsn.number_of_BP() + 1)]
     if drop_duplicates:
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
         pairs = [item for sublist in pairs for item in sublist]
     return pairs
+
+
+def get_top_similar(all_pairs, top=3, as_DataFrame=True):
+    """
+    Helper function for counting joint appearance of nodes and returning top N
+    :param all_pairs: all found pairs
+    :param top: required number of top elements for each node
+    :return: dictionary with node number as a key and values as list[node, cnt]
+    """
+    per_node = {item[0]: list() for item in all_pairs}
+    output_top = dict()
+    for item in all_pairs:
+        per_node[item[0]].append(item[1])
+    for key, data in per_node.items():
+        output_top[key] = Counter(per_node[key]).most_common(top)
+    if as_DataFrame:
+        return pd.DataFrame(output_top.items(), columns=["ID", "Similar_BP"])
+    else:
+        return output_top
