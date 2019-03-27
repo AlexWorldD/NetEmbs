@@ -12,6 +12,7 @@ from networkx.algorithms import bipartite
 from NetEmbs.CONFIG import *
 from collections import Counter
 import pandas as pd
+from NetEmbs.FSN.graph import FSN
 
 
 def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debug=False):
@@ -287,3 +288,27 @@ def get_top_similar(all_pairs, top=3, as_DataFrame=True):
         return pd.DataFrame(output_top.items(), columns=["ID", "Similar_BP"])
     else:
         return output_top
+
+
+def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN"):
+    fsn = FSN()
+    fsn.build(df, name_column="FA_Name")
+    pairs = get_pairs(fsn, version=version, walk_length=walk_length, walks_per_node=walks_per_node, direction=direction)
+    return get_top_similar(pairs, top=top_n)
+
+
+def add_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN"):
+    """
+    Adding "similar" BP
+    :param df: original DataFrame
+    :param top_n: the number of BP to store
+    :param version: step strategy version
+    :param walk_length: max length of RandomWalk
+    :param walks_per_node: max number of RandomWalks per each node in FSN
+    :param direction: initial direction
+    :return: original DataFrame with Similar_BP column
+    """
+    return df.merge(
+        find_similar(df, top_n=top_n, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
+                     direction=direction),
+        on="ID", how="left")
