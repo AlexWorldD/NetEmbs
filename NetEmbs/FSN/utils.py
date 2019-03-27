@@ -263,7 +263,7 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     """
     pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
              range(walks_per_node) for node
-             in range(1, fsn.number_of_BP() + 1)]
+             in fsn.get_BP()]
     if drop_duplicates:
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
