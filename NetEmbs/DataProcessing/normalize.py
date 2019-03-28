@@ -5,6 +5,7 @@ normalize.py
 Last modified by lex at 2019-02-13.
 """
 import numpy as np
+import pandas as pd
 
 
 # TODO try another kind of normalization, unit-normal etc.
@@ -16,3 +17,4 @@ def normalize(df, by="ID"):
     for column in titles:
         dfN[column] = dfN[column] / sums[column]
     return dfN
+

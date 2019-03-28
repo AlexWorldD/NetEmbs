@@ -6,7 +6,6 @@ Created by lex at 2019-03-24.
 """
 import sqlite3
 import pandas as pd
-from NetEmbs.DataProcessing.prepare_data import prepare_data
 
 
 def upload_data_old(path_to_db='DataSimulation/Sample.db', limit=10):
@@ -46,6 +45,5 @@ def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=10):
     else:
         db_data = pd.read_sql_query("SELECT * FROM EntryRecords", cnx).drop(["ID"], axis=1)
         # Split into two columns: Debit and Credit
-    db_data = prepare_data(db_data)
     db_data.rename(index=str, columns={"TID": "ID"}, inplace=True)
     return db_data

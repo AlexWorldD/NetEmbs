@@ -1,19 +1,27 @@
 # encoding: utf-8
 __author__ = 'Aleksei Maliutin'
 """
-data_processing.py
-Created by lex at 2019-03-27.
+prepare_data.py
+Created by lex at 2019-03-28.
 """
+from NetEmbs.DataProcessing.normalize import normalize
+from NetEmbs.DataProcessing.splitting import split_to_debit_credit
+from NetEmbs.DataProcessing.unique_signatures import unique_BPs
 
 
-def prepare_data(df):
+def prepare_data(original_df, split=True, norm=True, unique=True):
     """
-    Helper function for DataFrame preparation before construction FSN
-    :param df: original DataFrame
-    :return: FSN-ready DF
+    General function for data preprocessing
+    :param original_df:
+    :param split: True if Data has to be split into Credit/Debit columns
+    :param norm: True if Data has to be normalized wrt ID
+    :param unique: True if Data has to be filtered wrt to Signatures of BPs
+    :return: Transformed DF
     """
-    df["Debit"] = df["Value"][df["Value"] > 0.0]
-    df["Credit"] = -df["Value"][df["Value"] < 0.0]
-    df.fillna(0.0, inplace=True)
-    df["from"] = df["Credit"] > 0.0
-    return df
+    if split:
+        original_df = split_to_debit_credit(original_df)
+    if norm:
+        original_df = normalize(original_df)
+    if unique:
+        original_df = unique_BPs(original_df)
+    return original_df
