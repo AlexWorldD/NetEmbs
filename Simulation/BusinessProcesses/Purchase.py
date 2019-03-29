@@ -9,7 +9,7 @@ import numpy as np
 from Abstract.Transaction import Transaction
 from Abstract.Process import Process
 from Abstract.Observer import Observer
-from CONFIG import *
+from Simulation.CONFIG import *
 
 
 class PurchaseTransaction(Transaction):
@@ -101,14 +101,14 @@ class PurchaseInventoryProcess(Process):
         numberOfStocksToBuy = 1000
 
         self.transactionNotifier.setChanged()
-        for obs in self.transactionNotifier.notifyObservers([numberOfStocksToBuy, 10]):
+        for obs in self.transactionNotifier.notifyObservers(numberOfStocksToBuy):
             yield obs
 
     def manualOrderProcess(self):
         numberOfStocksToBuy = 1280
 
         self.transactionNotifier.setChanged()
-        for obs in self.transactionNotifier.notifyObservers([numberOfStocksToBuy, 0]):
+        for obs in self.transactionNotifier.notifyObservers(numberOfStocksToBuy):
             yield obs
 
     class Trigger(Observer):

@@ -9,7 +9,7 @@ import numpy as np
 from Abstract.Transaction import Transaction
 from Abstract.Process import Process
 from Abstract.Observer import Observer
-from CONFIG import *
+from Simulation.CONFIG import *
 
 
 class PayrollDisbursementsTransaction(Transaction):
@@ -54,7 +54,7 @@ class PayrollDisbursementsProcess(Process):
         self.Observer = PayrollDisbursementsProcess.PayrollObserver(self)
 
     def processPayrollDisbursement(self, transaction):
-        last_transaction = self.Transaction.newTransaction(transaction)
+        last_transaction = self.Transaction.newTransaction()
         self.transactionNotifier.setChanged()
 
         for obs in self.transactionNotifier.notifyObservers(last_transaction):

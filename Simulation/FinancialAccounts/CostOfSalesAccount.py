@@ -14,7 +14,7 @@ class CostOfSalesAccount(Account):
         self.salesObserver = CostOfSalesAccount.SalesObserver(self)
 
     def processSales(self, transaction):
-        c = transaction
+        c = transaction[0]
 
         if c > 0:
             yield self.container.put(c)

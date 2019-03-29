@@ -10,7 +10,7 @@ import numpy as np
 from Abstract.Transaction import Transaction
 from Abstract.Process import Process
 from Abstract.Observer import Observer
-from CONFIG import *
+from Simulation.CONFIG import *
 
 
 class CollectionsTransaction(Transaction):
@@ -64,5 +64,5 @@ class CollectionsProcess(Process):
             self.outer = outer
 
         def update(self, observable, args):
-            for obs in self.outer.processSalesCollection(args):
+            for obs in self.outer.SalesCollection(args):
                 yield obs

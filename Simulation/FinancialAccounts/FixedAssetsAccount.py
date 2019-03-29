@@ -15,7 +15,7 @@ class FixedAssetsAccount(Account):
         self.depreciationObserver = FixedAssetsAccount.DepreciationObserver(self)
 
     def processDepreciation(self, depr):
-        depr, fixed_assets = depr
+        depr, fixed_assets, _, _ = depr
 
         if fixed_assets > 0:
             yield self.container.get(fixed_assets)
@@ -34,10 +34,10 @@ class FixedAssetsAccount(Account):
                 yield obs
 
     def processFixedAssets(self, assets):
-        trade_pay, fixed_assets = assets
+        trade_pay, fixed_assets, _, _ = assets
 
         if fixed_assets > 0:
-            yield self.container.put(fix)
+            yield self.container.put(fixed_assets)
 
         self.setChanged()
 

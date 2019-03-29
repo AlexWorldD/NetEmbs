@@ -34,7 +34,7 @@ class InventoriesAccount(Account):
             yield obs
 
     def sellStock(self, salesTransaction):
-        c = salesTransaction
+        c = salesTransaction[0]
 
         if c > 0:
             yield self.container.get(c)

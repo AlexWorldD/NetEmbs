@@ -13,7 +13,7 @@ class DepreciationAccount(Account):
         self.depreciationObserver = DepreciationAccount.DepreciationObserver(self)
 
     def processDepreciation(self, depr):
-        depr, fixed_assets = depr
+        depr, fixed_assets, _, _ = depr
 
         if depr > 0:
             yield self.container.put(depr)

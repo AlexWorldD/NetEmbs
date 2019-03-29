@@ -34,7 +34,7 @@ class TradePayablesAccount(Account):
             yield obs
 
     def processFixedAssets(self, assets):
-        trade_pay, fixed_assets = assets
+        trade_pay, fixed_assets, _, _ = assets
 
         if trade_pay > 0:
             yield self.container.put(trade_pay)

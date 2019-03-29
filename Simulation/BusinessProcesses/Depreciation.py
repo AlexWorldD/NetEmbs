@@ -9,7 +9,7 @@ import random
 import numpy as np
 from Abstract.Transaction import Transaction
 from Abstract.Process import Process
-from CONFIG import *
+from Simulation.CONFIG import *
 
 
 class DepreciationTransaction(Transaction):

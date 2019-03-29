@@ -39,7 +39,7 @@ class CashAccount(Account):
             yield obs
 
     def processPayroll(self, payroll):
-        salary, EB, tax = payroll
+        EB, cash = payroll
 
         if EB > 0:
             yield self.container.get(EB)

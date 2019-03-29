@@ -8,7 +8,7 @@ import random
 import numpy as np
 from Abstract.Transaction import Transaction
 from Abstract.Process import Process
-from CONFIG import *
+from Simulation.CONFIG import *
 
 
 class SalesTransaction(Transaction):
@@ -61,14 +61,14 @@ class SalesProcess(Process):
         if PRINT:
             print("Process ", self.name)
         #     Add Notifier for process and Observer
-        self.transactionNotifier = super().TransactionNotifier(self)
-        self.transactionObserver = super().TransactionObserver(self)
+        self.transactionNotifier = Process.TransactionNotifier(self)
+        self.transactionObserver = Process.TransactionObserver(self)
         self.lastTransactionData = None
 
     def getTransactions(self, number):
         for _ in range(number):
             yield self.env.timeout(random.expovariate(1 / 4.0))
             self.lastTransactionData = self.Transaction.newTransaction()
-            self.TransactionNotifier.setChanged()
+            self.TransactionNotifier.setChanged(self)
             for obs in self.transactionNotifier.notifyObservers(self.lastTransactionData):
                 yield obs

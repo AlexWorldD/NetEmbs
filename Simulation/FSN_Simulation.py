@@ -106,7 +106,7 @@ class SalesCollectionEvent:
             self.outer = outer
 
         def update(self, observable, args):
-            for obs in self.outer.processNewSalesDelay(observable.outer.lastTransactionDetails):
+            for obs in self.outer.processNewSalesDelay(observable.outer.lastTransactionData):
                 yield obs
 
 
@@ -203,7 +203,7 @@ class FSN_Simulation(object):
         payrollTransaction = PayrollTransaction("Payroll", env, 1500)
         payrollDisbursementTransaction = PayrollDisbursementsTransaction("Payroll Disbursement", env, EBPayableAccount)
         purchaseTransaction = PurchaseTransaction("Purchase", env)
-        disbursementTransaction = PayrollDisbursementsProcess("Disbursement", env, tradePayablesAccount)
+        disbursementTransaction = PayrollDisbursementsTransaction("Disbursement", env, tradePayablesAccount)
         fixesAssetsTransaction = AddFixedAssetsTransaction("Fixed Assets", env)
         depreciationTransaction = DepreciationTransaction("Depreciation", env)
 
