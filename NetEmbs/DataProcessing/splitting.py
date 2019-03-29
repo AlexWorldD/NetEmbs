@@ -15,5 +15,9 @@ def split_to_debit_credit(df):
     df["Debit"] = df["Value"][df["Value"] > 0.0]
     df["Credit"] = -df["Value"][df["Value"] < 0.0]
     df.fillna(0.0, inplace=True)
+    return df
+
+
+def add_from_column(df):
     df["from"] = df["Credit"] > 0.0
     return df

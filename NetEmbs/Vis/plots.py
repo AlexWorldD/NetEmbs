@@ -12,7 +12,7 @@ import numpy as np
 from sklearn import preprocessing
 
 
-def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, title=None):
+def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, title=None):
     """
     Plot FSN with matplotlib library
     :param fsn: FSN to be visualize
@@ -31,11 +31,12 @@ def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, title=None):
     nx.draw_networkx_edges(fsn, pos, edgelist=credit, edge_color="salmon", arrowsize=30)
     if edge_labels:
         nx.draw_networkx_edge_labels(fsn, pos, node_size=250, edge_labels=arc_weight, font_size=16)
-    #     TODO add relative align for labels
-    label_pos = pos.copy()
-    for p in label_pos:  # raise text positions
-        label_pos[p][1] += 0.05
-    nx.draw_networkx_labels(fsn, pos, font_size=16)
+    if node_labels:
+        #     TODO add relative align for labels
+        label_pos = pos.copy()
+        for p in label_pos:  # raise text positions
+            label_pos[p][1] += 0.05
+        nx.draw_networkx_labels(fsn, label_pos, font_size=16)
     ax = plt.gca()
     ax.set_axis_off()
     if title is not None and isinstance(title, str):

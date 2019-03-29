@@ -11,7 +11,8 @@ class TestFSN:
         from NetEmbs.FSN.graph import FSN
         from NetEmbs.GenerateData.complex_df import sales_collections
         from NetEmbs.DataProcessing.normalize import normalize
-        self.df = normalize(sales_collections())
+        from NetEmbs.DataProcessing.splitting import add_from_column
+        self.df = normalize(add_from_column(sales_collections()))
         self.fsn = FSN()
         self.fsn.build(self.df)
         assert len(self.fsn.nodes()) == (self.df['Name'].nunique() + self.df['ID'].nunique())
@@ -23,7 +24,8 @@ class TestFSN:
         from NetEmbs.FSN.graph import FSN
         from NetEmbs.GenerateData.complex_df import sales_collections
         from NetEmbs.DataProcessing.normalize import normalize
-        self.df = normalize(sales_collections())
+        from NetEmbs.DataProcessing.splitting import add_from_column
+        self.df = normalize(add_from_column(sales_collections()))
         self.fsn = FSN()
         self.fsn.build(self.df)
         assert set(self.fsn.projection()) == set(self.df['ID'].unique())
