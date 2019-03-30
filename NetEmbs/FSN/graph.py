@@ -21,7 +21,6 @@ class FSN(nx.DiGraph):
         :param df: DataFrame with JournalEntities
         :param name_column: Title of column with FA names: Name or FA_Name
         """
-
         self.add_nodes_from(df['ID'], bipartite=0)
         self.add_nodes_from(df[name_column], bipartite=1)
         self.add_weighted_edges_from(
