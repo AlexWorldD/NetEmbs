@@ -33,7 +33,7 @@ class AddFixedAssetsTransaction(Transaction):
         self.fixed_assets = self.trade_pay + np.sum(list(noise["left"].values())) - np.sum(
             list(noise["right"].values()))
         self.addRecord("FixedAssets_" + str(unique_id), "FixedAssets", self.fixed_assets, cur_transaction)
-        self.addRecord("TradePayables_" + str(unique_id), "TradePayables", self.trade_pay,
+        self.addRecord("TradePayables_" + str(unique_id), "TradePayables", -self.trade_pay,
                        cur_transaction)
 
         if PRINT:

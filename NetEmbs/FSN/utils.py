@@ -122,6 +122,8 @@ def make_pairs(sampled_seq, window=3, debug=False):
         for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
             if drift != cur_idx:
                 output.append((sampled_seq[cur_idx], sampled_seq[drift]))
+    if len(output) < 2:
+        print(output)
     return output
 
 
@@ -283,9 +285,12 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
-    pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
+    pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="IN", version=version)) for _ in
              range(walks_per_node) for node
-             in fsn.get_BP()]
+             in fsn.get_BP()] + [make_pairs(randomWalk(fsn, node, walk_length, direction="OUT", version=version)) for _
+                                 in
+                                 range(walks_per_node) for node
+                                 in fsn.get_BP()]
     if drop_duplicates:
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
