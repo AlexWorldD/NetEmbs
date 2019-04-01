@@ -240,6 +240,8 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     else:
         context.append(vertex)
     cur_v = context[-1]
+    mask = {"IN": "OUT", "OUT": "IN"}
+    cur_direction = "IN"
     while len(context) < length + 1:
         try:
             if version == "DefUniform":
@@ -251,7 +253,11 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
             elif version == "MetaWeighted":
                 new_v = step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
             elif version == "MetaDiff":
-                new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
+                if direction is not "COMBI":
+                    new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
+                else:
+                    new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
+                    cur_direction = mask[cur_direction]
         except nx.NetworkXError:
             # TODO modify to more robust behaviour
             break
@@ -285,7 +291,7 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
-    if direction not in ["ALL", "IN", "OUT"]:
+    if direction not in ["ALL", "IN", "OUT", "COMBI"]:
         raise ValueError(
             "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
                 ["ALL", "IN", "OUT"]))
@@ -299,11 +305,15 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
                                      range(walks_per_node) for node
                                      in fsn.get_BP()]
     elif direction == "IN":
-        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="IN", version=version)) for _ in
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
                  range(walks_per_node) for node
                  in fsn.get_BP()]
     elif direction == "OUT":
-        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="OUT", version=version)) for _ in
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
+                 range(walks_per_node) for node
+                 in fsn.get_BP()]
+    elif direction == "COMBI":
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
                  range(walks_per_node) for node
                  in fsn.get_BP()]
     if drop_duplicates:
