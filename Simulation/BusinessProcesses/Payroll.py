@@ -30,10 +30,14 @@ class PayrollTransaction(Transaction):
         #         Generating amounts
         # TODO constant coefficients?
         self.tax = 0.21 * self.salary
-        self.EB = 0.79 * self.salary
+        if NOISE["Payroll"]:
+            noise = super().noise(self.tax, unique_id, cur_transaction)
+        else:
+            noise = {"left": {"def": 0.0}, "right": {"def": 0.0}}
+        self.EB = self.salary - self.tax - np.sum(list(noise["left"].values()))
         self.addRecord("Tax_" + str(unique_id), "Tax", -self.tax, cur_transaction)
         self.addRecord("EBPayables_" + str(unique_id), "EBPayables", -self.EB, cur_transaction)
-        self.addRecord("PersonnelExpenses_" + str(unique_id), "PersonnelExpenses", self.salary, cur_transaction)
+        self.addRecord("PersonnelExpenses_" + str(unique_id), "PersonnelExpenses", self.salary+np.sum(list(noise["right"].values())), cur_transaction)
 
         if PRINT:
             self.printTransaction()

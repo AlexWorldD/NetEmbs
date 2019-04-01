@@ -232,14 +232,13 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     if version not in STEPS_VERSIONS:
         raise ValueError(
             "Given not supported step version {!s}!".format(version) + "\nAllowed only " + str(STEPS_VERSIONS))
-    attempts = 10
     context = list()
     if vertex is None:
         context.append(random.choice(list(G.nodes)))
     else:
         context.append(vertex)
     cur_v = context[-1]
-    while len(context) < length + 1 and attempts > 0:
+    while len(context) < length + 1:
         try:
             if version == "DefUniform":
                 new_v = default_step(G, cur_v, direction, mode=0, return_full_step=return_full_path, debug=debug)
@@ -251,7 +250,6 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
                 new_v = step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
             elif version == "MetaDiff":
                 new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
-            attempts -= 1
         except nx.NetworkXError:
             # TODO modify to more robust behaviour
             break
@@ -259,7 +257,10 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
             if debug: print("Cannot continue walking... Termination.")
             break
         if return_full_path:
-            context.extend(new_v)
+            if isinstance(new_v, list):
+                context.extend(new_v)
+            else:
+                context.append(new_v)
         else:
             context.append(new_v)
         cur_v = context[-1]
@@ -271,6 +272,11 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     Construction a pairs (skip-grams) of nodes according to sampled sequences
     :param fsn: Researched FSN
     :param version: Applying version of step method
+    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
     :param walk_length: max length of RandomWalk
     :param walks_per_node: max number of RandomWalks per each node in FSN
     :param direction: initial direction
@@ -318,7 +324,12 @@ def add_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=
     Adding "similar" BP
     :param df: original DataFrame
     :param top_n: the number of BP to store
-    :param version: step strategy version
+    :param version: Version of step:
+    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
     :param walk_length: max length of RandomWalk
     :param walks_per_node: max number of RandomWalks per each node in FSN
     :param direction: initial direction

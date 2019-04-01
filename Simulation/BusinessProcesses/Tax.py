@@ -26,7 +26,7 @@ class TaxDisbursementsTransaction(Transaction):
         #         Generating amounts
         self.cash = self.tax
         self.addRecord("Tax_" + str(unique_id), "Tax", self.tax, cur_transaction)
-        self.addRecord("Cash" + str(unique_id), "Cash", -self.cash, cur_transaction)
+        self.addRecord("Cash_" + str(unique_id), "Cash", -self.cash, cur_transaction)
 
         if PRINT:
             self.printTransaction()

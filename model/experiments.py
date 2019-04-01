@@ -16,7 +16,7 @@ from NetEmbs.FSN.graph import FSN
 from NetEmbs.Vis.plots import plotFSN
 from NetEmbs.FSN.utils import get_pairs
 
-PLOT = True
+PLOT = False
 
 
 if __name__ == '__main__':

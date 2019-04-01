@@ -31,7 +31,7 @@ class CollectionsTransaction(Transaction):
         for key, item in noise["right"].items():
             self.addRecord(key, key, -item, cur_transaction)
 
-        self.addRecord("Cash" + str(unique_id), "Cash", self.cash, cur_transaction)
+        self.addRecord("Cash_" + str(unique_id), "Cash", self.cash, cur_transaction)
 
         if PRINT:
             self.printTransaction()
