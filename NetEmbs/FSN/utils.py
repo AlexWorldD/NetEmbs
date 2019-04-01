@@ -212,7 +212,23 @@ def step(G, vertex, direction="IN", mode=2, allow_back=False, return_full_step=F
         return -2
 
 
-def randomWalk(G, vertex=None, lenght=3, direction="IN", version="MetaDiff", return_full_path=False, debug=False):
+def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", return_full_path=False, debug=False):
+    """
+    RandomWalk function for sampling the sequence of nodes from given graph and initial node
+    :param G: Bipartite graph, an instance of networkx
+    :param vertex: initial node
+    :param length: the maximum length of RandomWalk
+    :param direction: The direction of walking. IN - go via source financial accounts, OUT - go via target financial accounts
+    :param version: Version of step:
+    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
+    :param return_full_path: If True, return the full path with FA nodes
+    :param debug: Debug boolean flag, print intermediate steps
+    :return: Sampled sequence of nodes
+    """
     if version not in STEPS_VERSIONS:
         raise ValueError(
             "Given not supported step version {!s}!".format(version) + "\nAllowed only " + str(STEPS_VERSIONS))
@@ -223,7 +239,7 @@ def randomWalk(G, vertex=None, lenght=3, direction="IN", version="MetaDiff", ret
     else:
         context.append(vertex)
     cur_v = context[-1]
-    while len(context) < lenght + 1 and attempts > 0:
+    while len(context) < length + 1 and attempts > 0:
         try:
             if version == "DefUniform":
                 new_v = default_step(G, cur_v, direction, mode=0, return_full_step=return_full_path, debug=debug)
