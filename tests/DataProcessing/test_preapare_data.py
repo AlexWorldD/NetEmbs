@@ -8,7 +8,6 @@ Created by lex at 2019-04-01.
 from NetEmbs.DataProcessing.rename_columns import rename_columns
 from NetEmbs.DataProcessing.unique_signatures import unique_BPs
 from NetEmbs.DataProcessing.splitting import add_from_column
-from NetEmbs.GenerateData.complex_df import sales_collections
 import pandas as pd
 
 test_data = {'transactionID': {0: 0, 1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 2, 7: 2},
