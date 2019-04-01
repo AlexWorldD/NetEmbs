@@ -269,7 +269,7 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     return context
 
 
-def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN", drop_duplicates=True):
+def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direction="ALL", drop_duplicates=True):
     """
     Construction a pairs (skip-grams) of nodes according to sampled sequences
     :param fsn: Researched FSN
@@ -285,12 +285,27 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
-    pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="IN", version=version)) for _ in
-             range(walks_per_node) for node
-             in fsn.get_BP()] + [make_pairs(randomWalk(fsn, node, walk_length, direction="OUT", version=version)) for _
-                                 in
-                                 range(walks_per_node) for node
-                                 in fsn.get_BP()]
+    if direction not in ["ALL", "IN", "OUT"]:
+        raise ValueError(
+            "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
+                ["ALL", "IN", "OUT"]))
+    if direction == "ALL":
+        #     Apply RandomWalk for both IN and OUT direction
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="IN", version=version)) for _ in
+                 range(walks_per_node) for node
+                 in fsn.get_BP()] + [make_pairs(randomWalk(fsn, node, walk_length, direction="OUT", version=version))
+                                     for _
+                                     in
+                                     range(walks_per_node) for node
+                                     in fsn.get_BP()]
+    elif direction == "IN":
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="IN", version=version)) for _ in
+                 range(walks_per_node) for node
+                 in fsn.get_BP()]
+    elif direction == "OUT":
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="OUT", version=version)) for _ in
+                 range(walks_per_node) for node
+                 in fsn.get_BP()]
     if drop_duplicates:
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
