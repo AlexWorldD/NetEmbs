@@ -8,8 +8,8 @@ import pandas as pd
 
 
 def get_signature(df):
-    signatureL = list(zip(df["FA_Name"][df["Value"] < 0.0].values, df["Credit"][df["Value"] < 0.0].values))
-    signatureR = list(zip(df["FA_Name"][df["Value"] > 0.0].values, df["Debit"][df["Value"] > 0.0].values))
+    signatureL = list(zip(df["FA_Name"][df["Credit"] > 0.0].values, df["Credit"][df["Credit"] > 0.0].values))
+    signatureR = list(zip(df["FA_Name"][df["Debit"] > 0.0].values, df["Debit"][df["Debit"] > 0.0].values))
     return pd.Series({"ID": df["ID"].values[0], "Signature": str((signatureL, signatureR))})
 
 

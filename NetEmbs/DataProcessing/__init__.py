@@ -9,3 +9,4 @@ from NetEmbs.DataProcessing.connect_db import upload_data
 from NetEmbs.DataProcessing.splitting import split_to_debit_credit
 from NetEmbs.DataProcessing.unique_signatures import unique_BPs
 from NetEmbs.DataProcessing.prepare_data import prepare_data
+from NetEmbs.DataProcessing.rename_columns import rename_columns

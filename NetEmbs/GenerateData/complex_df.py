@@ -9,13 +9,13 @@ import random
 
 
 # Construct test case with Sale BPs with different tax rates
-def sales_collections(N=2, taxes=[0.06, 0.25], noise=[1]):
+def sales_collections(N=2, taxes=[0.06, 0.25], noise=[1], titles=["ID", "Name", "Journal", "Date", "Debit", "Credit"]):
     if taxes is not None:
         tax_rates = taxes
     if N is not None:
         N = N
     cur_id = 0
-    data = pd.DataFrame(columns=["ID", "Name", "Journal", "Date", "Debit", "Credit"])
+    data = pd.DataFrame(columns=titles)
     for tax in tax_rates:
         for _ in range(N):
             # generate amounts

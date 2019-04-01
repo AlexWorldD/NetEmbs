@@ -19,7 +19,7 @@ def prepare_data(original_df, split=True, add_from=True, norm=True, unique=True)
     :param unique: True if Data has to be filtered wrt to Signatures of BPs
     :return: Transformed DF
     """
-    if split:
+    if split and "Debit" not in list(original_df):
         original_df = split_to_debit_credit(original_df)
     if add_from:
         original_df = add_from_column(original_df)
