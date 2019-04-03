@@ -127,14 +127,14 @@ def make_pairs(sampled_seq, window=3, debug=False):
     return output
 
 
-def step(G, vertex, direction="IN", mode=2, allow_back=False, return_full_step=False, pressure=20, debug=False):
+def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=20, debug=False):
     """
      Meta-Random step with changing direction.
     :param G: graph/network on which step should be done
     :param vertex: current vertex
     :param direction: the initial direction of step: IN or OUT
     :param mode: use the edge's weight for transition probability or difference between weights
-    :param allow_back: If True, one can get the sequence of the same BPs... Might be delete it?
+    :param allow_back: If True, one can get the sequence of the same BPs... Might be delete it? TODO check, is it needed?
     :param return_full_step: if True, then step includes intermediate node of FA type
     :param pressure: The regularization term, higher pressure leads to more strict function
     :param debug: print intermediate stages
@@ -253,11 +253,11 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
             elif version == "MetaWeighted":
                 new_v = step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
             elif version == "MetaDiff":
-                if direction is not "COMBI":
-                    new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
-                else:
+                if direction is "COMBI":
                     new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
                     cur_direction = mask[cur_direction]
+                else:
+                    new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
         except nx.NetworkXError:
             # TODO modify to more robust behaviour
             break
@@ -291,6 +291,7 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
+    # TODO implement parallel version!
     if direction not in ["ALL", "IN", "OUT", "COMBI"]:
         raise ValueError(
             "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
@@ -323,7 +324,7 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     return pairs
 
 
-def get_top_similar(all_pairs, top=3, as_DataFrame=True):
+def get_top_similar(all_pairs, top=3, as_DataFrame=True, sort_ids=True, title="Similar_BP"):
     """
     Helper function for counting joint appearance of nodes and returning top N
     :param all_pairs: all found pairs
@@ -337,16 +338,42 @@ def get_top_similar(all_pairs, top=3, as_DataFrame=True):
     for key, data in per_node.items():
         output_top[key] = Counter(per_node[key]).most_common(top)
     if as_DataFrame:
-        return pd.DataFrame(output_top.items(), columns=["ID", "Similar_BP"])
+        if sort_ids:
+            return pd.DataFrame(output_top.items(), columns=["ID", title]).sort_values(by=["ID"])
+        else:
+            return pd.DataFrame(output_top.items(), columns=["ID", title])
     else:
         return output_top
 
 
-def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN"):
+def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN",
+                 column_title="Similar_BP"):
     fsn = FSN()
     fsn.build(df, name_column="FA_Name")
-    pairs = get_pairs(fsn, version=version, walk_length=walk_length, walks_per_node=walks_per_node, direction=direction)
-    return get_top_similar(pairs, top=top_n)
+    if not isinstance(version, list) and not isinstance(direction, list):
+        pairs = get_pairs(fsn, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
+                          direction=direction)
+        return get_top_similar(pairs, top=top_n, title=column_title)
+    else:
+        #         Multiple parameters, build grid over them
+        if not isinstance(version, list) and isinstance(version, str):
+            version = [version]
+        if not isinstance(direction, list) and isinstance(direction, str):
+            direction = [direction]
+        #             All possible combinations:
+        _first = True
+        for ver in version:
+            for _dir in direction:
+                if _first:
+                    _first = False
+                    output_df = get_top_similar(
+                        get_pairs(fsn, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
+                                  direction=_dir), top=top_n, title=str(ver + "_" + _dir))
+                else:
+                    output_df[str(ver + "_" + _dir)] = get_top_similar(
+                        get_pairs(fsn, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
+                                  direction=_dir), top=top_n, title=str(ver + "_" + _dir))[str(ver + "_" + _dir)]
+        return output_df
 
 
 def add_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN"):
