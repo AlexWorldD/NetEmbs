@@ -14,7 +14,7 @@ from NetEmbs.DataProcessing import *
 from NetEmbs.GenerateData.complex_df import sales_collections
 from NetEmbs.FSN.graph import FSN
 from NetEmbs.Vis.plots import plotFSN
-from NetEmbs.FSN.utils import get_pairs, find_similar
+from NetEmbs.FSN.utils import get_pairs, find_similar, similar, get_JournalEntries
 
 PLOT = False
 
@@ -29,5 +29,5 @@ if __name__ == '__main__':
     #     plotFSN(fsn, edge_labels=False)
     # t1 = find_similar(d)
     # t2 = find_similar(d, direction="COMBI", column_title="COMBI Similarity")
-    t = find_similar(d, direction=["IN", "ALL", "COMBI"])
+    similar(d)
     print("t")

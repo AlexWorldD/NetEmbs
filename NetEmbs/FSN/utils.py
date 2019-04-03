@@ -396,3 +396,65 @@ def add_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=
         find_similar(df, top_n=top_n, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
                      direction=direction),
         on="ID", how="left")
+
+
+def get_JournalEntries(df):
+    """
+    Helper function for extraction Journal Entries from Entry Records DataFrame
+    :param df: Original DataFrame with Entries Records
+    :return: Journal Entries DataFrame, each row is separate business process
+    """
+    if "Signature" not in list(df):
+        from NetEmbs.DataProcessing.unique_signatures import unique_BPs
+        df = unique_BPs(df)
+    return df[["ID", "Signature"]].drop_duplicates("ID")
+
+
+global journal_decoder
+
+
+def decode_row(row):
+    global journal_decoder
+    output = dict()
+    output["ID"] = row["ID"]
+    output["Signature"] = row["Signature"]
+    for cur_title in row.index._data[2:]:
+        cur_row_decoded = list()
+        if row[cur_title] == -1.0:
+            output[cur_title] = None
+        else:
+            for item in row[cur_title]:
+                cur_row_decoded.append(journal_decoder[item[0]])
+            output[cur_title] = cur_row_decoded
+
+    return pd.Series(output)
+
+
+def similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction=["IN", "ALL", "COMBI"]):
+    """
+    Finding "similar" BP
+    :param df: original DataFrame
+    :param top_n: the number of BP to store
+    :param version: Version of step:
+    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
+    :param walk_length: max length of RandomWalk
+    :param walks_per_node: max number of RandomWalks per each node in FSN
+    :param direction: initial direction
+    :return: original DataFrame with Similar_BP column
+    """
+    global journal_decoder
+    journal_entries = get_JournalEntries(df)
+    journal_decoder = journal_entries.set_index("ID").to_dict()["Signature"]
+    print("Done with extraction Journal Entries data!")
+    output = find_similar(df, top_n=top_n, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
+                          direction=direction)
+    print("Done with RandomWalking... Found ", str(top_n), " top")
+    journal_entries = journal_entries.merge(output,
+                                            on="ID", how="left")
+    journal_entries.fillna(-1.0, inplace=True)
+    res = journal_entries.apply(decode_row, axis=1)
+    return res
