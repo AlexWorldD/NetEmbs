@@ -122,7 +122,7 @@ def make_pairs(sampled_seq, window=3, debug=False):
         for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
             if drift != cur_idx:
                 output.append((sampled_seq[cur_idx], sampled_seq[drift]))
-    if len(output) < 2:
+    if len(output) < 2 and debug:
         print(output)
     return output
 
