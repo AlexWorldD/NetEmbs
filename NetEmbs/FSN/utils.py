@@ -257,7 +257,7 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
                     new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
                     cur_direction = mask[cur_direction]
                 else:
-                    new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
+                    new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
         except nx.NetworkXError:
             # TODO modify to more robust behaviour
             break
