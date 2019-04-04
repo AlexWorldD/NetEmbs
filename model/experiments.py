@@ -14,17 +14,20 @@ from NetEmbs.DataProcessing import *
 from NetEmbs.GenerateData.complex_df import sales_collections
 from NetEmbs.FSN.graph import FSN
 from NetEmbs.Vis.plots import plotFSN
-from NetEmbs.FSN.utils import get_pairs
+from NetEmbs.FSN.utils import get_pairs, find_similar, similar, get_JournalEntries
 
 PLOT = False
 
 
 if __name__ == '__main__':
-    d = upload_data(limit=40)
+    d = upload_data(limit=80)
     d = prepare_data(d)
-    fsn = FSN()
-    fsn.build(normalize(d), name_column="FA_Name")
-    fsn.nodes()
-    if PLOT:
-        plotFSN(fsn, edge_labels=False)
-    get_pairs(fsn)
+    # fsn = FSN()
+    # fsn.build(normalize(d), name_column="FA_Name")
+    # fsn.nodes()
+    # if PLOT:
+    #     plotFSN(fsn, edge_labels=False)
+    # t1 = find_similar(d)
+    # t2 = find_similar(d, direction="COMBI", column_title="COMBI Similarity")
+    similar(d)
+    print("t")

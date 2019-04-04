@@ -122,19 +122,19 @@ def make_pairs(sampled_seq, window=3, debug=False):
         for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
             if drift != cur_idx:
                 output.append((sampled_seq[cur_idx], sampled_seq[drift]))
-    if len(output) < 2:
+    if len(output) < 2 and debug:
         print(output)
     return output
 
 
-def step(G, vertex, direction="IN", mode=2, allow_back=False, return_full_step=False, pressure=20, debug=False):
+def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=20, debug=False):
     """
      Meta-Random step with changing direction.
     :param G: graph/network on which step should be done
     :param vertex: current vertex
     :param direction: the initial direction of step: IN or OUT
     :param mode: use the edge's weight for transition probability or difference between weights
-    :param allow_back: If True, one can get the sequence of the same BPs... Might be delete it?
+    :param allow_back: If True, one can get the sequence of the same BPs... Might be delete it? TODO check, is it needed?
     :param return_full_step: if True, then step includes intermediate node of FA type
     :param pressure: The regularization term, higher pressure leads to more strict function
     :param debug: print intermediate stages
@@ -240,6 +240,8 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     else:
         context.append(vertex)
     cur_v = context[-1]
+    mask = {"IN": "OUT", "OUT": "IN"}
+    cur_direction = "IN"
     while len(context) < length + 1:
         try:
             if version == "DefUniform":
@@ -251,7 +253,11 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
             elif version == "MetaWeighted":
                 new_v = step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
             elif version == "MetaDiff":
-                new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
+                if direction is "COMBI":
+                    new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
+                    cur_direction = mask[cur_direction]
+                else:
+                    new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
         except nx.NetworkXError:
             # TODO modify to more robust behaviour
             break
@@ -285,7 +291,8 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
-    if direction not in ["ALL", "IN", "OUT"]:
+    # TODO implement parallel version!
+    if direction not in ["ALL", "IN", "OUT", "COMBI"]:
         raise ValueError(
             "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
                 ["ALL", "IN", "OUT"]))
@@ -299,11 +306,15 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
                                      range(walks_per_node) for node
                                      in fsn.get_BP()]
     elif direction == "IN":
-        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="IN", version=version)) for _ in
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
                  range(walks_per_node) for node
                  in fsn.get_BP()]
     elif direction == "OUT":
-        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="OUT", version=version)) for _ in
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
+                 range(walks_per_node) for node
+                 in fsn.get_BP()]
+    elif direction == "COMBI":
+        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
                  range(walks_per_node) for node
                  in fsn.get_BP()]
     if drop_duplicates:
@@ -313,7 +324,7 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     return pairs
 
 
-def get_top_similar(all_pairs, top=3, as_DataFrame=True):
+def get_top_similar(all_pairs, top=3, as_DataFrame=True, sort_ids=True, title="Similar_BP"):
     """
     Helper function for counting joint appearance of nodes and returning top N
     :param all_pairs: all found pairs
@@ -327,16 +338,42 @@ def get_top_similar(all_pairs, top=3, as_DataFrame=True):
     for key, data in per_node.items():
         output_top[key] = Counter(per_node[key]).most_common(top)
     if as_DataFrame:
-        return pd.DataFrame(output_top.items(), columns=["ID", "Similar_BP"])
+        if sort_ids:
+            return pd.DataFrame(output_top.items(), columns=["ID", title]).sort_values(by=["ID"])
+        else:
+            return pd.DataFrame(output_top.items(), columns=["ID", title])
     else:
         return output_top
 
 
-def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN"):
+def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN",
+                 column_title="Similar_BP"):
     fsn = FSN()
     fsn.build(df, name_column="FA_Name")
-    pairs = get_pairs(fsn, version=version, walk_length=walk_length, walks_per_node=walks_per_node, direction=direction)
-    return get_top_similar(pairs, top=top_n)
+    if not isinstance(version, list) and not isinstance(direction, list):
+        pairs = get_pairs(fsn, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
+                          direction=direction)
+        return get_top_similar(pairs, top=top_n, title=column_title)
+    else:
+        #         Multiple parameters, build grid over them
+        if not isinstance(version, list) and isinstance(version, str):
+            version = [version]
+        if not isinstance(direction, list) and isinstance(direction, str):
+            direction = [direction]
+        #             All possible combinations:
+        _first = True
+        for ver in version:
+            for _dir in direction:
+                if _first:
+                    _first = False
+                    output_df = get_top_similar(
+                        get_pairs(fsn, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
+                                  direction=_dir), top=top_n, title=str(ver + "_" + _dir))
+                else:
+                    output_df[str(ver + "_" + _dir)] = get_top_similar(
+                        get_pairs(fsn, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
+                                  direction=_dir), top=top_n, title=str(ver + "_" + _dir))[str(ver + "_" + _dir)]
+        return output_df
 
 
 def add_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN"):
@@ -359,3 +396,65 @@ def add_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=
         find_similar(df, top_n=top_n, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
                      direction=direction),
         on="ID", how="left")
+
+
+def get_JournalEntries(df):
+    """
+    Helper function for extraction Journal Entries from Entry Records DataFrame
+    :param df: Original DataFrame with Entries Records
+    :return: Journal Entries DataFrame, each row is separate business process
+    """
+    if "Signature" not in list(df):
+        from NetEmbs.DataProcessing.unique_signatures import unique_BPs
+        df = unique_BPs(df)
+    return df[["ID", "Signature"]].drop_duplicates("ID")
+
+
+global journal_decoder
+
+
+def decode_row(row):
+    global journal_decoder
+    output = dict()
+    output["ID"] = row["ID"]
+    output["Signature"] = row["Signature"]
+    for cur_title in row.index._data[2:]:
+        cur_row_decoded = list()
+        if row[cur_title] == -1.0:
+            output[cur_title] = None
+        else:
+            for item in row[cur_title]:
+                cur_row_decoded.append(journal_decoder[item[0]])
+            output[cur_title] = cur_row_decoded
+
+    return pd.Series(output)
+
+
+def similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction=["IN", "ALL", "COMBI"]):
+    """
+    Finding "similar" BP
+    :param df: original DataFrame
+    :param top_n: the number of BP to store
+    :param version: Version of step:
+    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
+    :param walk_length: max length of RandomWalk
+    :param walks_per_node: max number of RandomWalks per each node in FSN
+    :param direction: initial direction
+    :return: original DataFrame with Similar_BP column
+    """
+    global journal_decoder
+    journal_entries = get_JournalEntries(df)
+    journal_decoder = journal_entries.set_index("ID").to_dict()["Signature"]
+    print("Done with extraction Journal Entries data!")
+    output = find_similar(df, top_n=top_n, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
+                          direction=direction)
+    print("Done with RandomWalking... Found ", str(top_n), " top")
+    journal_entries = journal_entries.merge(output,
+                                            on="ID", how="left")
+    journal_entries.fillna(-1.0, inplace=True)
+    res = journal_entries.apply(decode_row, axis=1)
+    return res
