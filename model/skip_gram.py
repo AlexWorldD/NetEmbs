@@ -1,0 +1,113 @@
+# encoding: utf-8
+__author__ = 'Aleksei Maliutin'
+"""
+skip_gram.py
+Created by lex at 2019-04-05.
+"""
+import numpy as np
+import tensorflow as tf
+from NetEmbs.FSN.utils import *
+from NetEmbs.DataProcessing.prepare_data import prepare_data
+from NetEmbs.DataProcessing.connect_db import upload_data
+import math
+import time
+
+
+# class SquareTest(tf.test.TestCase):
+#
+#     def testSquare(self):
+#         with self.test_session():
+#             x = tf.square([2, 3])
+#             self.assertAllEqual(x.eval(), [4, 9])
+
+def generate_batch(all_data, batch_size):
+    _t = np.random.randint(0, len(all_data), batch_size)
+    batch = np.ndarray(shape=(batch_size), dtype=np.int32, buffer=np.array([all_data[t][0] for t in _t]))
+    context = np.ndarray(shape=(batch_size, 1), dtype=np.int32, buffer=np.array([all_data[t][1] for t in _t]))
+    return batch, context
+
+
+def basic_test():
+    # Initialize two constants
+    x1 = tf.constant([1, 2, 3, 4])
+    x2 = tf.constant([5, 6, 7, 8])
+    # Multiply
+    result = tf.multiply(x1, x2)
+
+    # Intialize the Session
+    sess = tf.Session()
+
+    # Print the result
+    print(sess.run(result))
+
+    # Close the session
+    sess.close()
+
+
+def run(graph, num_steps, data, batch_size):
+    with tf.Session(graph=graph) as session:
+        # We must initialize all variables before we use them.
+        init.run()
+        print('Initialized')
+
+        average_loss = 0
+        for step in range(num_steps):
+            batch_inputs, batch_context = generate_batch(data,
+                                                         batch_size)
+            feed_dict = {train_inputs: batch_inputs, train_context: batch_context}
+
+            _, loss_val = session.run([optimizer, cross_entropy], feed_dict=feed_dict)
+            average_loss += loss_val
+
+            if step % 2000 == 0:
+                if step > 0:
+                    average_loss /= 2000
+                # The average loss is an estimate of the loss over the last 2000 batches.
+                print('Average loss at step ', step, ': ', average_loss)
+                average_loss = 0
+        final_embeddings = normalized_embeddings.eval()
+        return final_embeddings
+
+
+if __name__ == '__main__':
+    d = prepare_data(upload_data("../Simulation/FSN_Data.db", limit=496))
+    skip_grams, fsn, enc_dec = get_SkipGrams(d)
+    print(skip_grams[:5])
+
+    #     TensorFlow stuff
+    batch_size = 32
+    embedding_size = 4  # Dimension of the embedding vector
+    total_size = fsn.number_of_BP()
+    graph = tf.Graph()
+    with graph.as_default():
+        train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
+        train_context = tf.placeholder(tf.int32, shape=[batch_size, 1])
+        embeddings = tf.Variable(tf.random_uniform([total_size, embedding_size], -1.0, 1.0))
+        embed = tf.nn.embedding_lookup(embeddings, train_inputs)
+        # ----
+        # Construct the variables for the softmax
+        weights = tf.Variable(tf.truncated_normal([total_size, embedding_size],
+                                                  stddev=1.0 / math.sqrt(embedding_size)))
+        biases = tf.Variable(tf.zeros([total_size]))
+        hidden_out = tf.matmul(embed, tf.transpose(weights)) + biases
+        # ----
+        # convert train_context to a one-hot format
+        train_one_hot = tf.one_hot(train_context, total_size)
+        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=hidden_out,
+                                                                                  labels=train_one_hot))
+        # Construct the SGD optimizer using a learning rate of 1.0.
+        optimizer = tf.train.GradientDescentOptimizer(0.2).minimize(cross_entropy)
+        # Compute the cosine similarity between minibatch examples and all embeddings.
+        norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
+        normalized_embeddings = embeddings / norm
+        # Add variable initializer.
+        init = tf.global_variables_initializer()
+
+    #     Run
+    num_steps = 10000
+    softmax_start_time = time.time()
+    embs = run(graph, num_steps, skip_grams, batch_size)
+    softmax_end_time = time.time()
+    print("Elapsed time: ", softmax_end_time - softmax_start_time)
+    fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])
+    print("Done!")

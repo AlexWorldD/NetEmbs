@@ -369,9 +369,6 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     return tr.encode_pairs(get_pairs(fsn, version, walk_length, walks_per_node, direction)), fsn, tr
 
 
-
-
-
 class TransformationBPs:
     """
     Encode/Decode original BP nodes number to/from sequential integers for TensorFlow
@@ -475,6 +472,7 @@ def decode_row(row):
         else:
             for item in row[cur_title]:
                 cur_row_decoded.append(journal_decoder[item[0]])
+                cur_row_decoded.append("---------")
             output[cur_title] = cur_row_decoded
 
     return pd.Series(output)
