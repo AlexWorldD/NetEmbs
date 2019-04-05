@@ -346,6 +346,56 @@ def get_top_similar(all_pairs, top=3, as_DataFrame=True, sort_ids=True, title="S
         return output_top
 
 
+def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI"):
+    """
+    Get Skip-Grams for given DataFrame with Entries records
+    :param df: original DataFrame
+    :param version: Version of step:
+    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
+    :param walk_length: max length of RandomWalk
+    :param walks_per_node: max number of RandomWalks per each node in FSN
+    :param direction: initial direction
+    :return: list of all pairs
+    :return fsn: FSN class instance for given DataFrame
+    :return tr: Encoder/Decoder for given DataFrame
+    """
+    fsn = FSN()
+    fsn.build(df, name_column="FA_Name")
+    tr = TransformationBPs(fsn.get_BP())
+    return tr.encode_pairs(get_pairs(fsn, version, walk_length, walks_per_node, direction)), fsn, tr
+
+
+
+
+
+class TransformationBPs:
+    """
+    Encode/Decode original BP nodes number to/from sequential integers for TensorFlow
+    """
+
+    def __init__(self, original_bps):
+        self.len = len(original_bps)
+        self.original_bps = original_bps
+        self._enc_dec()
+
+    def _enc_dec(self):
+        self.encoder = dict(list(zip(self.original_bps, range(self.len))))
+        self.decoder = dict(list(zip(range(self.len), self.original_bps)))
+
+    def encode(self, original_seq):
+        return [self.encoder[item] for item in original_seq]
+
+    def decode(self, seq):
+        return [self.decoder[item] for item in seq]
+
+    def encode_pairs(self, original_pairs):
+        return [(self.encoder[item[0]], self.encoder[item[1]]) for item in original_pairs]
+
+
 def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN",
                  column_title="Similar_BP"):
     fsn = FSN()
