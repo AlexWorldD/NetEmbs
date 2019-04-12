@@ -187,26 +187,35 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
         if len(outs) == 0:
             return -3
         ws = np.array(ws)
-        if mode == 2:
-            # Transition probability depends on the difference between monetary flows
-            ws = diff_function(tmp_weight, ws, pressure)
-            if debug:
-                print(list(zip(outs, ws)))
-            tmp_vertex = np.random.choice(outs, p=ws)
-            output.append(tmp_vertex)
-        elif mode == 1:
-            # Transition probability depends on the monetary flows - "rich gets richer"
-            ws = ws / np.sum(ws)
-            if debug:
-                print(list(zip(outs, ws)))
-            tmp_vertex = np.random.choice(outs, p=ws)
-            output.append(tmp_vertex)
-        elif mode == 0:
-            # Transition probability is uniform
-            if debug:
-                print(outs)
-            tmp_vertex = np.random.choice(outs)
-            output.append(tmp_vertex)
+        try:
+            if mode == 2:
+                # Transition probability depends on the difference between monetary flows
+                probas = diff_function(tmp_weight, ws, pressure)
+                if debug:
+                    print(list(zip(outs, ws)))
+                tmp_vertex = np.random.choice(outs, p=probas)
+                output.append(tmp_vertex)
+            elif mode == 1:
+                # Transition probability depends on the monetary flows - "rich gets richer"
+                probas = ws / np.sum(ws)
+                if debug:
+                    print(list(zip(outs, ws)))
+                tmp_vertex = np.random.choice(outs, p=probas)
+                output.append(tmp_vertex)
+            elif mode == 0:
+                # Transition probability is uniform
+                if debug:
+                    print(outs)
+                probas = None
+                tmp_vertex = np.random.choice(outs)
+                output.append(tmp_vertex)
+        except ValueError as e:
+            if LOG:
+                snapshot = {"CurrentNode": tmp_vertex, "CurrentWeight": tmp_weight,
+                            "NextCandidates": list(zip(outs, ws)), "Probas": probas}
+                local_logger = logging.getLogger("NetEmbs.Utils.step")
+                local_logger.error("Fatal ValueError during step", exc_info=True)
+                local_logger.info("Snapshot" + str(snapshot))
         #     Return next vertex here
         if return_full_step:
             return output
