@@ -6,6 +6,7 @@ Created by lex at 2019-03-24.
 """
 import sqlite3
 import pandas as pd
+import logging
 
 
 def upload_data_old(path_to_db='DataSimulation/Sample.db', limit=10):
@@ -37,6 +38,8 @@ def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=10):
     :param limit: number of rows to be uploaded, None - upload all data
     :return: DataFrame with required structure
     """
+    local_logger = logging.getLogger("NetEmbs.UploadData")
+    local_logger.info("Connection to DataBase")
     cnx = sqlite3.connect(path_to_db)
     # Loading data from db
     if isinstance(limit, int):
@@ -45,5 +48,6 @@ def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=10):
     else:
         db_data = pd.read_sql_query("SELECT * FROM EntryRecords", cnx).drop(["ID"], axis=1)
         # Split into two columns: Debit and Credit
+    local_logger.info("Data has been uploaded")
     db_data.rename(index=str, columns={"TID": "ID"}, inplace=True)
     return db_data

@@ -15,12 +15,19 @@ from NetEmbs.GenerateData.complex_df import sales_collections
 from NetEmbs.FSN.graph import FSN
 from NetEmbs.Vis.plots import plotFSN
 from NetEmbs.FSN.utils import get_pairs, find_similar, similar, get_JournalEntries
+from NetEmbs.CONFIG import MAIN_LOGGER
+from NetEmbs.Logs.custom_logger import log_me
 
 PLOT = False
 
-
 if __name__ == '__main__':
+    MAIN_LOGGER = log_me()
+    MAIN_LOGGER.info("Started..")
+
     d = upload_data(limit=80)
+
+    MAIN_LOGGER.info("Ended")
+
     d = prepare_data(d)
     # fsn = FSN()
     # fsn.build(normalize(d), name_column="FA_Name")

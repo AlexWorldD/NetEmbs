@@ -13,6 +13,8 @@ from NetEmbs.CONFIG import *
 from collections import Counter
 import pandas as pd
 from NetEmbs.FSN.graph import FSN
+import logging
+from NetEmbs.CONFIG import LOG
 
 
 def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debug=False):
@@ -329,6 +331,9 @@ def get_top_similar(all_pairs, top=3, as_DataFrame=True, sort_ids=True, title="S
     Helper function for counting joint appearance of nodes and returning top N
     :param all_pairs: all found pairs
     :param top: required number of top elements for each node
+    :param as_DataFrame: convert output to DataFrame
+    :param sort_ids: Sort output DataFrame w.r.t. ID column
+    :param title: title of column in returned DataFrame
     :return: dictionary with node number as a key and values as list[node, cnt]
     """
     per_node = {item[0]: list() for item in all_pairs}
@@ -397,6 +402,8 @@ def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node
                  column_title="Similar_BP"):
     fsn = FSN()
     fsn.build(df, name_column="FA_Name")
+    if LOG:
+        local_logger = logging.getLogger("NetEmbs.Utils.find_similar")
     if not isinstance(version, list) and not isinstance(direction, list):
         pairs = get_pairs(fsn, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
                           direction=direction)
@@ -411,6 +418,8 @@ def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node
         _first = True
         for ver in version:
             for _dir in direction:
+                if LOG:
+                    local_logger.info("Current arguments are " + ver + " and " + _dir)
                 if _first:
                     _first = False
                     output_df = get_top_similar(
@@ -495,7 +504,14 @@ def similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, 
     :return: original DataFrame with Similar_BP column
     """
     global journal_decoder
+    if LOG:
+        local_logger = logging.getLogger("NetEmbs.Utils.Similar")
+        local_logger.info("Given directions are " + str(direction))
+        local_logger.info("Given versions are " + str(version))
     journal_entries = get_JournalEntries(df)
+
+    if LOG:
+        local_logger.info("Journal entries have been extracted!")
     journal_decoder = journal_entries.set_index("ID").to_dict()["Signature"]
     print("Done with extraction Journal Entries data!")
     output = find_similar(df, top_n=top_n, version=version, walk_length=walk_length, walks_per_node=walks_per_node,

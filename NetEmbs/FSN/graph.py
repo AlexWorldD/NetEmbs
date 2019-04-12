@@ -5,7 +5,8 @@ graph.py
 Last modified by lex at 2019-03-14.
 """
 import networkx as nx
-
+from NetEmbs.CONFIG import LOG
+import logging
 
 class FSN(nx.DiGraph):
     """
@@ -29,6 +30,10 @@ class FSN(nx.DiGraph):
         self.add_weighted_edges_from(
             [(row['ID'], row[name_column], row["Debit"]) for idx, row in df[df["from"] == False].iterrows()],
             weight='weight', type="DEBIT")
+        if LOG:
+            local_logger = logging.getLogger("NetEmbs.FSN.build")
+            local_logger.info("FSN constructed!")
+            local_logger.info("Financial accounts are "+ str(self.get_BP()))
 
     def build_default(self):
         """
