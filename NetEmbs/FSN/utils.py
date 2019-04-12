@@ -15,7 +15,7 @@ import pandas as pd
 from NetEmbs.FSN.graph import FSN
 import logging
 from NetEmbs.CONFIG import LOG
-
+np.seterr(all="raise")
 
 def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debug=False):
     """
@@ -187,6 +187,7 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
         if len(outs) == 0:
             return -3
         ws = np.array(ws)
+        probas = None
         try:
             if mode == 2:
                 # Transition probability depends on the difference between monetary flows
@@ -206,10 +207,9 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
                 # Transition probability is uniform
                 if debug:
                     print(outs)
-                probas = None
                 tmp_vertex = np.random.choice(outs)
                 output.append(tmp_vertex)
-        except ValueError as e:
+        except Exception as e:
             if LOG:
                 snapshot = {"CurrentNode": tmp_vertex, "CurrentWeight": tmp_weight,
                             "NextCandidates": list(zip(outs, ws)), "Probas": probas}
