@@ -124,78 +124,79 @@ def run2(graph, num_steps, data, batch_size, enc_dec):
 
 
 if __name__ == '__main__':
-    from NetEmbs.Logs.custom_logger import log_me
-
-    MAIN_LOGGER = log_me()
-    MAIN_LOGGER.info("Started..")
-    d = prepare_data(upload_data("../Simulation/FSN_Data.db", limit=496))
-    skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=10)
-    print(skip_grams[:5])
+    from NetEmbs.SkipGram import *
+    get_embs_TF()
+    # from NetEmbs.Logs.custom_logger import log_me
     #
-    #     TensorFlow stuff
-    batch_size = 32
-    embedding_size = 4  # Dimension of the embedding vector
-    neg_number = 10
-    valid_size = 4
-    total_size = fsn.number_of_BP()
-    graph = tf.Graph()
+    # MAIN_LOGGER = log_me()
+    # MAIN_LOGGER.info("Started..")
+    # d = prepare_data(upload_data("../Simulation/FSN_Data.db", limit=496))
+    # skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=10)
+    # print(skip_grams[:5])
+    # #
+    # #     TensorFlow stuff
+    # batch_size = 32
+    # embedding_size = 4  # Dimension of the embedding vector
+    # neg_number = 10
+    # valid_size = 4
+    # total_size = fsn.number_of_BP()
+    # graph = tf.Graph()
+    #
+    # with graph.as_default():
+    #     # Input variables
+    #     train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
+    #     train_context = tf.placeholder(tf.int32, shape=[batch_size, 1])
+    #
+    #     # Embeddings matrix initialisation
+    #     embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
+    #     embed = tf.nn.embedding_lookup(embeddings, train_inputs)
+    #     # ----
+    #     # Output layer parameters
+    #     weights = tf.Variable(tf.truncated_normal((total_size, embedding_size),
+    #                                               stddev=1.0 / math.sqrt(embedding_size)))
+    #     biases = tf.Variable(tf.zeros((total_size)))
+    #
+    #     # ---- Version 1
+    #     # hidden_out = tf.matmul(embed, tf.transpose(weights)) + biases
+    #     # # ----
+    #     # # convert train_context to a one-hot format
+    #     # train_one_hot = tf.one_hot(train_context, total_size)
+    #     # cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=hidden_out,
+    #     #                                                                           labels=train_one_hot))
+    #     # # Construct the SGD optimizer using a learning rate of 1.0.
+    #     # optimizer = tf.train.GradientDescentOptimizer(0.2).minimize(cost)
+    #     # Compute the cosine similarity between minibatch examples and all embeddings.
+    #
+    #     #  ---- Version 2, like Marcel's example
+    #     # Calculate the loss using negative sampling
+    #     loss = tf.nn.sampled_softmax_loss(weights, biases,
+    #                                       train_context, embed,
+    #                                       neg_number, total_size)
+    #
+    #     cost = tf.reduce_mean(loss)
+    #     optimizer = tf.train.AdamOptimizer().minimize(cost)
+    #
+    #     # Validation subset of BPs
+    #     # pick 8 samples from (0,100) and (1000,1100) each ranges. lower id implies more frequent
+    #
+    #     valid_examples = np.random.randint(0, total_size, valid_size)
+    #     valid_dataset = tf.constant(valid_examples, dtype=tf.int32)
+    #
+    #     # We use the cosine distance:
+    #     norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
+    #     normalized_embeddings = embeddings / norm
+    #
+    #     valid_embedding = tf.nn.embedding_lookup(normalized_embeddings, valid_dataset)
+    #     similarity = tf.matmul(valid_embedding, tf.transpose(normalized_embeddings))
+    #     # Add variable initializer.
+    #     init = tf.global_variables_initializer()
+    #
+    # #     Run
+    # num_steps = 10000
+    # softmax_start_time = time.time()
+    # embs = run2(graph, num_steps, skip_grams, batch_size, enc_dec)
+    # softmax_end_time = time.time()
+    # print("Elapsed time: ", softmax_end_time - softmax_start_time)
+    # fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])
+    # print("Done with TensorFlow!")
 
-    with graph.as_default():
-        # Input variables
-        train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
-        train_context = tf.placeholder(tf.int32, shape=[batch_size, 1])
-
-        # Embeddings matrix initialisation
-        embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
-        embed = tf.nn.embedding_lookup(embeddings, train_inputs)
-        # ----
-        # Output layer parameters
-        weights = tf.Variable(tf.truncated_normal((total_size, embedding_size),
-                                                  stddev=1.0 / math.sqrt(embedding_size)))
-        biases = tf.Variable(tf.zeros((total_size)))
-
-        # ---- Version 1
-        # hidden_out = tf.matmul(embed, tf.transpose(weights)) + biases
-        # # ----
-        # # convert train_context to a one-hot format
-        # train_one_hot = tf.one_hot(train_context, total_size)
-        # cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=hidden_out,
-        #                                                                           labels=train_one_hot))
-        # # Construct the SGD optimizer using a learning rate of 1.0.
-        # optimizer = tf.train.GradientDescentOptimizer(0.2).minimize(cost)
-        # Compute the cosine similarity between minibatch examples and all embeddings.
-
-        #  ---- Version 2, like Marcel's example
-        # Calculate the loss using negative sampling
-        loss = tf.nn.sampled_softmax_loss(weights, biases,
-                                          train_context, embed,
-                                          neg_number, total_size)
-
-        cost = tf.reduce_mean(loss)
-        optimizer = tf.train.AdamOptimizer().minimize(cost)
-
-        # Validation subset of BPs
-        # pick 8 samples from (0,100) and (1000,1100) each ranges. lower id implies more frequent
-
-        valid_examples = np.random.randint(0, total_size, valid_size)
-        valid_dataset = tf.constant(valid_examples, dtype=tf.int32)
-
-        # We use the cosine distance:
-        norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
-        normalized_embeddings = embeddings / norm
-
-        valid_embedding = tf.nn.embedding_lookup(normalized_embeddings, valid_dataset)
-        similarity = tf.matmul(valid_embedding, tf.transpose(normalized_embeddings))
-        # Add variable initializer.
-        init = tf.global_variables_initializer()
-
-    #     Run
-    num_steps = 10000
-    softmax_start_time = time.time()
-    embs = run2(graph, num_steps, skip_grams, batch_size, enc_dec)
-    softmax_end_time = time.time()
-    print("Elapsed time: ", softmax_end_time - softmax_start_time)
-    fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])
-    print("Done!")
-
-    plot_tSNE(fsn_embs)

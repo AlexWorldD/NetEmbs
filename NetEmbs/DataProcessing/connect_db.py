@@ -51,3 +51,23 @@ def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=10):
     local_logger.info("Data has been uploaded")
     db_data.rename(index=str, columns={"TID": "ID"}, inplace=True)
     return db_data[db_data["Value"] != 0.0]
+
+
+def upload_JournalEntriesTruth(path_to_db='../Simulation/FSN_Data.db', limit=None):
+    """
+    Uploading data from EntryRecords database
+    :param path_to_db: path to sqlite3 database
+    :param limit: number of rows to be uploaded, None - upload all data
+    :return: DataFrame with JournalEntries
+    """
+    local_logger = logging.getLogger("NetEmbs.UploadJournalEntries")
+    local_logger.info("Connection to DataBase")
+    cnx = sqlite3.connect(path_to_db)
+    # Loading data from db
+    if isinstance(limit, int):
+        db_data = pd.read_sql_query("SELECT * FROM main.JournalEntries LIMIT " + str(limit), cnx)
+    else:
+        db_data = pd.read_sql_query("SELECT * FROM main.JournalEntries", cnx)
+        # Split into two columns: Debit and Credit
+    local_logger.info("Data has been uploaded")
+    return db_data
