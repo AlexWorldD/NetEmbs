@@ -14,9 +14,10 @@ import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
 
-def get_embs_TF(path_file="../Simulation/FSN_Data.db"):
+
+def get_embs_TF(path_file="../Simulation/FSN_Data.db", num_steps=10000, walk_length=10, walks_per_node=10):
     d = prepare_data(upload_data(path_file, limit=496))
-    skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=10)
+    skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=walks_per_node, walk_length=walk_length)
     print(skip_grams[:5])
     #
     #     TensorFlow stuff
@@ -113,7 +114,6 @@ def get_embs_TF(path_file="../Simulation/FSN_Data.db"):
                 final_embeddings = normalized_embeddings.eval()
                 return final_embeddings
     #     Run
-    num_steps = 10000
     softmax_start_time = time.time()
     embs = run2(graph, num_steps, skip_grams, batch_size, enc_dec)
     softmax_end_time = time.time()

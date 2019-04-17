@@ -24,7 +24,11 @@ def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, ti
     pos = nx.bipartite_layout(fsn, left)
     arc_weight = nx.get_edge_attributes(fsn, 'weight')
     node_col = [colors[d['bipartite']] for n, d in fsn.nodes(data=True)]
-    nx.draw_networkx_nodes(fsn, pos, node_color=node_col, with_labels=False, node_size=250)
+    BPs = [node for node, d in fsn.nodes(data=True) if d["bipartite"] == 0]
+    FAs = [node for node, d in fsn.nodes(data=True) if d["bipartite"] == 1]
+    nx.draw_networkx_nodes(fsn, pos, nodelist=BPs, node_shape="D", node_color=colors[1], with_labels=False, node_size=250)
+    nx.draw_networkx_nodes(fsn, pos, nodelist=FAs, node_color=colors[0], with_labels=False, node_size=250)
+#     nx.draw_networkx_nodes(fsn, pos, node_color=node_col, with_labels=False, node_size=250)
     debit = {(u, v) for u, v, d in fsn.edges(data=True) if d['type'] == "DEBIT"}
     credit = {(u, v) for u, v, d in fsn.edges(data=True) if d['type'] == "CREDIT"}
     nx.draw_networkx_edges(fsn, pos, edgelist=debit, edge_color="forestgreen", arrowsize=30)
