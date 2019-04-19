@@ -54,7 +54,7 @@ if __name__ == '__main__':
     fsn.build(normalize(d), name_column="FA_Name")
     fsn.nodes()
     time_calc(fsn, runs=10)
-    time_calc(fsn, jobs=2, runs=10)
+    time_calc(fsn, jobs=4, runs=10)
     # t = get_pairs(fsn)
     # if PLOT:
     #     plotFSN(fsn, edge_labels=False)

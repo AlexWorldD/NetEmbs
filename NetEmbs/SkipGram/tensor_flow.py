@@ -13,6 +13,7 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
+from NetEmbs.CONFIG import EMBD_SIZE
 
 
 def get_embs_TF(path_file="../Simulation/FSN_Data.db", num_steps=10000, walk_length=10, walks_per_node=10):
@@ -22,7 +23,7 @@ def get_embs_TF(path_file="../Simulation/FSN_Data.db", num_steps=10000, walk_len
     #
     #     TensorFlow stuff
     batch_size = 32
-    embedding_size = 4  # Dimension of the embedding vector
+    embedding_size = EMBD_SIZE  # Dimension of the embedding vector
     neg_number = 10
     valid_size = 4
     total_size = fsn.number_of_BP()

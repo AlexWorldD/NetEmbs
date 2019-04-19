@@ -15,6 +15,7 @@ import pandas as pd
 from NetEmbs.FSN.graph import FSN
 import logging
 from NetEmbs.CONFIG import LOG
+import time
 
 np.seterr(all="raise")
 
@@ -345,6 +346,10 @@ def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=10, walks_per_
         try:
             sampled = pool.map(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
                                [walks_per_node] * n_BPs, [direction] * n_BPs)
+            # while not sampled.ready():
+            #     time.sleep(1)
+            #     print(".", end=' ')
+            # sampled = sampled.get()
         except KeyboardInterrupt:
             print('got ^C while pool mapping, terminating the pool')
             pool.terminate()

@@ -6,6 +6,7 @@ Created by lex at 2019-03-26.
 """
 # Running parameters
 N_JOBS = 4
+EMBD_SIZE = 4
 # STEP configuration
 STEPS_VERSIONS = ["DefUniform", "DefWeighted", "MetaUniform", "MetaWeighted", "MetaDiff"]
 # RandomWalk configuration
