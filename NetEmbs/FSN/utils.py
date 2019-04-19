@@ -15,7 +15,9 @@ import pandas as pd
 from NetEmbs.FSN.graph import FSN
 import logging
 from NetEmbs.CONFIG import LOG
+
 np.seterr(all="raise")
+
 
 def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debug=False):
     """
@@ -120,13 +122,16 @@ def make_pairs(sampled_seq, window=3, debug=False):
     if debug:
         print(sampled_seq)
     output = list()
-    for cur_idx in range(len(sampled_seq)):
-        for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
-            if drift != cur_idx:
-                output.append((sampled_seq[cur_idx], sampled_seq[drift]))
-    if len(output) < 2 and debug:
-        print(output)
-    return output
+    try:
+        for cur_idx in range(len(sampled_seq)):
+            for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
+                if drift != cur_idx:
+                    output.append((sampled_seq[cur_idx], sampled_seq[drift]))
+        if len(output) < 2 and debug:
+            print(output)
+        return output
+    except TypeError:
+        print("t")
 
 
 def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=20, debug=False):
@@ -264,7 +269,7 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
             elif version == "MetaWeighted":
                 new_v = step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
             elif version == "MetaDiff":
-                if direction is "COMBI":
+                if direction == "COMBI":
                     new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
                     cur_direction = mask[cur_direction]
                 else:
@@ -286,10 +291,75 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     return context
 
 
-def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direction="ALL", drop_duplicates=True):
+def wrappedRandomWalk(fsn, node, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI"):
+    return [randomWalk(fsn, node, walk_length, direction=direction, version=version) for _ in range(walks_per_node)]
+
+
+from pathos.multiprocessing import ProcessPool
+import itertools
+import os
+import sys
+
+
+def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI"):
+    """
+    Construction a sequences of nodes from given FSN
+    :param fsn: Researched FSN
+    :param n_jobs: Number of parallel processes to be created
+    :param version: Applying version of step method
+    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
+    :param walk_length: max length of RandomWalk
+    :param walks_per_node: max number of RandomWalks per each node in FSN
+    :param direction: initial direction
+    :return: array of sampled nodes
+    """
+    max_processes = min(n_jobs, os.cpu_count())
+    pool = ProcessPool(nodes=max_processes)
+    BPs = fsn.get_BP()
+    n_BPs = len(BPs)
+    all_arguments = zip([fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs, [walks_per_node] * n_BPs,
+                        [direction] * n_BPs)
+    if LOG:
+        local_logger = logging.getLogger("NetEmbs.Utils.graph_sampling")
+        local_logger.info("Created a Pool with " + str(max_processes) + " processes ")
+        local_logger.info("Total size of GRID arguments is " + str(sys.getsizeof(all_arguments)) + " bytes ")
+
+    if direction not in ["ALL", "IN", "OUT", "COMBI"]:
+        raise ValueError(
+            "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
+                ["ALL", "IN", "OUT"]))
+    if direction == "ALL":
+        #     Apply RandomWalk for both IN and OUT direction
+        sampled = [randomWalk(fsn, node, walk_length, direction="IN", version=version) for _ in
+                   range(walks_per_node) for node
+                   in fsn.get_BP()] + [randomWalk(fsn, node, walk_length, direction="OUT", version=version)
+                                       for _
+                                       in
+                                       range(walks_per_node) for node
+                                       in fsn.get_BP()]
+    elif direction in ["COMBI", "IN", "OUT"]:
+        try:
+            sampled = pool.map(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
+                               [walks_per_node] * n_BPs, [direction] * n_BPs)
+        except KeyboardInterrupt:
+            print('got ^C while pool mapping, terminating the pool')
+            pool.terminate()
+    res = list(itertools.chain(*sampled))
+    pool.terminate()
+    pool.restart()
+    return res
+
+
+def get_pairs(fsn, n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI",
+              drop_duplicates=True):
     """
     Construction a pairs (skip-grams) of nodes according to sampled sequences
     :param fsn: Researched FSN
+    :param n_jobs: Number of parallel processes to be created
     :param version: Applying version of step method
     "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
     "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
@@ -302,36 +372,20 @@ def get_pairs(fsn, version="MetaDiff", walk_length=10, walks_per_node=10, direct
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
-    # TODO implement parallel version!
     if direction not in ["ALL", "IN", "OUT", "COMBI"]:
         raise ValueError(
             "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
                 ["ALL", "IN", "OUT"]))
-    if direction == "ALL":
-        #     Apply RandomWalk for both IN and OUT direction
-        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction="IN", version=version)) for _ in
-                 range(walks_per_node) for node
-                 in fsn.get_BP()] + [make_pairs(randomWalk(fsn, node, walk_length, direction="OUT", version=version))
-                                     for _
-                                     in
-                                     range(walks_per_node) for node
-                                     in fsn.get_BP()]
-    elif direction == "IN":
-        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
-                 range(walks_per_node) for node
-                 in fsn.get_BP()]
-    elif direction == "OUT":
-        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
-                 range(walks_per_node) for node
-                 in fsn.get_BP()]
-    elif direction == "COMBI":
-        pairs = [make_pairs(randomWalk(fsn, node, walk_length, direction=direction, version=version)) for _ in
-                 range(walks_per_node) for node
-                 in fsn.get_BP()]
+    sequences = graph_sampling(fsn, n_jobs, version, walk_length, walks_per_node, direction)
+    max_processes = min(n_jobs, os.cpu_count())
+    pool = ProcessPool(nodes=max_processes)
+    pairs = pool.map(make_pairs, sequences)
     if drop_duplicates:
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
         pairs = [item for sublist in pairs for item in sublist]
+    pool.terminate()
+    pool.restart()
     return pairs
 
 
@@ -380,7 +434,7 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     fsn = FSN()
     fsn.build(df, name_column="FA_Name")
     tr = TransformationBPs(fsn.get_BP())
-    return tr.encode_pairs(get_pairs(fsn, version, walk_length, walks_per_node, direction)), fsn, tr
+    return tr.encode_pairs(get_pairs(fsn, N_JOBS, version, walk_length, walks_per_node, direction)), fsn, tr
 
 
 class TransformationBPs:
@@ -414,7 +468,7 @@ def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node
     if LOG:
         local_logger = logging.getLogger("NetEmbs.Utils.find_similar")
     if not isinstance(version, list) and not isinstance(direction, list):
-        pairs = get_pairs(fsn, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
+        pairs = get_pairs(fsn, N_JOBS, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
                           direction=direction)
         return get_top_similar(pairs, top=top_n, title=column_title)
     else:
@@ -432,11 +486,11 @@ def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node
                 if _first:
                     _first = False
                     output_df = get_top_similar(
-                        get_pairs(fsn, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
+                        get_pairs(fsn, N_JOBS, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
                                   direction=_dir), top=top_n, title=str(ver + "_" + _dir))
                 else:
                     output_df[str(ver + "_" + _dir)] = get_top_similar(
-                        get_pairs(fsn, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
+                        get_pairs(fsn, N_JOBS, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
                                   direction=_dir), top=top_n, title=str(ver + "_" + _dir))[str(ver + "_" + _dir)]
         return output_df
 
@@ -496,7 +550,7 @@ def decode_row(row):
     return pd.Series(output)
 
 
-def similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction=["IN", "ALL", "COMBI"]):
+def similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction=["IN", "OUT", "COMBI"]):
     """
     Finding "similar" BP
     :param df: original DataFrame

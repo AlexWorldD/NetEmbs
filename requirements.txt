@@ -6,3 +6,4 @@ seaborn
 sklearn
 scipy
 simpy
+pathos
