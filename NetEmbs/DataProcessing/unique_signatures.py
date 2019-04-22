@@ -5,11 +5,20 @@ unique_signatures.py
 Created by lex at 2019-03-28.
 """
 import pandas as pd
+from NetEmbs.CONFIG import N_DIGITS
 
 
 def get_signature(df):
-    signatureL = list(zip(df["FA_Name"][df["Credit"] > 0.0].values, df["Credit"][df["Credit"] > 0.0].values))
-    signatureR = list(zip(df["FA_Name"][df["Debit"] > 0.0].values, df["Debit"][df["Debit"] > 0.0].values))
+    # TODO change list to set
+    # Old version
+    # signatureL = list(zip(df["FA_Name"][df["Credit"] > 0.0].values, df["Credit"][df["Credit"] > 0.0].values))
+    # signatureR = list(zip(df["FA_Name"][df["Debit"] > 0.0].values, df["Debit"][df["Debit"] > 0.0].values))
+    signatureL = sorted(
+        list(zip(df["FA_Name"][df["Credit"] > 0.0].values, df["Credit"][df["Credit"] > 0.0].values.round(N_DIGITS))),
+        key=lambda x: x[0])
+    signatureR = sorted(
+        list(zip(df["FA_Name"][df["Debit"] > 0.0].values, df["Debit"][df["Debit"] > 0.0].values.round(N_DIGITS))),
+        key=lambda x: x[0])
     return pd.Series({"ID": df["ID"].values[0], "Signature": str((signatureL, signatureR))})
 
 
