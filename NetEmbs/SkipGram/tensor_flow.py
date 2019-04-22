@@ -16,14 +16,18 @@ from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
 from NetEmbs.CONFIG import EMBD_SIZE
 
 
-def get_embs_TF(path_file="../Simulation/FSN_Data.db", num_steps=10000, walk_length=10, walks_per_node=10):
+def get_embs_TF(path_file="../Simulation/FSN_Data.db", embed_size=None, num_steps=10000, walk_length=10,
+                walks_per_node=10):
     d = prepare_data(upload_data(path_file, limit=496))
     skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=walks_per_node, walk_length=walk_length)
     print(skip_grams[:5])
     #
     #     TensorFlow stuff
     batch_size = 32
-    embedding_size = EMBD_SIZE  # Dimension of the embedding vector
+    if embed_size is not None:
+        embedding_size = embed_size
+    else:
+        embedding_size = EMBD_SIZE  # Dimension of the embedding vector
     neg_number = 10
     valid_size = 4
     total_size = fsn.number_of_BP()
