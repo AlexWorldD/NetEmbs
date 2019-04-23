@@ -10,6 +10,7 @@ import seaborn as sns
 from collections import Counter
 import numpy as np
 from sklearn import preprocessing
+from NetEmbs.DataProcessing.stats import getHistCounts
 
 
 def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, title=None):
@@ -26,9 +27,10 @@ def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, ti
     node_col = [colors[d['bipartite']] for n, d in fsn.nodes(data=True)]
     BPs = [node for node, d in fsn.nodes(data=True) if d["bipartite"] == 0]
     FAs = [node for node, d in fsn.nodes(data=True) if d["bipartite"] == 1]
-    nx.draw_networkx_nodes(fsn, pos, nodelist=BPs, node_shape="D", node_color=colors[1], with_labels=False, node_size=250)
+    nx.draw_networkx_nodes(fsn, pos, nodelist=BPs, node_shape="D", node_color=colors[1], with_labels=False,
+                           node_size=250)
     nx.draw_networkx_nodes(fsn, pos, nodelist=FAs, node_color=colors[0], with_labels=False, node_size=250)
-#     nx.draw_networkx_nodes(fsn, pos, node_color=node_col, with_labels=False, node_size=250)
+    #     nx.draw_networkx_nodes(fsn, pos, node_color=node_col, with_labels=False, node_size=250)
     debit = {(u, v) for u, v, d in fsn.edges(data=True) if d['type'] == "DEBIT"}
     credit = {(u, v) for u, v, d in fsn.edges(data=True) if d['type'] == "CREDIT"}
     nx.draw_networkx_edges(fsn, pos, edgelist=debit, edge_color="forestgreen", arrowsize=30)
@@ -72,3 +74,16 @@ def plotHeatMap(pairs, title="HeatMap", size=6, norm="col", return_hm=False, abs
     plt.show()
     if return_hm:
         return heatmap_data
+
+
+def plotHist(df, title="Histogram"):
+    stat_here = getHistCounts(df)
+    from matplotlib.ticker import MaxNLocator
+    for k, d in stat_here.items():
+        ax = plt.figure().gca()
+        ax.bar(d.keys(), d.values())
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.title(k + "-side number of FAs")
+        if title is not None and isinstance(title, str):
+            plt.tight_layout()
+            plt.savefig("img/" + title + k, dpi=140, pad_inches=0.01)

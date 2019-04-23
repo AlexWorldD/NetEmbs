@@ -173,7 +173,7 @@ class stockToLowEvent:
 
 class FSN_Simulation(object):
 
-    def simulate(self):
+    def simulate(self, SalesNum = (1000, 1000), until=1000):
         env = simpy.Environment()
 
         revenueAccount = RevenueAccount(env, "Revenue")
@@ -332,8 +332,8 @@ class FSN_Simulation(object):
         # statement.addAccount(fixedAssetsAccount)
         # statement.addAccount(deprExpenseAccount)
 
-        env.process(salesHigh.getTransactions(1000))
-        env.process(salesLow.getTransactions(1000))
+        env.process(salesHigh.getTransactions(SalesNum[0]))
+        env.process(salesLow.getTransactions(SalesNum[1]))
         # env.process(manualOrderEvent.start()) #generate random periodic orders
         env.process(collectionsEvent.start())  # payment received
         env.process(salesTaxDisbur.start())  # collect periodically all the taxes
@@ -344,6 +344,6 @@ class FSN_Simulation(object):
         env.process(fixedAssetsProcess.start())
         env.process(depreciationProcess.start())
 
-        env.run(until=100)
+        env.run(until=until)
 
         return True

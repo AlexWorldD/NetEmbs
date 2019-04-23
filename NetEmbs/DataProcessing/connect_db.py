@@ -31,7 +31,7 @@ def upload_data_old(path_to_db='DataSimulation/Sample.db', limit=10):
     return db_data
 
 
-def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=10):
+def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=997):
     """
     Uploading data from EntryRecords database
     :param path_to_db: path to sqlite3 database
