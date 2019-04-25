@@ -4,3 +4,8 @@
 1;Tax;Sales ledger;01/01/2017;;21
 2;Cost of Sales;Journal ledger;01/01/2017;80;
 2;Inventories;Journal ledger;01/01/2017;;80
+3;Trade Receivables;Sales ledger;01/01/2017;121;
+3;Revenue;Sales ledger;01/01/2017;;100
+3;Tax;Sales ledger;01/01/2017;;21
+4;Cost of Sales;Journal ledger;01/01/2017;80;
+4;Inventories;Journal ledger;01/01/2017;;80

@@ -13,12 +13,12 @@ from sklearn import preprocessing
 from NetEmbs.DataProcessing.stats import getHistCounts
 
 
-def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, title=None):
+def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, title=None, text_size=16):
     """
     Plot FSN with matplotlib library
     :param fsn: FSN to be visualize
     :param colors: array of colors for FA and BP respectively
-    :param edge_labels: True: Show the weights of edges, False: Without the weights of edges
+    :param edge_labels: True: Show the weights of edges, False: Without the weights of edges, string "NodeName" - only part of edges from that NodeName
     :param title: Title for file to be saved in /img folder. None: no savings
     """
     left = fsn.get_FA()
@@ -35,14 +35,18 @@ def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, ti
     credit = {(u, v) for u, v, d in fsn.edges(data=True) if d['type'] == "CREDIT"}
     nx.draw_networkx_edges(fsn, pos, edgelist=debit, edge_color="forestgreen", arrowsize=30)
     nx.draw_networkx_edges(fsn, pos, edgelist=credit, edge_color="salmon", arrowsize=30)
-    if edge_labels:
+    if isinstance(edge_labels, str):
+        lbls = {(u, v) for u, v, d in fsn.edges(data=True) if u == edge_labels}
+        wei = {item: arc_weight[item] for item in lbls}
+        nx.draw_networkx_edge_labels(fsn, pos, node_size=250, edge_labels=wei, font_size=16)
+    if edge_labels and isinstance(edge_labels, bool):
         nx.draw_networkx_edge_labels(fsn, pos, node_size=250, edge_labels=arc_weight, font_size=16)
     if node_labels:
         #     TODO add relative align for labels
         label_pos = pos.copy()
         for p in label_pos:  # raise text positions
             label_pos[p][1] += 0.05
-        nx.draw_networkx_labels(fsn, label_pos, font_size=16)
+        nx.draw_networkx_labels(fsn, label_pos, font_size=text_size)
     ax = plt.gca()
     ax.set_axis_off()
     if title is not None and isinstance(title, str):
