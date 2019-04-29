@@ -13,7 +13,7 @@ EMBD_SIZE = 4
 # /////// Sampling parameters \\\\\\\
 # STEP configuration
 STEPS_VERSIONS = ["DefUniform", "DefWeighted", "MetaUniform", "MetaWeighted", "MetaDiff"]
-PRESSURE = 20
+PRESSURE = 30
 # Signatures round to decimals
 N_DIGITS = 5
 

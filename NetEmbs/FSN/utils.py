@@ -14,7 +14,7 @@ from collections import Counter
 import pandas as pd
 from NetEmbs.FSN.graph import FSN
 import logging
-from NetEmbs.CONFIG import LOG
+from NetEmbs.CONFIG import LOG, PRESSURE
 import time
 
 np.seterr(all="raise")
@@ -135,7 +135,7 @@ def make_pairs(sampled_seq, window=3, debug=False):
         print("t")
 
 
-def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=20, debug=False):
+def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=PRESSURE, debug=False):
     """
      Meta-Random step with changing direction.
     :param G: graph/network on which step should be done
