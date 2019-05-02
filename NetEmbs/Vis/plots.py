@@ -80,12 +80,24 @@ def plotHeatMap(pairs, title="HeatMap", size=6, norm="col", return_hm=False, abs
         return heatmap_data
 
 
-def plotHist(df, title="Histogram"):
+def plotHist(df, title="Histogram", normalized=False):
+    """
+    Visualize the distribution of the number of FAs involved in BPs
+    :param df: Journal entries DataFrame
+    :param title: title of img to save
+    :param normalized: If True, the histogram height shows a density rather than a count.
+    :return:
+    """
     stat_here = getHistCounts(df)
     from matplotlib.ticker import MaxNLocator
     for k, d in stat_here.items():
         ax = plt.figure().gca()
-        ax.bar(d.keys(), d.values())
+        if normalized:
+            import numpy as np
+            ax.bar(d.keys(), list(d.values())/np.sum(list(d.values())))
+        else:
+            ax.bar(d.keys(), d.values())
+        ax.set_xlim((0.5,10.5))
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.title(k + "-side number of FAs")
         if title is not None and isinstance(title, str):
