@@ -437,7 +437,7 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     :return tr: Encoder/Decoder for given DataFrame
     """
     fsn = FSN()
-    fsn.build(df, name_column="FA_Name")
+    fsn.build(df, left_title="FA_Name")
     tr = TransformationBPs(fsn.get_BP())
     return tr.encode_pairs(get_pairs(fsn, N_JOBS, version, walk_length, walks_per_node, direction)), fsn, tr
 
@@ -469,7 +469,7 @@ class TransformationBPs:
 def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN",
                  column_title="Similar_BP"):
     fsn = FSN()
-    fsn.build(df, name_column="FA_Name")
+    fsn.build(df, left_title="FA_Name")
     if LOG:
         local_logger = logging.getLogger("NetEmbs.Utils.find_similar")
     if not isinstance(version, list) and not isinstance(direction, list):

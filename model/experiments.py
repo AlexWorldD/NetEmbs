@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     d = prepare_data(d)
     fsn = FSN()
-    fsn.build(normalize(d), name_column="FA_Name")
+    fsn.build(normalize(d), left_title="FA_Name")
     fsn.nodes()
     time_calc(fsn, runs=10)
     time_calc(fsn, jobs=4, runs=10)

@@ -8,6 +8,7 @@ import networkx as nx
 from NetEmbs.CONFIG import LOG
 import logging
 
+
 class FSN(nx.DiGraph):
     """
     Financial Statement Network class. Includes construction, projection, plotting methods
@@ -16,24 +17,25 @@ class FSN(nx.DiGraph):
     def __init__(self):
         super().__init__()
 
-    def build(self, df, name_column="Name"):
+    def build(self, df, left_title="Name", right_title="ID"):
         """
         Construct Financial Statement Network (FSN) from DataFrame
         :param df: DataFrame with JournalEntities
-        :param name_column: Title of column with FA names: Name or FA_Name
+        :param left_title: Title of column with FA names: e.g. Name or FA_Name
+        :param right_title: Title of column with BP names: e.g. ID, or after clustering Label
         """
-        self.add_nodes_from(df['ID'], bipartite=0)
-        self.add_nodes_from(df[name_column], bipartite=1)
+        self.add_nodes_from(df[right_title], bipartite=0)
+        self.add_nodes_from(df[left_title], bipartite=1)
         self.add_weighted_edges_from(
-            [(row[name_column], row['ID'], row["Credit"]) for idx, row in df[df["from"] == True].iterrows()],
+            [(row[left_title], row[right_title], row["Credit"]) for idx, row in df[df["from"] == True].iterrows()],
             weight='weight', type="CREDIT")
         self.add_weighted_edges_from(
-            [(row['ID'], row[name_column], row["Debit"]) for idx, row in df[df["from"] == False].iterrows()],
+            [(row[right_title], row[left_title], row["Debit"]) for idx, row in df[df["from"] == False].iterrows()],
             weight='weight', type="DEBIT")
         if LOG:
             local_logger = logging.getLogger("NetEmbs.FSN.build")
             local_logger.info("FSN constructed!")
-            local_logger.info("Financial accounts are "+ str(self.get_BP()))
+            local_logger.info("Financial accounts are " + str(self.get_BP()))
 
     def build_default(self):
         """
@@ -91,4 +93,6 @@ class FSN(nx.DiGraph):
             project_to = [n for n, d in self.nodes(data=True) if d['bipartite'] == 0]
         elif on == "FA":
             project_to = [n for n, d in self.nodes(data=True) if d['bipartite'] == 1]
+        else:
+            raise ValueError("Wrong projection argument! {!s} used while FA or BP are allowed!".format(on))
         return bipartite.weighted_projected_graph(self, project_to)
