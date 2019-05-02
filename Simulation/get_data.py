@@ -10,4 +10,4 @@ from Simulation.FSN_Simulation import FSN_Simulation
 
 cleanDB()
 b = FSN_Simulation()
-financialStatement = b.simulate(until=5000)
+financialStatement = b.simulate(SalesNum=(1000, 1000), until=5000)

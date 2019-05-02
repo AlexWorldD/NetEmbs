@@ -34,6 +34,23 @@ class Transaction(object):
     def noise(self, base_amount, id, tid):
         noise = {"left": {"def": 0.0}, "right": {"def": 0.0}}
         # Add noise of type 2 when noisy financial accounts with very small amounts
+        for _ in range(np.random.choice(ks_l, p=pds_l)):
+            noise_name = randomString(6)
+            noise_amount = base_amount * random.uniform(0.0, NOISE_Type2["noise_amplitude"])
+            # Add noise for credited side
+            noise["left"][noise_name] = noise_amount
+            self.addRecord(noise_name + "_" + str(id), noise_name, -noise_amount, tid)
+        for _ in range(np.random.choice(ks_r, p=pds_r)):
+            noise_name = randomString(6)
+            noise_amount = base_amount * random.uniform(0.0, NOISE_Type2["noise_amplitude"])
+            # Add noise for credited side
+            self.addRecord(noise_name + "_" + str(id), noise_name, noise_amount, tid)
+            noise["right"][noise_name] = noise_amount
+        return noise
+
+    def noise2(self, base_amount, id, tid):
+        noise = {"left": {"def": 0.0}, "right": {"def": 0.0}}
+        # Add noise of type 2 when noisy financial accounts with very small amounts
         if random.random() < NOISE_Type2["freq"]:
             # TODO check other distribution for number of noisy FAs per BP
             for _ in range(int(random.uniform(0.0, NOISE_Type2["num_amplitude"]))):
@@ -52,7 +69,7 @@ class Transaction(object):
 
     def new(self, postfix):
         self.c.execute("INSERT INTO JournalEntries (Time, Name, FA_Name) VALUES(?,?,?)",
-                       (self.env.now, self.name+str(postfix), self.name))
+                       (self.env.now, self.name + str(postfix), self.name))
         self.conn.commit()
         return self.c.lastrowid
         # return 1
