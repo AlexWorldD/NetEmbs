@@ -14,11 +14,24 @@ import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
 from NetEmbs.CONFIG import EMBD_SIZE
+import os
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
-def get_embs_TF(path_file="../Simulation/FSN_Data.db", embed_size=None, num_steps=10000, walk_length=10,
-                walks_per_node=10):
-    d = prepare_data(upload_data(path_file, limit=496))
+def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, num_steps=10000, walk_length=10,
+                walks_per_node=10, save_embs=False):
+    # Check the input argument type: FSN or DataFrame
+    if isinstance(input_data, pd.DataFrame):
+        # #     Construct FSN object from the given df
+        d = input_data
+    elif isinstance(input_data, tuple):
+        d = prepare_data(upload_data(input_data[0], limit=input_data[1]))
+    else:
+        raise ValueError(
+            "As input data should be DataFrame with journal entries of the path to DataBase! Was given {!s}!".format(
+                type(input_data)))
+    print("Total number of BPs in given dataset is ", d.ID.nunique())
     skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=walks_per_node, walk_length=walk_length)
     print(skip_grams[:5])
     #
@@ -28,6 +41,7 @@ def get_embs_TF(path_file="../Simulation/FSN_Data.db", embed_size=None, num_step
         embedding_size = embed_size
     else:
         embedding_size = EMBD_SIZE  # Dimension of the embedding vector
+
     neg_number = 10
     valid_size = 4
     total_size = fsn.number_of_BP()
@@ -119,12 +133,17 @@ def get_embs_TF(path_file="../Simulation/FSN_Data.db", embed_size=None, num_step
                 final_embeddings = normalized_embeddings.eval()
                 return final_embeddings
     #     Run
-    softmax_start_time = time.time()
+    start_time = time.time()
     embs = run2(graph, num_steps, skip_grams, batch_size, enc_dec)
-    softmax_end_time = time.time()
-    print("Elapsed time: ", softmax_end_time - softmax_start_time)
+    end_time = time.time()
+    print("Elapsed time: ", end_time - start_time)
     fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])
-    journal_truth = upload_JournalEntriesTruth(path_file)[["ID", "FA_Name"]]
-    fsn_embs = fsn_embs.merge(journal_truth, on="ID")
     print("Done with TensorFlow!")
+    if isinstance(save_embs, str):
+        fsn_embs.to_pickle(save_embs + ".pkl")
     return fsn_embs
+
+
+def add_ground_truth(df, path_file="../Simulation/FSN_Data.db"):
+    journal_truth = upload_JournalEntriesTruth(path_file)[["ID", "FA_Name"]]
+    return df.merge(journal_truth, on="ID")

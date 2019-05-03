@@ -14,11 +14,15 @@ EMBD_SIZE = 4
 # STEP configuration
 STEPS_VERSIONS = ["DefUniform", "DefWeighted", "MetaUniform", "MetaWeighted", "MetaDiff"]
 PRESSURE = 30
+WINDOW_SIZE = 3
+WALKS_PER_NODE = 10
+WALKS_LENGTH = 10
 # Signatures round to decimals
 N_DIGITS = 5
-
 
 # /////// Logging configuration \\\\\\\
 MAIN_LOGGER = None
 LOG = True
 
+# /////// Clustering configuration \\\\\\\
+NUM_CL_MAX = 10

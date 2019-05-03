@@ -112,7 +112,7 @@ def diff_function(prev_edge, new_edges, pressure):
     return softmax((1.0 - abs(new_edges - prev_edge)) * pressure)
 
 
-def make_pairs(sampled_seq, window=3, debug=False):
+def make_pairs(sampled_seq, window=None, debug=False):
     """
     Helper function for construction pairs from sequence of nodes with given window size
     :param sampled_seq: Original sequence of nodes (output of RandomWalk procedure)
@@ -123,6 +123,8 @@ def make_pairs(sampled_seq, window=3, debug=False):
     if debug:
         print(sampled_seq)
     output = list()
+    if window is None:
+        window = WINDOW_SIZE
     try:
         for cur_idx in range(len(sampled_seq)):
             for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
@@ -302,7 +304,7 @@ import os
 import sys
 
 
-def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI"):
+def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=None, walks_per_node=None, direction="COMBI"):
     """
     Construction a sequences of nodes from given FSN
     :param fsn: Researched FSN
@@ -318,6 +320,10 @@ def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=10, walks_per_
     :param direction: initial direction
     :return: array of sampled nodes
     """
+    if walks_per_node is None:
+        walks_per_node = WALKS_PER_NODE
+    if walk_length is None:
+        walk_length = WALKS_LENGTH
     max_processes = min(n_jobs, os.cpu_count())
     pool = ProcessPool(nodes=max_processes)
     BPs = fsn.get_BP()

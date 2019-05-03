@@ -17,7 +17,8 @@ from NetEmbs.Vis.plots import plotFSN
 from NetEmbs.FSN.utils import get_pairs, find_similar, similar, get_JournalEntries, graph_sampling
 from NetEmbs.CONFIG import MAIN_LOGGER
 from NetEmbs.Logs.custom_logger import log_me
-
+from NetEmbs.Clustering import *
+from sklearn.cluster import KMeans, AgglomerativeClustering
 PLOT = False
 
 import time
@@ -48,12 +49,13 @@ if __name__ == '__main__':
 
     MAIN_LOGGER.info("Ended")
 
-    d = prepare_data(d)
-    fsn = FSN()
-    fsn.build(normalize(d), left_title="FA_Name")
-    fsn.nodes()
-    plotFSN(fsn)
-    plotFSN(1)
+    d = pd.read_pickle("../tmp_embs.pkl")
+    find_optimal_nClusters(d, KMeans)
+    # fsn = FSN()
+    # fsn.build(normalize(d), left_title="FA_Name")
+    # fsn.nodes()
+    # plotFSN(fsn)
+    # plotFSN(1)
     # time_calc(fsn, runs=10)
     # time_calc(fsn, jobs=4, runs=10)
     # t = get_pairs(fsn)

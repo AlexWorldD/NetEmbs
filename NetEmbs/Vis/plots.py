@@ -119,7 +119,7 @@ def plotHist(df, title="Histogram", normalized=False):
             plt.savefig("img/" + title + k, dpi=140, pad_inches=0.01)
 
 
-def plot_tSNE(fsn_embs, title="tSNE", rand_state=1):
+def plot_tSNE(fsn_embs, title="tSNE", legend_title="FA_Name", rand_state=1):
     import os
     import matplotlib.pyplot as plt
     from sklearn.manifold import TSNE
@@ -133,7 +133,7 @@ def plot_tSNE(fsn_embs, title="tSNE", rand_state=1):
     cur_m = 0
     plt.clf()
     n_gr = 0
-    for name, group in fsn_embs.groupby("FA_Name"):
+    for name, group in fsn_embs.groupby(legend_title):
         n_gr += 1
         if n_gr > 3:
             cur_m = cur_m + 1 if len(markers) - 1 > cur_m else 0
