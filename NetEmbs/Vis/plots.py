@@ -119,7 +119,7 @@ def plotHist(df, title="Histogram", normalized=False):
             plt.savefig("img/" + title + k, dpi=140, pad_inches=0.01)
 
 
-def plot_tSNE(fsn_embs, title="tSNE", legend_title="FA_Name", rand_state=1):
+def plot_tSNE(fsn_embs, title="tSNE", legend_title="GroundTruth", rand_state=1):
     import os
     import matplotlib.pyplot as plt
     from sklearn.manifold import TSNE
