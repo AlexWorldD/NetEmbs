@@ -40,7 +40,6 @@ def time_calc(fsn, jobs=1, runs=10):
     end = time.time()
     print("Elapsed time: ", end - st)
 
-
 if __name__ == '__main__':
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
@@ -53,8 +52,10 @@ if __name__ == '__main__':
     fsn = FSN()
     fsn.build(normalize(d), left_title="FA_Name")
     fsn.nodes()
-    time_calc(fsn, runs=10)
-    time_calc(fsn, jobs=4, runs=10)
+    plotFSN(fsn)
+    plotFSN(1)
+    # time_calc(fsn, runs=10)
+    # time_calc(fsn, jobs=4, runs=10)
     # t = get_pairs(fsn)
     # if PLOT:
     #     plotFSN(fsn, edge_labels=False)

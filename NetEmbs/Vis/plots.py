@@ -11,9 +11,11 @@ from collections import Counter
 import numpy as np
 from sklearn import preprocessing
 from NetEmbs.DataProcessing.stats import getHistCounts
+import pandas as pd
+from NetEmbs.FSN.graph import FSN
 
 
-def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, title=None, text_size=16):
+def plotFSN(input_data, colors=("Red", "Blue"), edge_labels=False, node_labels=True, title=None, text_size=16):
     """
     Plot FSN with matplotlib library
     :param fsn: FSN to be visualize
@@ -21,6 +23,18 @@ def plotFSN(fsn, colors=("Red", "Blue"), edge_labels=False, node_labels=True, ti
     :param edge_labels: True: Show the weights of edges, False: Without the weights of edges, string "NodeName" - only part of edges from that NodeName
     :param title: Title for file to be saved in /img folder. None: no savings
     """
+    # Check the input argument type: FSN or DataFrame
+    if isinstance(input_data, pd.DataFrame):
+        # #     Construct FSN object from the given df
+        fsn = FSN()
+        fsn.build(input_data, left_title="FA_Name")
+        fsn.nodes()
+    elif isinstance(input_data, FSN):
+        fsn = input_data
+    else:
+        raise ValueError(
+            "Plotting is possible only for DataFrame with journal entries of FSN object! Was given {!s}!".format(
+                type(input_data)))
     left = fsn.get_FA()
     pos = nx.bipartite_layout(fsn, left)
     arc_weight = nx.get_edge_attributes(fsn, 'weight')
@@ -94,12 +108,40 @@ def plotHist(df, title="Histogram", normalized=False):
         ax = plt.figure().gca()
         if normalized:
             import numpy as np
-            ax.bar(d.keys(), list(d.values())/np.sum(list(d.values())))
+            ax.bar(d.keys(), list(d.values()) / np.sum(list(d.values())))
         else:
             ax.bar(d.keys(), d.values())
-        ax.set_xlim((0.5,10.5))
+        ax.set_xlim((0.5, 10.5))
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.title(k + "-side number of FAs")
         if title is not None and isinstance(title, str):
             plt.tight_layout()
             plt.savefig("img/" + title + k, dpi=140, pad_inches=0.01)
+
+
+def plot_tSNE(fsn_embs, title="tSNE", rand_state=1):
+    import os
+    import matplotlib.pyplot as plt
+    from sklearn.manifold import TSNE
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    tsne = TSNE(random_state=rand_state)
+    embdf = pd.DataFrame(list(map(np.ravel, fsn_embs.iloc[:, 1])))
+    embed_tsne = tsne.fit_transform(embdf)
+    fsn_embs["x"] = pd.Series(embed_tsne[:, 0])
+    fsn_embs["y"] = pd.Series(embed_tsne[:, 1])
+    markers = ["o", "v", "s"]
+    cur_m = 0
+    plt.clf()
+    n_gr = 0
+    for name, group in fsn_embs.groupby("FA_Name"):
+        n_gr += 1
+        if n_gr > 3:
+            cur_m = cur_m + 1 if len(markers) - 1 > cur_m else 0
+            n_gr = 0
+        plt.scatter(group["x"].values, group["y"].values, s=150, marker=markers[cur_m], label=name)
+    plt.legend(bbox_to_anchor=(1.3, 1), loc="upper right", frameon=False, markerscale=1)
+
+    if title is not None and isinstance(title, str):
+        plt.tight_layout()
+        plt.savefig("img/" + title, dpi=140, pad_inches=0.01)
+    plt.show()
