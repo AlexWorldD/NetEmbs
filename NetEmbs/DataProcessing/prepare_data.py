@@ -23,6 +23,8 @@ def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=Tru
     """
     if split and "Debit" not in list(original_df):
         original_df = split_to_debit_credit(original_df)
+    #     Simplest way to deal with NA values.
+    original_df.fillna(0.0, inplace=True)
     if merge_fa:
         original_df = merge_FAs(original_df)
     if add_from:
