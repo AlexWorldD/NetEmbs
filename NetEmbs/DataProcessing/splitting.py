@@ -6,15 +6,16 @@ Created by lex at 2019-03-27.
 """
 
 
-def split_to_debit_credit(df):
+def split_to_debit_credit(df, value_col="Value"):
     """
     Helper function for DataFrame preparation before construction FSN
     :param df: original DataFrame
     :return: FSN-ready DF
     """
-    df["Debit"] = df["Value"][df["Value"] > 0.0]
-    df["Credit"] = -df["Value"][df["Value"] < 0.0]
-    df.fillna(0.0, inplace=True)
+    df.loc[:, "Debit"] = df.loc[df[value_col] > 0.0, value_col]
+    df.loc[:, "Credit"] = -df.loc[df[value_col] < 0.0, value_col]
+    # df.loc[df[value_col] > 0.0, "Debit"] = df.loc[df[value_col] > 0.0, value_col]
+    # df.loc[df[value_col] < 0.0, "Credit"] = -df.loc[df[value_col] < 0.0, value_col]
     return df
 
 

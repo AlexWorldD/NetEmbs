@@ -19,7 +19,7 @@ def cl_KMeans(df, n_cl=7):
     """
     if n_cl is None:
         n_cl = find_optimal_nClusters(df, KMeans)
-    embdf = pd.DataFrame(list(map(np.ravel, df.iloc[:, 1])))
+    embdf = pd.DataFrame(list(map(np.ravel, df["Emb"])))
     #     Clustering stuff
     print("First row of Data: \n", embdf.iloc[0].values)
     km = KMeans(n_clusters=n_cl)

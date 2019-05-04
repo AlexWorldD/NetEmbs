@@ -17,7 +17,7 @@ class FSN(nx.DiGraph):
     def __init__(self):
         super().__init__()
 
-    def build(self, df, left_title="Name", right_title="ID"):
+    def build(self, df, left_title="FA_Name", right_title="ID"):
         """
         Construct Financial Statement Network (FSN) from DataFrame
         :param df: DataFrame with JournalEntities

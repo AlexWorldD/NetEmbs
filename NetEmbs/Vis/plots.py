@@ -12,6 +12,8 @@ import numpy as np
 from sklearn import preprocessing
 from NetEmbs.DataProcessing.stats import getHistCounts
 import pandas as pd
+from NetEmbs.CONFIG import FIG_SIZE
+plt.rcParams["figure.figsize"] = FIG_SIZE
 from NetEmbs.FSN.graph import FSN
 
 
@@ -65,8 +67,11 @@ def plotFSN(input_data, colors=("Red", "Blue"), edge_labels=False, node_labels=T
     ax.set_axis_off()
     if title is not None and isinstance(title, str):
         plt.tight_layout()
-        plt.savefig("img/" + title, dpi=140, pad_inches=0.01)
-    plt.show()
+        try:
+            plt.savefig("img/" + title, dpi=140, pad_inches=0.01)
+        except FileNotFoundError:
+            plt.savefig("../img/" + title, dpi=140, pad_inches=0.01)
+    # plt.show()
 
 
 def plotHeatMap(pairs, title="HeatMap", size=6, norm="col", return_hm=False, absolute_vals=False, debug=False):
@@ -125,7 +130,7 @@ def plot_tSNE(fsn_embs, title="tSNE", legend_title="GroundTruth", rand_state=1):
     from sklearn.manifold import TSNE
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     tsne = TSNE(random_state=rand_state)
-    embdf = pd.DataFrame(list(map(np.ravel, fsn_embs.iloc[:, 1])))
+    embdf = pd.DataFrame(list(map(np.ravel, fsn_embs["Emb"])))
     embed_tsne = tsne.fit_transform(embdf)
     fsn_embs["x"] = pd.Series(embed_tsne[:, 0])
     fsn_embs["y"] = pd.Series(embed_tsne[:, 1])

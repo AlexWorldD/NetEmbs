@@ -20,7 +20,7 @@ def cl_Agglomerative(df, n_cl=7):
     """
     if n_cl is None:
         n_cl = find_optimal_nClusters(df, AgglomerativeClustering)
-    embdf = pd.DataFrame(list(map(np.ravel, df.iloc[:, 1])))
+    embdf = pd.DataFrame(list(map(np.ravel, df["Emb"])))
     #     Clustering stuff
     print("First row of Data: \n", embdf.iloc[0].values)
     agg = AgglomerativeClustering(n_clusters=n_cl)

@@ -4,6 +4,9 @@ __author__ = 'Aleksei Maliutin'
 CONFIG.py
 Created by lex at 2019-03-26.
 """
+FIG_SIZE = [20, 10]
+PRINT_STATUS = True
+
 # /////// Running parameters \\\\\\\
 N_JOBS = 4
 
