@@ -15,8 +15,8 @@ class TestFSN:
         self.df = normalize(add_from_column(sales_collections()))
         self.fsn = FSN()
         self.fsn.build(self.df)
-        assert len(self.fsn.nodes()) == (self.df['Name'].nunique() + self.df['ID'].nunique())
-        assert set(self.fsn.get_FA()) == set(self.df['Name'].unique())
+        assert len(self.fsn.nodes()) == (self.df['FA_Name'].nunique() + self.df['ID'].nunique())
+        assert set(self.fsn.get_FA()) == set(self.df['FA_Name'].unique())
         assert set(self.fsn.get_BP()) == set(self.df['ID'].unique())
         # TODO add test for weights of edges
 
@@ -29,4 +29,4 @@ class TestFSN:
         self.fsn = FSN()
         self.fsn.build(self.df)
         assert set(self.fsn.projection()) == set(self.df['ID'].unique())
-        assert set(self.fsn.projection(on="FA")) == set(self.df['Name'].unique())
+        assert set(self.fsn.projection(on="FA")) == set(self.df['FA_Name'].unique())
