@@ -148,5 +148,8 @@ def plot_tSNE(fsn_embs, title="tSNE", legend_title="GroundTruth", rand_state=1):
 
     if title is not None and isinstance(title, str):
         plt.tight_layout()
-        plt.savefig("img/" + title, dpi=140, pad_inches=0.01)
-    plt.show()
+        try:
+            plt.savefig("img/" + title, dpi=140, pad_inches=0.01)
+        except FileNotFoundError:
+            plt.savefig("../img/" + title, dpi=140, pad_inches=0.01)
+    # plt.show()
