@@ -26,6 +26,7 @@ def bData():
     print(df.shape)
     df.amount = df.amount.apply(lambda x: x.replace(",", "."))
     df.amount = df.amount.astype(float)
+    # I need these columns for further work
     df = df[["transactionID", "accountID", "BR", "amount", "type"]]
     return df
 
@@ -62,6 +63,7 @@ if __name__ == '__main__':
     d.to_pickle("tmp_dataMarcel.pkl")
     #     ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(d, 9)
+    print(cl_labs.head(3))
     #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
-    plot_tSNE(cl_labs, legend_title="FA_Name", title="Marcel/GroundTruth")
+    plot_tSNE(cl_labs, legend_title="GroundTruth", title="Marcel/GroundTruth")
     plot_tSNE(cl_labs, legend_title="label", title="Marcel/AgglomerativeCl")
