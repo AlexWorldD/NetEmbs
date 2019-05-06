@@ -16,6 +16,11 @@ from NetEmbs.FSN.graph import FSN
 import logging
 from NetEmbs.CONFIG import LOG, PRESSURE
 import time
+from pathos.multiprocessing import ProcessPool
+import itertools
+import os
+import sys
+from tqdm import *
 
 np.seterr(all="raise")
 
@@ -294,14 +299,29 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     return context
 
 
+def get_size(obj, seen=None):
+    """Recursively finds size of objects"""
+    size = sys.getsizeof(obj)
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        return 0
+    # Important mark as seen *before* entering recursion to gracefully handle
+    # self-referential objects
+    seen.add(obj_id)
+    if isinstance(obj, dict):
+        size += sum([get_size(v, seen) for v in obj.values()])
+        size += sum([get_size(k, seen) for k in obj.keys()])
+    elif hasattr(obj, '__dict__'):
+        size += get_size(obj.__dict__, seen)
+    elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+        size += sum([get_size(i, seen) for i in obj])
+    return size
+
+
 def wrappedRandomWalk(fsn, node, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI"):
     return [randomWalk(fsn, node, walk_length, direction=direction, version=version) for _ in range(walks_per_node)]
-
-
-from pathos.multiprocessing import ProcessPool
-import itertools
-import os
-import sys
 
 
 def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=None, walks_per_node=None, direction="COMBI"):
@@ -328,6 +348,7 @@ def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=None, walks_pe
     pool = ProcessPool(nodes=max_processes)
     BPs = fsn.get_BP()
     n_BPs = len(BPs)
+    sampled = list()
     all_arguments = zip([fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs, [walks_per_node] * n_BPs,
                         [direction] * n_BPs)
     if LOG:
@@ -350,8 +371,16 @@ def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=None, walks_pe
                                        in fsn.get_BP()]
     elif direction in ["COMBI", "IN", "OUT"]:
         try:
-            sampled = pool.map(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
-                               [walks_per_node] * n_BPs, [direction] * n_BPs)
+            with tqdm(total=n_BPs) as pbar:
+                for i, res in tqdm(enumerate(
+                        pool.uimap(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
+                                   [walks_per_node] * n_BPs, [direction] * n_BPs))):
+                    sampled.append(res)
+                    pbar.update()
+            # sampled = pool.uimap(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
+            #                    [walks_per_node] * n_BPs, [direction] * n_BPs)
+            # sampled = pool.map(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
+            #                    [walks_per_node] * n_BPs, [direction] * n_BPs)
             # while not sampled.ready():
             #     time.sleep(1)
             #     print(".", end=' ')
@@ -387,10 +416,18 @@ def get_pairs(fsn, n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=
         raise ValueError(
             "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
                 ["ALL", "IN", "OUT"]))
+    if PRINT_STATUS:
+        print("--------- Started the SAMPLING the sequences from FSN ---------")
     sequences = graph_sampling(fsn, n_jobs, version, walk_length, walks_per_node, direction)
+    if PRINT_STATUS:
+        print("--------- Ended the SAMPLING the sequences from FSN ---------")
     max_processes = min(n_jobs, os.cpu_count())
     pool = ProcessPool(nodes=max_processes)
+    if PRINT_STATUS:
+        print("--------- Started making pairs from the sequences ---------")
     pairs = pool.map(make_pairs, sequences)
+    if PRINT_STATUS:
+        print("--------- Ended making pairs from the sequences ---------")
     if drop_duplicates:
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
@@ -442,10 +479,10 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     :return fsn: FSN class instance for given DataFrame
     :return tr: Encoder/Decoder for given DataFrame
     """
-    fsn = FSN()
-    fsn.build(df, left_title="FA_Name")
-    tr = TransformationBPs(fsn.get_BP())
-    return tr.encode_pairs(get_pairs(fsn, N_JOBS, version, walk_length, walks_per_node, direction)), fsn, tr
+    GLOBAL_FSN = FSN()
+    GLOBAL_FSN.build(df, left_title="FA_Name")
+    tr = TransformationBPs(GLOBAL_FSN.get_BP())
+    return tr.encode_pairs(get_pairs(GLOBAL_FSN, N_JOBS, version, walk_length, walks_per_node, direction)), GLOBAL_FSN, tr
 
 
 class TransformationBPs:

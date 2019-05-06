@@ -29,3 +29,4 @@ LOG = True
 
 # /////// Clustering configuration \\\\\\\
 NUM_CL_MAX = 10
+GLOBAL_FSN = None

@@ -51,10 +51,10 @@ if __name__ == '__main__':
     # let's check it
     countDirtyData(d, ["Debit", "Credit"])
     # Save visualisation of current FSN
-    plotFSN(d, edge_labels=False, node_labels=False, title="Marcel/FSN_Vis")
+    # plotFSN(d, edge_labels=False, node_labels=False, title="Marcel/FSN_Vis")
 
     # ///////// Getting embeddings \\\\\\\\\\\\
-    embds = get_embs_TF(d, embed_size=6, walks_per_node=50, num_steps=10000)
+    embds = get_embs_TF(d, embed_size=6, walks_per_node=10, num_steps=10000)
     # //////// Merge with GroundTruth \\\\\\\\\
     if MODE == "SimulatedData":
         d = add_ground_truth(embds)
