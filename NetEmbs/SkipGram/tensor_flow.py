@@ -20,7 +20,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, num_steps=10000, walk_length=10,
-                walks_per_node=10, save_embs=False):
+                walks_per_node=10, save_embs=False, use_cached_skip_grams=False):
     # Check the input argument type: FSN or DataFrame
     if isinstance(input_data, pd.DataFrame):
         # #     Construct FSN object from the given df
@@ -32,7 +32,8 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
             "As input data should be DataFrame with journal entries of the path to DataBase! Was given {!s}!".format(
                 type(input_data)))
     print("Total number of BPs in given dataset is ", d.ID.nunique())
-    skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=walks_per_node, walk_length=walk_length)
+    skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=walks_per_node, walk_length=walk_length,
+                                             use_cache=use_cached_skip_grams)
     print(skip_grams[:5])
     #
     #     TensorFlow stuff
@@ -118,7 +119,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
                         print('Average train loss at step ', step, ': ', average_loss)
                         average_loss = 0
 
-                    if step % 5000 == 0:
+                    if step % 20000 == 0:
                         # note that this is expensive (~20% slowdown if computed every 500 steps)
                         sim = similarity.eval()
                         for i in range(valid_size):

@@ -21,6 +21,7 @@ import itertools
 import os
 import sys
 from tqdm import *
+import pickle
 
 np.seterr(all="raise")
 
@@ -320,11 +321,12 @@ def get_size(obj, seen=None):
     return size
 
 
-def wrappedRandomWalk(fsn, node, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI"):
-    return [randomWalk(fsn, node, walk_length, direction=direction, version=version) for _ in range(walks_per_node)]
+def wrappedRandomWalk(node):
+    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction=global_direction, version=global_version) for _
+            in range(global_walks_per_node)]
 
 
-def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=None, walks_per_node=None, direction="COMBI"):
+def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_node=None, direction="COMBI"):
     """
     Construction a sequences of nodes from given FSN
     :param fsn: Researched FSN
@@ -346,15 +348,15 @@ def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=None, walks_pe
         walk_length = WALKS_LENGTH
     max_processes = min(n_jobs, os.cpu_count())
     pool = ProcessPool(nodes=max_processes)
-    BPs = fsn.get_BP()
+    BPs = GLOBAL_FSN.get_BP()
     n_BPs = len(BPs)
     sampled = list()
-    all_arguments = zip([fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs, [walks_per_node] * n_BPs,
-                        [direction] * n_BPs)
+    # all_arguments = zip(BPs, [version] * n_BPs, [walk_length] * n_BPs, [walks_per_node] * n_BPs,
+    #                     [direction] * n_BPs)
     if LOG:
         local_logger = logging.getLogger("NetEmbs.Utils.graph_sampling")
         local_logger.info("Created a Pool with " + str(max_processes) + " processes ")
-        local_logger.info("Total size of GRID arguments is " + str(sys.getsizeof(all_arguments)) + " bytes ")
+        local_logger.info("Total size of GRID arguments is " + str(get_size(BPs)) + " bytes ")
 
     if direction not in ["ALL", "IN", "OUT", "COMBI"]:
         raise ValueError(
@@ -362,19 +364,19 @@ def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=None, walks_pe
                 ["ALL", "IN", "OUT"]))
     if direction == "ALL":
         #     Apply RandomWalk for both IN and OUT direction
-        sampled = [randomWalk(fsn, node, walk_length, direction="IN", version=version) for _ in
-                   range(walks_per_node) for node
-                   in fsn.get_BP()] + [randomWalk(fsn, node, walk_length, direction="OUT", version=version)
-                                       for _
-                                       in
-                                       range(walks_per_node) for node
-                                       in fsn.get_BP()]
+        # sampled = [randomWalk(fsn, node, walk_length, direction="IN", version=version) for _ in
+        #            range(walks_per_node) for node
+        #            in fsn.get_BP()] + [randomWalk(fsn, node, walk_length, direction="OUT", version=version)
+        #                                for _
+        #                                in
+        #                                range(walks_per_node) for node
+        #                                in fsn.get_BP()]
+        pass
     elif direction in ["COMBI", "IN", "OUT"]:
         try:
             with tqdm(total=n_BPs) as pbar:
                 for i, res in tqdm(enumerate(
-                        pool.uimap(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
-                                   [walks_per_node] * n_BPs, [direction] * n_BPs))):
+                        pool.uimap(wrappedRandomWalk, BPs))):
                     sampled.append(res)
                     pbar.update()
             # sampled = pool.uimap(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
@@ -394,7 +396,7 @@ def graph_sampling(fsn, n_jobs=4, version="MetaDiff", walk_length=None, walks_pe
     return res
 
 
-def get_pairs(fsn, n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI",
+def get_pairs(n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI",
               drop_duplicates=True):
     """
     Construction a pairs (skip-grams) of nodes according to sampled sequences
@@ -418,7 +420,7 @@ def get_pairs(fsn, n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=
                 ["ALL", "IN", "OUT"]))
     if PRINT_STATUS:
         print("--------- Started the SAMPLING the sequences from FSN ---------")
-    sequences = graph_sampling(fsn, n_jobs, version, walk_length, walks_per_node, direction)
+    sequences = graph_sampling(n_jobs, version, walk_length, walks_per_node, direction)
     if PRINT_STATUS:
         print("--------- Ended the SAMPLING the sequences from FSN ---------")
     max_processes = min(n_jobs, os.cpu_count())
@@ -462,7 +464,7 @@ def get_top_similar(all_pairs, top=3, as_DataFrame=True, sort_ids=True, title="S
         return output_top
 
 
-def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI"):
+def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI", use_cache=False):
     """
     Get Skip-Grams for given DataFrame with Entries records
     :param df: original DataFrame
@@ -475,14 +477,35 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     :param walk_length: max length of RandomWalk
     :param walks_per_node: max number of RandomWalks per each node in FSN
     :param direction: initial direction
+    :param use_cache: If True, cache the intermediate SkipGrams sequences
     :return: list of all pairs
     :return fsn: FSN class instance for given DataFrame
     :return tr: Encoder/Decoder for given DataFrame
     """
+    global GLOBAL_FSN
     GLOBAL_FSN = FSN()
     GLOBAL_FSN.build(df, left_title="FA_Name")
     tr = TransformationBPs(GLOBAL_FSN.get_BP())
-    return tr.encode_pairs(get_pairs(GLOBAL_FSN, N_JOBS, version, walk_length, walks_per_node, direction)), GLOBAL_FSN, tr
+    # Global variables for using in forked sub-processes in parallel execution
+    global global_version, global_walk_length, global_walks_per_node, global_direction
+    global_direction = direction
+    global_version = version
+    global_walk_length = walk_length
+    global_walks_per_node = walks_per_node
+    if not use_cache:
+        print("Sampling sequences... wait...")
+        skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, direction))
+        with open("skip_grams_cached.pkl", "wb") as file:
+            pickle.dump(skip_gr, file)
+        print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
+    elif use_cache:
+        print("Loading sequences from cache... wait...")
+        with open("skip_grams_cached.pkl", "rb") as file:
+            skip_gr = pickle.load(file)
+    else:
+        raise ValueError(
+            "Use True or False for skip_gr argument! {!s}!".format(use_cache) + " was given")
+    return skip_gr, GLOBAL_FSN, tr
 
 
 class TransformationBPs:

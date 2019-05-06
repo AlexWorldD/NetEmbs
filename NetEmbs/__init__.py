@@ -10,3 +10,4 @@ from NetEmbs.FSN import *
 from NetEmbs.Logs import *
 from NetEmbs.SkipGram import *
 from NetEmbs.Vis import *
+from NetEmbs.CONFIG import *

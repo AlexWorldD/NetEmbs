@@ -8,10 +8,11 @@ FIG_SIZE = [20, 10]
 PRINT_STATUS = True
 
 # /////// Running parameters \\\\\\\
-N_JOBS = 4
+N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
-EMBD_SIZE = 4
+EMBD_SIZE = 16
+STEPS = 50000
 
 # /////// Sampling parameters \\\\\\\
 # STEP configuration

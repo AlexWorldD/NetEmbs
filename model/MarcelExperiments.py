@@ -36,7 +36,7 @@ if __name__ == '__main__':
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
     if MODE == "SimulatedData":
-        d = upload_data("../Simulation/FSN_Data.db", limit=1000)
+        d = upload_data("../Simulation/FSN_Data.db", limit=None)
         d = prepare_data(d)
 
     if MODE == "RealData":
@@ -52,9 +52,12 @@ if __name__ == '__main__':
     countDirtyData(d, ["Debit", "Credit"])
     # Save visualisation of current FSN
     # plotFSN(d, edge_labels=False, node_labels=False, title="Marcel/FSN_Vis")
-
+    # ----- SET required parameters in CONFIG file -------
+    print("Current config parameters: \n Embedding size: ", EMBD_SIZE, "\n Walks per node: ", WALKS_PER_NODE,
+          "\n Steps in TF model: ", STEPS)
     # ///////// Getting embeddings \\\\\\\\\\\\
-    embds = get_embs_TF(d, embed_size=6, walks_per_node=10, num_steps=10000)
+    embds = get_embs_TF(d, embed_size=EMBD_SIZE, walks_per_node=WALKS_PER_NODE, num_steps=STEPS,
+                        use_cached_skip_grams=True)
     # //////// Merge with GroundTruth \\\\\\\\\
     if MODE == "SimulatedData":
         d = add_ground_truth(embds)
@@ -64,6 +67,8 @@ if __name__ == '__main__':
     #     ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(d, 9)
     print(cl_labs.head(3))
+    prefix = "_emb" + str(EMBD_SIZE) + "_walks"
     #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
     plot_tSNE(cl_labs, legend_title="GroundTruth", title="Marcel/GroundTruth")
+    print("Plotted the GroundTruth graph!")
     plot_tSNE(cl_labs, legend_title="label", title="Marcel/AgglomerativeCl")
