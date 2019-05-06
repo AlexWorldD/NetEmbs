@@ -67,8 +67,8 @@ if __name__ == '__main__':
     #     ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(d, 9)
     print(cl_labs.head(3))
-    prefix = "_emb" + str(EMBD_SIZE) + "_walks"
+    prefix = "_emb" + str(EMBD_SIZE) + "_walks"+str(WALKS_PER_NODE)+"_TFsteps"+str(STEPS)
     #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
-    plot_tSNE(cl_labs, legend_title="GroundTruth", title="Marcel/GroundTruth")
+    plot_tSNE(cl_labs, legend_title="GroundTruth", title="Marcel/GroundTruth"+prefix)
     print("Plotted the GroundTruth graph!")
-    plot_tSNE(cl_labs, legend_title="label", title="Marcel/AgglomerativeCl")
+    plot_tSNE(cl_labs, legend_title="label", title="Marcel/AgglomerativeCl"+prefix)

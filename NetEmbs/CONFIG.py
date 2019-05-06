@@ -11,8 +11,8 @@ PRINT_STATUS = True
 N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
-EMBD_SIZE = 16
-STEPS = 50000
+EMBD_SIZE = 6
+STEPS = 10000
 
 # /////// Sampling parameters \\\\\\\
 # STEP configuration
