@@ -11,16 +11,18 @@ PRINT_STATUS = True
 N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
-EMBD_SIZE = 6
-STEPS = 10000
+EMBD_SIZE = 32
+STEPS = 100000
+BATCH_SIZE = 128
 
 # /////// Sampling parameters \\\\\\\
 # STEP configuration
 STEPS_VERSIONS = ["DefUniform", "DefWeighted", "MetaUniform", "MetaWeighted", "MetaDiff"]
 PRESSURE = 30
-WINDOW_SIZE = 3
-WALKS_PER_NODE = 10
-WALKS_LENGTH = 10
+WINDOW_SIZE = 4
+DOUBLE_NEAREST = True
+WALKS_PER_NODE = 30
+WALKS_LENGTH = 50
 # Signatures round to decimals
 N_DIGITS = 5
 

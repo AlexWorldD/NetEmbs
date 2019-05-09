@@ -57,7 +57,7 @@ if __name__ == '__main__':
           "\n Steps in TF model: ", STEPS)
     # ///////// Getting embeddings \\\\\\\\\\\\
     embds = get_embs_TF(d, embed_size=EMBD_SIZE, walks_per_node=WALKS_PER_NODE, num_steps=STEPS,
-                        use_cached_skip_grams=True)
+                        use_cached_skip_grams=True, use_prev_embs=True)
     # //////// Merge with GroundTruth \\\\\\\\\
     if MODE == "SimulatedData":
         d = add_ground_truth(embds)
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     #     ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(d, 9)
     print(cl_labs.head(3))
-    prefix = "_emb" + str(EMBD_SIZE) + "_walks"+str(WALKS_PER_NODE)+"_TFsteps"+str(STEPS)
+    prefix = "_128batch_v3_emb" + str(EMBD_SIZE) + "_walks"+str(WALKS_PER_NODE)+"_TFsteps"+str(STEPS)
     #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
     plot_tSNE(cl_labs, legend_title="GroundTruth", title="Marcel/GroundTruth"+prefix)
     print("Plotted the GroundTruth graph!")

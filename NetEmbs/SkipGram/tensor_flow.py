@@ -13,14 +13,14 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
-from NetEmbs.CONFIG import EMBD_SIZE
+from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE
 import os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, num_steps=10000, walk_length=10,
-                walks_per_node=10, save_embs=False, use_cached_skip_grams=False):
+                walks_per_node=10, save_embs=False, use_cached_skip_grams=False, use_prev_embs=False):
     # Check the input argument type: FSN or DataFrame
     if isinstance(input_data, pd.DataFrame):
         # #     Construct FSN object from the given df
@@ -37,13 +37,13 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
     print(skip_grams[:5])
     #
     #     TensorFlow stuff
-    batch_size = 32
+    batch_size = BATCH_SIZE
     if embed_size is not None:
         embedding_size = embed_size
     else:
         embedding_size = EMBD_SIZE  # Dimension of the embedding vector
 
-    neg_number = 10
+    neg_number = 100
     valid_size = 4
     total_size = fsn.number_of_BP()
     tf.reset_default_graph()
@@ -54,7 +54,11 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
         train_context = tf.placeholder(tf.int32, shape=[batch_size, 1])
 
         # Embeddings matrix initialisation
-        embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
+        if use_prev_embs:
+            print("Loading previous embeddings from cache... wait...")
+            embeddings = tf.Variable(pd.read_pickle("snapshot.pkl").values)
+        else:
+            embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
         embed = tf.nn.embedding_lookup(embeddings, train_inputs)
         # ----
         # Output layer parameters
@@ -112,30 +116,31 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
                     _, loss_train = session.run([optimizer, cost], feed_dict=feed_dict)
                     average_loss += loss_train
 
-                    if step % 1000 == 0:
+                    if step % 5000 == 0:
                         if step > 0:
-                            average_loss /= 2000
+                            average_loss /= 5000
                         # The average loss is an estimate of the loss over the last 2000 batches.
                         print('Average train loss at step ', step, ': ', average_loss)
                         average_loss = 0
 
-                    if step % 20000 == 0:
-                        # note that this is expensive (~20% slowdown if computed every 500 steps)
-                        sim = similarity.eval()
-                        for i in range(valid_size):
-                            valid_word = enc_dec.decoder[valid_examples[i]]
-                            top_k = 3  # number of nearest neighbors
-                            nearest = (-sim[i, :]).argsort()[1:top_k + 1]
-                            log = 'Nearest to %s:' % valid_word
-                            for k in range(top_k):
-                                close_word = enc_dec.decoder[nearest[k]]
-                                log = '%s %s,' % (log, close_word)
-                            print(log)
+                    # if step % 20000 == 0:
+                    #     # note that this is expensive (~20% slowdown if computed every 500 steps)
+                    #     sim = similarity.eval()
+                    #     for i in range(valid_size):
+                    #         valid_word = enc_dec.decoder[valid_examples[i]]
+                    #         top_k = 3  # number of nearest neighbors
+                    #         nearest = (-sim[i, :]).argsort()[1:top_k + 1]
+                    #         log = 'Nearest to %s:' % valid_word
+                    #         for k in range(top_k):
+                    #             close_word = enc_dec.decoder[nearest[k]]
+                    #             log = '%s %s,' % (log, close_word)
+                    #         print(log)
                 final_embeddings = normalized_embeddings.eval()
                 return final_embeddings
     #     Run
     start_time = time.time()
     embs = run2(graph, num_steps, skip_grams, batch_size, enc_dec)
+    pd.DataFrame(embs).to_pickle("snapshot.pkl")
     end_time = time.time()
     print("Elapsed time: ", end_time - start_time)
     fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])

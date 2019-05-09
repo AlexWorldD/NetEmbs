@@ -9,6 +9,7 @@ import sqlite3
 from Simulation.CONFIG import *
 import random
 from Simulation.utils import randomString
+from Simulation import CONFIG
 
 
 class Transaction(object):
@@ -35,13 +36,15 @@ class Transaction(object):
         noise = {"left": {"def": 0.0}, "right": {"def": 0.0}}
         # Add noise of type 2 when noisy financial accounts with very small amounts
         for _ in range(np.random.choice(ks_l, p=pds_l)):
-            noise_name = randomString(6)
+            # noise_name = randomString(6)
+            noise_name = np.random.choice(CONFIG.noisy_left)
             noise_amount = base_amount * random.uniform(0.0, NOISE_Type2["noise_amplitude"])
             # Add noise for credited side
             noise["left"][noise_name] = noise_amount
             self.addRecord(noise_name + "_" + str(id), noise_name, -noise_amount, tid)
         for _ in range(np.random.choice(ks_r, p=pds_r)):
-            noise_name = randomString(6)
+            # noise_name = randomString(6)
+            noise_name = np.random.choice(CONFIG.noisy_right)
             noise_amount = base_amount * random.uniform(0.0, NOISE_Type2["noise_amplitude"])
             # Add noise for credited side
             self.addRecord(noise_name + "_" + str(id), noise_name, noise_amount, tid)

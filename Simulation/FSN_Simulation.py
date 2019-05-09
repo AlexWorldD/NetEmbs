@@ -9,8 +9,8 @@ from Simulation.CreateDB import *
 from Simulation.Abstract.Transaction import *
 from Simulation.BusinessProcesses import *
 from Simulation.FinancialAccounts import *
-
-
+from Simulation.utils import getNoisyFAs
+from Simulation import CONFIG
 class PayrollDisbursementEvent:
 
     def __init__(self, env, averageDisbursementTerm):
@@ -173,7 +173,9 @@ class stockToLowEvent:
 
 class FSN_Simulation(object):
 
-    def simulate(self, SalesNum = (1000, 1000), until=1000):
+    def simulate(self, SalesNum=(1000, 1000), until=1000):
+        CONFIG.noisy_left = getNoisyFAs("NoisyLeft", SalesNum[0] * 0.8)
+        CONFIG.noisy_right = getNoisyFAs("NoisyRight", SalesNum[0] * 0.5)
         env = simpy.Environment()
 
         revenueAccount = RevenueAccount(env, "Revenue")

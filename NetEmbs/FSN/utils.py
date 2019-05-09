@@ -14,7 +14,7 @@ from collections import Counter
 import pandas as pd
 from NetEmbs.FSN.graph import FSN
 import logging
-from NetEmbs.CONFIG import LOG, PRESSURE
+from NetEmbs.CONFIG import LOG, PRESSURE, DOUBLE_NEAREST
 import time
 from pathos.multiprocessing import ProcessPool
 import itertools
@@ -296,6 +296,9 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
                 context.append(new_v)
         else:
             context.append(new_v)
+        #     TODO modification is here! check is it needed or not
+        if DOUBLE_NEAREST:
+            context.extend(context[-2:])
         cur_v = context[-1]
     return context
 

@@ -13,3 +13,7 @@ def randomString(stringLength=10):
     """Generate a random string of fixed length """
     letters = string.ascii_lowercase
     return ''.join(random.choice(letters) for i in range(stringLength))
+
+
+def getNoisyFAs(prefix="Noisy", N=1000):
+    return [prefix + "FA_" + randomString(4) for _ in range(int(N))]

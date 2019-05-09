@@ -34,6 +34,8 @@ real_left = {1: 0.2455795677799607,
 
 ks_l, pds_l = [0, 0] + list(range(1, 9)), list(real_left.values())
 
+noisy_left = list()
+
 real_right = {1: 0.42857142857142855,
               2: 0.16071428571428573,
               3: 0.039285714285714285,
@@ -45,3 +47,5 @@ real_right = {1: 0.42857142857142855,
               9: 0.017857142857142856,
               10: 0.0017857142857142857}
 ks_r, pds_r = [0] + list(range(1, 10)), list(real_right.values())
+
+noisy_right = list()
