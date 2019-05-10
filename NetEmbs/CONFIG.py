@@ -7,6 +7,7 @@ Created by lex at 2019-03-26.
 FIG_SIZE = [20, 10]
 PRINT_STATUS = True
 WORK_FOLDER = "1"
+# TODO here you can select with what kind of data you are going to work: Simulated or Real one
 MODE = "SimulatedData"
 
 # /////// Running parameters \\\\\\\

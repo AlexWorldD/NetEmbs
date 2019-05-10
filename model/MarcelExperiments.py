@@ -10,7 +10,6 @@ import pandas as pd
 import os
 import numpy as np
 
-# TODO here you can select with what kind of data you are going to work: Simulated or Real one
 
 
 # MODE = "RealData"
