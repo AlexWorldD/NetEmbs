@@ -11,7 +11,6 @@ import os
 import numpy as np
 
 # TODO here you can select with what kind of data you are going to work: Simulated or Real one
-MODE = "SimulatedData"
 
 
 # MODE = "RealData"
@@ -32,10 +31,19 @@ def bData():
     return df
 
 
-if __name__ == '__main__':
+def create_working_folder():
     # Create working folder for current execution
-    if not os.path.exists(WORK_FOLDER):
-        os.makedirs(WORK_FOLDER, exist_ok=True)
+    if not os.path.exists(WORK_FOLDER[0]+WORK_FOLDER[1]):
+        os.makedirs(WORK_FOLDER[0]+WORK_FOLDER[1], exist_ok=True)
+    if not os.path.exists(WORK_FOLDER[0]+WORK_FOLDER[1] + "img/"):
+        os.makedirs(WORK_FOLDER[0]+WORK_FOLDER[1] + "img/", exist_ok=True)
+    if not os.path.exists(WORK_FOLDER[0]+WORK_FOLDER[1] + "cache/"):
+        os.makedirs(WORK_FOLDER[0]+WORK_FOLDER[1] + "cache/", exist_ok=True)
+
+
+if __name__ == '__main__':
+    # Creating current working place for storing intermediate cache and final images
+    create_working_folder()
     print("Welcome to NetEmbs application!")
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
@@ -61,18 +69,18 @@ if __name__ == '__main__':
           "\n Steps in TF model: ", STEPS)
     # ///////// Getting embeddings \\\\\\\\\\\\
     embds = get_embs_TF(d, embed_size=EMBD_SIZE, walks_per_node=WALKS_PER_NODE, num_steps=STEPS,
-                        use_cached_skip_grams=False, use_prev_embs=False)
+                        use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False, groundTruthDF=None)
     # //////// Merge with GroundTruth \\\\\\\\\
     if MODE == "SimulatedData":
         d = add_ground_truth(embds)
     if MODE == "RealData":
         d = embds.merge(d.groupby("ID", as_index=False).agg({"GroundTruth": "first"}), on="ID")
-    d.to_pickle(WORK_FOLDER+"tmp_dataMarcel.pkl")
+    d.to_pickle(WORK_FOLDER[0]+WORK_FOLDER[1] + "cache/Embeddings.pkl")
     #     ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(d, 9)
     print(cl_labs.head(3))
-    prefix = "_"+str(BATCH_SIZE)+"batch_emb" + str(EMBD_SIZE) + "_walks"+str(WALKS_PER_NODE)+"_TFsteps"+str(STEPS)
     #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
-    plot_tSNE(cl_labs, legend_title="GroundTruth", title="Marcel/"+WORK_FOLDER+"GroundTruth"+prefix)
+    plot_tSNE(cl_labs, legend_title="GroundTruth", folder=WORK_FOLDER[0]+WORK_FOLDER[1], title="GroundTruth")
     print("Plotted the GroundTruth graph!")
-    plot_tSNE(cl_labs, legend_title="label", title="Marcel/"+WORK_FOLDER+"AgglomerativeCl"+prefix)
+    plot_tSNE(cl_labs, legend_title="label", folder=WORK_FOLDER[0]+WORK_FOLDER[1], title="AgglomerativeCl")
+    print("Plotted the Clustered graph!")

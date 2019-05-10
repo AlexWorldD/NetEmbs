@@ -359,7 +359,8 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
     if LOG:
         local_logger = logging.getLogger("NetEmbs.Utils.graph_sampling")
         local_logger.info("Created a Pool with " + str(max_processes) + " processes ")
-        local_logger.info("Total size of GRID arguments is " + str(get_size(BPs)) + " bytes ")
+        local_logger.info("Total size of broadcasting arguments is " + str(get_size(BPs)) + " bytes ")
+        local_logger.info("Total size of FSN is " + str(get_size(GLOBAL_FSN)) + " bytes ")
 
     if direction not in ["ALL", "IN", "OUT", "COMBI"]:
         raise ValueError(
@@ -498,13 +499,20 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     if not use_cache:
         print("Sampling sequences... wait...")
         skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, direction))
-        with open(WORK_FOLDER+"skip_grams_cached.pkl", "wb") as file:
+        with open(WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
             pickle.dump(skip_gr, file)
         print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
     elif use_cache:
         print("Loading sequences from cache... wait...")
-        with open(WORK_FOLDER+"skip_grams_cached.pkl", "rb") as file:
-            skip_gr = pickle.load(file)
+        try:
+            with open(WORK_FOLDER[0] + "skip_grams_cached.pkl", "rb") as file:
+                skip_gr = pickle.load(file)
+        except FileNotFoundError:
+            print("File not found... Recalculate \n")
+            print("Sampling sequences... wait...")
+            skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, direction))
+            with open(WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+                pickle.dump(skip_gr, file)
     else:
         raise ValueError(
             "Use True or False for skip_gr argument! {!s}!".format(use_cache) + " was given")

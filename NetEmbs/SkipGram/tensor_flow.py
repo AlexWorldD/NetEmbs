@@ -13,14 +13,30 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
-from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, WORK_FOLDER
+from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, WORK_FOLDER, MODE
+from NetEmbs.Vis.plots import plot_tSNE
 import os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, num_steps=10000, walk_length=10,
-                walks_per_node=10, save_embs=False, use_cached_skip_grams=False, use_prev_embs=False):
+                walks_per_node=10, use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False,
+                groundTruthDF=None):
+    """
+    Wrapper around all representation stuff for FSN
+    :param input_data: Input DataFrame with journal entries
+    :param embed_size: Dimensionality of embedding space
+    :param num_steps: Number of training steps for TF model
+    :param walk_length: Walk length for sampling strategy
+    :param walks_per_node: Number of finWalks per each BP node in FSN
+    :param use_cached_skip_grams: If True, use previously saved skip_grams. Default is True
+    :param use_prev_embs: If True, use previously calculated embeddings for tensor initialisation. Default is False
+    :param vis_progress: Integer, plot tSNE after specified number of steps during TF model training. Not recommend,
+    extremely expensive. Default is False, hence, no drawing at all.
+    :param groundTruthDF: DataFrame with the ground truth column. Required if vis_progress is not False
+    :return: DataFrame with normalized embeddings
+    """
     # Check the input argument type: FSN or DataFrame
     if isinstance(input_data, pd.DataFrame):
         # #     Construct FSN object from the given df
@@ -56,7 +72,11 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
         # Embeddings matrix initialisation
         if use_prev_embs:
             print("Loading previous embeddings from cache... wait...")
-            embeddings = tf.Variable(pd.read_pickle(WORK_FOLDER+"snapshot.pkl").values)
+            try:
+                embeddings = tf.Variable(pd.read_pickle(WORK_FOLDER[0] + WORK_FOLDER[1] + "cache/snapshot.pkl").values)
+            except FileNotFoundError:
+                print("No cached embeddings, initialize as random matrix...")
+                embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
         else:
             embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
         embed = tf.nn.embedding_lookup(embeddings, train_inputs)
@@ -101,7 +121,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
         # Add variable initializer.
         init = tf.global_variables_initializer()
 
-        def run2(graph, num_steps, data, batch_size, enc_dec):
+        def run(graph, num_steps, data, batch_size, enc_dec):
             with tf.Session(graph=graph) as session:
                 # We must initialize all variables before we use them.
                 init.run()
@@ -137,16 +157,55 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
                     #         print(log)
                 final_embeddings = normalized_embeddings.eval()
                 return final_embeddings
+
+        def run_with_vis(graph, num_steps, data, batch_size, enc_dec):
+            with tf.Session(graph=graph) as session:
+                # We must initialize all variables before we use them.
+                init.run()
+                print('Initialized')
+
+                average_loss = 0
+                for chunk in range(0, num_steps, vis_progress):
+                    for step in range(chunk, chunk + vis_progress):
+                        batch_inputs, batch_context = generate_batch(data,
+                                                                     batch_size)
+                        feed_dict = {train_inputs: batch_inputs, train_context: batch_context}
+
+                        _, loss_train = session.run([optimizer, cost], feed_dict=feed_dict)
+                        average_loss += loss_train
+
+                        if step % 5000 == 0:
+                            if step > 0:
+                                average_loss /= 5000
+                            # The average loss is an estimate of the loss over the last 2000 batches.
+                            print('Average train loss at step ', step, ': ', average_loss)
+                            average_loss = 0
+                    final_embeddings = normalized_embeddings.eval()
+                    fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, final_embeddings)), columns=["ID", "Emb"])
+                    # //////// Merge with GroundTruth \\\\\\\\\
+                    if MODE == "SimulatedData":
+                        d = add_ground_truth(fsn_embs)
+                    if MODE == "RealData" and groundTruthDF is not None:
+                        d = fsn_embs.merge(groundTruthDF.groupby("ID", as_index=False).agg({"GroundTruth": "first"}),
+                                           on="ID")
+                        #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
+                    plot_tSNE(d, legend_title="GroundTruth", folder=WORK_FOLDER[0] + WORK_FOLDER[1],
+                              title="progress/GroundTruth" + str(chunk + vis_progress))
+                    print("Plotted the GroundTruth graph after " + str(chunk + vis_progress))
+                return final_embeddings
     #     Run
     start_time = time.time()
-    embs = run2(graph, num_steps, skip_grams, batch_size, enc_dec)
-    pd.DataFrame(embs).to_pickle(WORK_FOLDER+"snapshot.pkl")
+    if not vis_progress:
+        embs = run(graph, num_steps, skip_grams, batch_size, enc_dec)
+    elif isinstance(vis_progress, int):
+        if not os.path.exists(WORK_FOLDER[0] + WORK_FOLDER[1] + "img/progress/"):
+            os.makedirs(WORK_FOLDER[0] + WORK_FOLDER[1] + "img/progress/", exist_ok=True)
+        embs = run_with_vis(graph, num_steps, skip_grams, batch_size, enc_dec)
+    pd.DataFrame(embs).to_pickle(WORK_FOLDER[0] + WORK_FOLDER[1] + "cache/snapshot.pkl")
     end_time = time.time()
     print("Elapsed time: ", end_time - start_time)
     fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])
     print("Done with TensorFlow!")
-    if isinstance(save_embs, str):
-        fsn_embs.to_pickle(save_embs + ".pkl")
     return fsn_embs
 
 

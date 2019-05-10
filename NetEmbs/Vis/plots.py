@@ -12,7 +12,8 @@ import numpy as np
 from sklearn import preprocessing
 from NetEmbs.DataProcessing.stats import getHistCounts
 import pandas as pd
-from NetEmbs.CONFIG import FIG_SIZE
+from NetEmbs.CONFIG import FIG_SIZE, BATCH_SIZE, WALKS_PER_NODE, EMBD_SIZE, STEPS
+
 plt.rcParams["figure.figsize"] = FIG_SIZE
 from NetEmbs.FSN.graph import FSN
 
@@ -124,7 +125,7 @@ def plotHist(df, title="Histogram", normalized=False):
             plt.savefig("img/" + title + k, dpi=140, pad_inches=0.01)
 
 
-def plot_tSNE(fsn_embs, title="tSNE", legend_title="GroundTruth", rand_state=1):
+def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", rand_state=1):
     import os
     import matplotlib.pyplot as plt
     from sklearn.manifold import TSNE
@@ -148,8 +149,11 @@ def plot_tSNE(fsn_embs, title="tSNE", legend_title="GroundTruth", rand_state=1):
 
     if title is not None and isinstance(title, str):
         plt.tight_layout()
-        try:
-            plt.savefig("img/" + title, dpi=140, pad_inches=0.01)
-        except FileNotFoundError:
-            plt.savefig("../img/" + title, dpi=140, pad_inches=0.01)
+        postfix = ""
+        if folder == "":
+            postfix = "_" + "batch" + str(BATCH_SIZE) \
+                      + "_emb" + str(EMBD_SIZE) \
+                      + "_walks" + str(WALKS_PER_NODE) \
+                      + "_TFsteps" + str(STEPS)
+        plt.savefig(folder + "img/" + title + postfix, dpi=140, pad_inches=0.01)
     # plt.show()

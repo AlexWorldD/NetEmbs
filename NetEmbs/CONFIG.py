@@ -6,22 +6,23 @@ Created by lex at 2019-03-26.
 """
 FIG_SIZE = [20, 10]
 PRINT_STATUS = True
-WORK_FOLDER = "May10/"
+WORK_FOLDER = "1"
+MODE = "SimulatedData"
 
 # /////// Running parameters \\\\\\\
 N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
 EMBD_SIZE = 32
-STEPS = 10000
+STEPS = 100000
 BATCH_SIZE = 128
 
 # /////// Sampling parameters \\\\\\\
 # STEP configuration
 STEPS_VERSIONS = ["DefUniform", "DefWeighted", "MetaUniform", "MetaWeighted", "MetaDiff"]
 PRESSURE = 30
-WINDOW_SIZE = 4
-DOUBLE_NEAREST = True
+WINDOW_SIZE = 3
+DOUBLE_NEAREST = False
 WALKS_PER_NODE = 30
 WALKS_LENGTH = 50
 # Signatures round to decimals
@@ -34,3 +35,12 @@ LOG = True
 # /////// Clustering configuration \\\\\\\
 NUM_CL_MAX = 10
 GLOBAL_FSN = None
+
+# Current working folder
+path_postfix_samplings = "_" + "walks" + str(WALKS_PER_NODE) \
+                         + "_pressure" + str(PRESSURE) \
+                         + "_window" + str(WINDOW_SIZE) + "/"
+path_postfix_tf = "TFsteps" + str(STEPS) \
+                  + "batch" + str(BATCH_SIZE) \
+                  + "_emb" + str(EMBD_SIZE) + "/"
+WORK_FOLDER = (WORK_FOLDER + path_postfix_samplings, path_postfix_tf)
