@@ -13,7 +13,7 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
-from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE
+from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, WORK_FOLDER
 import os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -56,7 +56,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
         # Embeddings matrix initialisation
         if use_prev_embs:
             print("Loading previous embeddings from cache... wait...")
-            embeddings = tf.Variable(pd.read_pickle("snapshot.pkl").values)
+            embeddings = tf.Variable(pd.read_pickle(WORK_FOLDER+"snapshot.pkl").values)
         else:
             embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
         embed = tf.nn.embedding_lookup(embeddings, train_inputs)
@@ -140,7 +140,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
     #     Run
     start_time = time.time()
     embs = run2(graph, num_steps, skip_grams, batch_size, enc_dec)
-    pd.DataFrame(embs).to_pickle("snapshot.pkl")
+    pd.DataFrame(embs).to_pickle(WORK_FOLDER+"snapshot.pkl")
     end_time = time.time()
     print("Elapsed time: ", end_time - start_time)
     fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])

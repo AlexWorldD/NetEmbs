@@ -23,7 +23,8 @@ def cl_Agglomerative(df, n_cl=7):
     embdf = pd.DataFrame(list(map(np.ravel, df["Emb"])))
     #     Clustering stuff
     print("First row of Data: \n", embdf.iloc[0].values)
+    with_cl = df.copy()
     agg = AgglomerativeClustering(n_clusters=n_cl)
     predicted_labels = agg.fit_predict(embdf)
-    df["label"] = pd.Series(predicted_labels)
-    return df
+    with_cl["label"] = pd.Series(predicted_labels)
+    return with_cl

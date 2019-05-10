@@ -498,12 +498,12 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     if not use_cache:
         print("Sampling sequences... wait...")
         skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, direction))
-        with open("skip_grams_cached.pkl", "wb") as file:
+        with open(WORK_FOLDER+"skip_grams_cached.pkl", "wb") as file:
             pickle.dump(skip_gr, file)
         print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
     elif use_cache:
         print("Loading sequences from cache... wait...")
-        with open("skip_grams_cached.pkl", "rb") as file:
+        with open(WORK_FOLDER+"skip_grams_cached.pkl", "rb") as file:
             skip_gr = pickle.load(file)
     else:
         raise ValueError(

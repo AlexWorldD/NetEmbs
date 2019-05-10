@@ -7,6 +7,7 @@ Created by lex at 2019-05-05.
 from NetEmbs import *
 from NetEmbs.Logs.custom_logger import log_me
 import pandas as pd
+import os
 import numpy as np
 
 # TODO here you can select with what kind of data you are going to work: Simulated or Real one
@@ -32,6 +33,9 @@ def bData():
 
 
 if __name__ == '__main__':
+    # Create working folder for current execution
+    if not os.path.exists(WORK_FOLDER):
+        os.makedirs(WORK_FOLDER, exist_ok=True)
     print("Welcome to NetEmbs application!")
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
@@ -57,18 +61,18 @@ if __name__ == '__main__':
           "\n Steps in TF model: ", STEPS)
     # ///////// Getting embeddings \\\\\\\\\\\\
     embds = get_embs_TF(d, embed_size=EMBD_SIZE, walks_per_node=WALKS_PER_NODE, num_steps=STEPS,
-                        use_cached_skip_grams=True, use_prev_embs=True)
+                        use_cached_skip_grams=False, use_prev_embs=False)
     # //////// Merge with GroundTruth \\\\\\\\\
     if MODE == "SimulatedData":
         d = add_ground_truth(embds)
     if MODE == "RealData":
         d = embds.merge(d.groupby("ID", as_index=False).agg({"GroundTruth": "first"}), on="ID")
-    d.to_pickle("tmp_dataMarcel.pkl")
+    d.to_pickle(WORK_FOLDER+"tmp_dataMarcel.pkl")
     #     ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(d, 9)
     print(cl_labs.head(3))
-    prefix = "_128batch_v3_emb" + str(EMBD_SIZE) + "_walks"+str(WALKS_PER_NODE)+"_TFsteps"+str(STEPS)
+    prefix = "_"+str(BATCH_SIZE)+"batch_emb" + str(EMBD_SIZE) + "_walks"+str(WALKS_PER_NODE)+"_TFsteps"+str(STEPS)
     #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
-    plot_tSNE(cl_labs, legend_title="GroundTruth", title="Marcel/GroundTruth"+prefix)
+    plot_tSNE(cl_labs, legend_title="GroundTruth", title="Marcel/"+WORK_FOLDER+"GroundTruth"+prefix)
     print("Plotted the GroundTruth graph!")
-    plot_tSNE(cl_labs, legend_title="label", title="Marcel/AgglomerativeCl"+prefix)
+    plot_tSNE(cl_labs, legend_title="label", title="Marcel/"+WORK_FOLDER+"AgglomerativeCl"+prefix)

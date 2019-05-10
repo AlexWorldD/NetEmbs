@@ -6,13 +6,14 @@ Created by lex at 2019-03-26.
 """
 FIG_SIZE = [20, 10]
 PRINT_STATUS = True
+WORK_FOLDER = "May10/"
 
 # /////// Running parameters \\\\\\\
 N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
 EMBD_SIZE = 32
-STEPS = 100000
+STEPS = 10000
 BATCH_SIZE = 128
 
 # /////// Sampling parameters \\\\\\\
