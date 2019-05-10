@@ -11,7 +11,7 @@ from sklearn.cluster import AgglomerativeClustering
 from NetEmbs.Clustering.find_optimal import find_optimal_nClusters
 
 
-def cl_Agglomerative(df, n_cl=7):
+def cl_Agglomerative(df, n_cl=7, to_string=False):
     """
     Clustering in embedding space with KMeans algorithm
     :param df: DataFrame with 'emb' column
@@ -26,5 +26,7 @@ def cl_Agglomerative(df, n_cl=7):
     with_cl = df.copy()
     agg = AgglomerativeClustering(n_clusters=n_cl)
     predicted_labels = agg.fit_predict(embdf)
+    if to_string:
+        predicted_labels = [str(item) for item in predicted_labels]
     with_cl["label"] = pd.Series(predicted_labels)
     return with_cl
