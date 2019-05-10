@@ -12,6 +12,17 @@ from collections import Counter
 
 def findMostCommonFAs(df, labels_column="label", words_column="FA_Name", amount_column="amount", sort_mode="freq",
                       n_top=2, vis=False):
+    """
+    Helper function for going through the whole DF and printing most common names w.r.t. labels from clustering algorithm
+    :param df: Input DataFrame
+    :param labels_column: Column with predicted labels
+    :param words_column: Column with FA names
+    :param amount_column: Column with amount for that journal entry
+    :param sort_mode: How to sort the output array, freq - based on the frequencies of the words; amount - based on the amounts for each FA name
+    :param n_top: Number of samples to print
+    :param vis: Vis or not the output as a WordCloud graph
+    :return:
+    """
     if vis:
         from wordcloud import WordCloud
     for name, group in df.groupby(labels_column):
