@@ -86,3 +86,10 @@ if __name__ == '__main__':
     # print("Plotted the GroundTruth graph!")
     # plot_tSNE(cl_labs, legend_title="label", folder=WORK_FOLDER[0] + WORK_FOLDER[1], title="AgglomerativeCl")
     # print("Plotted the Clustered graph!")
+    # Embeddings after small training, 10k for instance
+    embs = pd.read_pickle("model/<YOUR FOLDER TO 10K TRAIN STEPS>/cache/Embeddings.pkl")
+    plotVectors(groupVectors(embs, how="median", subset=["BR4", "BR4c", "BR6", "BR2", "BR3.1", "BR5"]), title="MarcelTest_BadVectors")
+    # Embeddings after small training, 200k for instance
+    embs = pd.read_pickle("model/<YOUR FOLDER TO 200K TRAIN STEPS>/cache/Embeddings.pkl")
+    plotVectors(groupVectors(embs, how="median", subset=["BR4", "BR4c", "BR6", "BR2", "BR3.1", "BR5"]),
+                title="MarcelTest_GoodVectors")
