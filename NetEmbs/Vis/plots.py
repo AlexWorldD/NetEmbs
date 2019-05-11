@@ -146,6 +146,10 @@ def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", ran
             n_gr = 0
         plt.scatter(group["x"].values, group["y"].values, s=150, marker=markers[cur_m], label=name)
     plt.legend(bbox_to_anchor=(1.3, 1), loc="upper right", frameon=False, markerscale=1)
+    if legend_title == "GroundTruth":
+        plt.title("Embeddings visualisation with t-SNE, Ground Truth")
+    elif legend_title == "label":
+        plt.title("Embeddings visualisation with t-SNE, predicted labels")
 
     if title is not None and isinstance(title, str):
         plt.tight_layout()
@@ -157,3 +161,40 @@ def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", ran
                       + "_TFsteps" + str(STEPS)
         plt.savefig(folder + "img/" + title + postfix, dpi=140, pad_inches=0.01)
     # plt.show()
+
+
+def plot_PCA(fsn_embs, title="PCA", folder="", legend_title="GroundTruth", rand_state=1):
+    import os
+    import matplotlib.pyplot as plt
+    from sklearn.decomposition import PCA
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    pca = PCA(n_components=2)
+    embdf = pd.DataFrame(list(map(np.ravel, fsn_embs["Emb"])))
+    embed_tsne = pca.fit_transform(embdf)
+    fsn_embs["x"] = pd.Series(embed_tsne[:, 0])
+    fsn_embs["y"] = pd.Series(embed_tsne[:, 1])
+    markers = ["o", "v", "s"]
+    cur_m = 0
+    plt.clf()
+    n_gr = 0
+    for name, group in fsn_embs.groupby(legend_title):
+        n_gr += 1
+        if n_gr > 3:
+            cur_m = cur_m + 1 if len(markers) - 1 > cur_m else 0
+            n_gr = 0
+        plt.scatter(group["x"].values, group["y"].values, s=150, marker=markers[cur_m], label=name)
+    plt.legend(bbox_to_anchor=(1.3, 1), loc="upper right", frameon=False, markerscale=1)
+    if legend_title == "GroundTruth":
+        plt.title("Embeddings visualisation with PCA, Ground Truth")
+    elif legend_title == "label":
+        plt.title("Embeddings visualisation with PCA, predicted labels")
+
+    if title is not None and isinstance(title, str):
+        plt.tight_layout()
+        postfix = ""
+        if folder == "":
+            postfix = "_" + "batch" + str(BATCH_SIZE) \
+                      + "_emb" + str(EMBD_SIZE) \
+                      + "_walks" + str(WALKS_PER_NODE) \
+                      + "_TFsteps" + str(STEPS)
+        plt.savefig(folder + "img/" + title + postfix, dpi=140, pad_inches=0.01)

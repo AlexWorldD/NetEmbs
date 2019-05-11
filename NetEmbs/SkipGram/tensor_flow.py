@@ -13,8 +13,8 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
-from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, WORK_FOLDER, MODE
-from NetEmbs.Vis.plots import plot_tSNE
+from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, WORK_FOLDER, MODE, LOG_LEVEL
+from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
 import os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -65,6 +65,17 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
     tf.reset_default_graph()
     graph = tf.Graph()
     with graph.as_default():
+        def variable_summaries(var):
+            """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+            with tf.name_scope('summaries'):
+                mean = tf.reduce_mean(var)
+                tf.summary.scalar('mean', mean)
+                with tf.name_scope('stddev'):
+                    stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+                tf.summary.scalar('stddev', stddev)
+                tf.summary.scalar('max', tf.reduce_max(var))
+                tf.summary.scalar('min', tf.reduce_min(var))
+
         # Input variables
         train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
         train_context = tf.placeholder(tf.int32, shape=[batch_size, 1])
@@ -82,9 +93,15 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
         embed = tf.nn.embedding_lookup(embeddings, train_inputs)
         # ----
         # Output layer parameters
-        weights = tf.Variable(tf.truncated_normal((total_size, embedding_size),
-                                                  stddev=1.0 / math.sqrt(embedding_size)))
-        biases = tf.Variable(tf.zeros((total_size)))
+        with tf.name_scope('weights'):
+            weights = tf.Variable(tf.truncated_normal((total_size, embedding_size),
+                                                      stddev=1.0 / math.sqrt(embedding_size)))
+            if LOG_LEVEL == "full":
+                variable_summaries(weights)
+        with tf.name_scope('biases'):
+            biases = tf.Variable(tf.zeros((total_size)))
+            if LOG_LEVEL == "full":
+                variable_summaries(biases)
 
         # ---- Version 1
         # hidden_out = tf.matmul(embed, tf.transpose(weights)) + biases
@@ -99,11 +116,13 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
 
         #  ---- Version 2, like Marcel's example
         # Calculate the loss using negative sampling
-        loss = tf.nn.sampled_softmax_loss(weights, biases,
-                                          train_context, embed,
-                                          neg_number, total_size)
+        with tf.name_scope('cost'):
+            loss = tf.nn.sampled_softmax_loss(weights, biases,
+                                              train_context, embed,
+                                              neg_number, total_size)
 
-        cost = tf.reduce_mean(loss)
+            cost = tf.reduce_mean(loss)
+            tf.summary.scalar('Cost', cost)
         optimizer = tf.train.AdamOptimizer().minimize(cost)
 
         # Validation subset of BPs
@@ -118,6 +137,10 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
 
         valid_embedding = tf.nn.embedding_lookup(normalized_embeddings, valid_dataset)
         similarity = tf.matmul(valid_embedding, tf.transpose(normalized_embeddings))
+
+        # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
+        merged = tf.summary.merge_all()
+        train_writer = tf.summary.FileWriter(WORK_FOLDER[0] + WORK_FOLDER[1] + '/train', graph)
         # Add variable initializer.
         init = tf.global_variables_initializer()
 
@@ -133,8 +156,10 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
                                                                  batch_size)
                     feed_dict = {train_inputs: batch_inputs, train_context: batch_context}
 
-                    _, loss_train = session.run([optimizer, cost], feed_dict=feed_dict)
+                    _, loss_train, summary_logs = session.run([optimizer, cost, merged], feed_dict=feed_dict)
                     average_loss += loss_train
+                    if step % 500:
+                        train_writer.add_summary(summary_logs, step)
 
                     if step % 5000 == 0:
                         if step > 0:
@@ -171,8 +196,10 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
                                                                      batch_size)
                         feed_dict = {train_inputs: batch_inputs, train_context: batch_context}
 
-                        _, loss_train = session.run([optimizer, cost], feed_dict=feed_dict)
+                        _, loss_train, summary_logs = session.run([optimizer, cost, merged], feed_dict=feed_dict)
                         average_loss += loss_train
+                        if step % 500:
+                            train_writer.add_summary(summary_logs, step)
 
                         if step % 5000 == 0:
                             if step > 0:
@@ -190,7 +217,9 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
                                            on="ID")
                         #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
                     plot_tSNE(d, legend_title="GroundTruth", folder=WORK_FOLDER[0] + WORK_FOLDER[1],
-                              title="progress/GroundTruth" + str(chunk + vis_progress))
+                              title="progress/tSNE_GroundTruth" + str(chunk + vis_progress))
+                    plot_PCA(d, legend_title="GroundTruth", folder=WORK_FOLDER[0] + WORK_FOLDER[1],
+                              title="progress/PCA_GroundTruth" + str(chunk + vis_progress))
                     print("Plotted the GroundTruth graph after " + str(chunk + vis_progress))
                 return final_embeddings
     #     Run

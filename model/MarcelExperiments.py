@@ -11,7 +11,6 @@ import os
 import numpy as np
 
 
-
 # MODE = "RealData"
 
 def bData():
@@ -32,17 +31,19 @@ def bData():
 
 def create_working_folder():
     # Create working folder for current execution
-    if not os.path.exists(WORK_FOLDER[0]+WORK_FOLDER[1]):
-        os.makedirs(WORK_FOLDER[0]+WORK_FOLDER[1], exist_ok=True)
-    if not os.path.exists(WORK_FOLDER[0]+WORK_FOLDER[1] + "img/"):
-        os.makedirs(WORK_FOLDER[0]+WORK_FOLDER[1] + "img/", exist_ok=True)
-    if not os.path.exists(WORK_FOLDER[0]+WORK_FOLDER[1] + "cache/"):
-        os.makedirs(WORK_FOLDER[0]+WORK_FOLDER[1] + "cache/", exist_ok=True)
+    if not os.path.exists(WORK_FOLDER[0] + WORK_FOLDER[1]):
+        os.makedirs(WORK_FOLDER[0] + WORK_FOLDER[1], exist_ok=True)
+    if not os.path.exists(WORK_FOLDER[0] + WORK_FOLDER[1] + "img/"):
+        os.makedirs(WORK_FOLDER[0] + WORK_FOLDER[1] + "img/", exist_ok=True)
+    if not os.path.exists(WORK_FOLDER[0] + WORK_FOLDER[1] + "cache/"):
+        os.makedirs(WORK_FOLDER[0] + WORK_FOLDER[1] + "cache/", exist_ok=True)
+    print("Working directory is ", "model/" + WORK_FOLDER[0] + WORK_FOLDER[1])
 
 
 if __name__ == '__main__':
     # Creating current working place for storing intermediate cache and final images
     create_working_folder()
+    set_font(20)
     print("Welcome to NetEmbs application!")
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
@@ -68,18 +69,20 @@ if __name__ == '__main__':
           "\n Steps in TF model: ", STEPS)
     # ///////// Getting embeddings \\\\\\\\\\\\
     embds = get_embs_TF(d, embed_size=EMBD_SIZE, walks_per_node=WALKS_PER_NODE, num_steps=STEPS,
-                        use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False, groundTruthDF=None)
+                        use_cached_skip_grams=True, use_prev_embs=False, vis_progress=20000, groundTruthDF=None)
     # //////// Merge with GroundTruth \\\\\\\\\
     if MODE == "SimulatedData":
         d = add_ground_truth(embds)
     if MODE == "RealData":
         d = embds.merge(d.groupby("ID", as_index=False).agg({"GroundTruth": "first"}), on="ID")
-    d.to_pickle(WORK_FOLDER[0]+WORK_FOLDER[1] + "cache/Embeddings.pkl")
+    d.to_pickle(WORK_FOLDER[0] + WORK_FOLDER[1] + "cache/Embeddings.pkl")
+    print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
+    print("tensorboard --logdir=model/" + WORK_FOLDER[0] + WORK_FOLDER[1])
     #     ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(d, 9)
     print(cl_labs.head(3))
     #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
-    plot_tSNE(cl_labs, legend_title="GroundTruth", folder=WORK_FOLDER[0]+WORK_FOLDER[1], title="GroundTruth")
+    plot_tSNE(cl_labs, legend_title="GroundTruth", folder=WORK_FOLDER[0] + WORK_FOLDER[1], title="GroundTruth")
     print("Plotted the GroundTruth graph!")
-    plot_tSNE(cl_labs, legend_title="label", folder=WORK_FOLDER[0]+WORK_FOLDER[1], title="AgglomerativeCl")
+    plot_tSNE(cl_labs, legend_title="label", folder=WORK_FOLDER[0] + WORK_FOLDER[1], title="AgglomerativeCl")
     print("Plotted the Clustered graph!")

@@ -6,7 +6,7 @@ Created by lex at 2019-03-26.
 """
 FIG_SIZE = [20, 10]
 PRINT_STATUS = True
-WORK_FOLDER = "1"
+WORK_FOLDER = "2"
 # TODO here you can select with what kind of data you are going to work: Simulated or Real one
 MODE = "SimulatedData"
 
@@ -15,8 +15,12 @@ N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
 EMBD_SIZE = 32
-STEPS = 100000
-BATCH_SIZE = 128
+STEPS = 200000
+BATCH_SIZE = 64
+# What save for TensorBoard during model training: "full" includes min/max/mean/std for weights/biases, but very expensive
+# LOG_LEVEL = "full"
+# "cost" includes only the cost values
+LOG_LEVEL = "cost"
 
 # /////// Sampling parameters \\\\\\\
 # STEP configuration
