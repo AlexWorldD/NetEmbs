@@ -15,7 +15,7 @@ N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
 EMBD_SIZE = 32
-STEPS = 200000
+STEPS = 10000
 BATCH_SIZE = 64
 # What save for TensorBoard during model training: "full" includes min/max/mean/std for weights/biases, but very expensive
 # LOG_LEVEL = "full"

@@ -9,10 +9,10 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-def groupVectors(df, how="median", samples_per_group=11, print_info=False):
+def groupVectors(df, how="median", by="GroundTruth", samples_per_group=11, print_info=False):
     means = dict()
     pretty_vectors = pd.DataFrame(columns=list(df))
-    for name, group in df.groupby("GroundTruth"):
+    for name, group in df.groupby(by):
         if group.shape[0] > samples_per_group:
             cur_data = group.copy()
             if how == "mean":
