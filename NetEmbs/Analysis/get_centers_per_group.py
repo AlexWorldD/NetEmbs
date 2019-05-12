@@ -12,8 +12,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 def groupVectors(df, how="median", by="GroundTruth", subset=None, samples_per_group=11, print_info=False):
     means = dict()
     pretty_vectors = pd.DataFrame(columns=list(df))
+    emb_size = df.Emb.head(1).values[0].shape[0]
     for name, group in df.groupby(by):
-        if subset is not None and isinstance(subset, list) and name in subset:
+        if subset is None or (isinstance(subset, list) and name in subset):
             if group.shape[0] > samples_per_group:
                 cur_data = group.copy()
                 if how == "mean":
@@ -31,8 +32,11 @@ def groupVectors(df, how="median", by="GroundTruth", subset=None, samples_per_gr
                     print("Highest similarity: \n", cur_data.Similarity.head(2), "\nLowest similarity: \n",
                           cur_data.Similarity.tail(2))
                 app = cur_data.head(samples_per_group).copy()
-                pretty_vectors = pretty_vectors.append(app, sort=True).append(pd.DataFrame(
-                    {"ID": 0, "Emb": [[-2] * 32], "GroundTruth": None}), sort=False)
+                try:
+                    pretty_vectors = pretty_vectors.append(app, sort=True).append(pd.DataFrame(
+                        {"ID": 0, "Emb": [[-2] * emb_size], "GroundTruth": None}), sort=False)
+                except ValueError:
+                    raise ValueError("Could not add empty row to heatmap...")
             else:
                 print("For group ", name, " is not enough samples...")
     return pretty_vectors

@@ -241,7 +241,7 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
 
 def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", return_full_path=False, debug=False):
     """
-    RandomWalk function for sampling the sequence of nodes from given graph and initial node
+    RandomWalk th
     :param G: Bipartite graph, an instance of networkx
     :param vertex: initial node
     :param length: the maximum length of RandomWalk
@@ -377,6 +377,7 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
         #                                in fsn.get_BP()]
         pass
     elif direction in ["COMBI", "IN", "OUT"]:
+        # sampled = [wrappedRandomWalk(node) for node in tqdm(GLOBAL_FSN.get_BP())]
         try:
             with tqdm(total=n_BPs) as pbar:
                 for i, res in tqdm(enumerate(
@@ -424,7 +425,10 @@ def get_pairs(n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, d
                 ["ALL", "IN", "OUT"]))
     if PRINT_STATUS:
         print("--------- Started the SAMPLING the sequences from FSN ---------")
+    start_time = time.time()
     sequences = graph_sampling(n_jobs, version, walk_length, walks_per_node, direction)
+    end_time = time.time()
+    print("Elapsed time for sampling: ", end_time - start_time)
     if PRINT_STATUS:
         print("--------- Ended the SAMPLING the sequences from FSN ---------")
     max_processes = min(n_jobs, os.cpu_count())

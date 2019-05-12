@@ -13,7 +13,7 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
-from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, WORK_FOLDER, MODE, LOG_LEVEL
+from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, WORK_FOLDER, MODE, LOG_LEVEL, NEGATIVE_SAMPLES
 from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
 import os
 
@@ -59,7 +59,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
     else:
         embedding_size = EMBD_SIZE  # Dimension of the embedding vector
 
-    neg_number = 100
+    neg_number = NEGATIVE_SAMPLES
     valid_size = 4
     total_size = fsn.number_of_BP()
     tf.reset_default_graph()

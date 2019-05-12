@@ -9,7 +9,8 @@ import seaborn as sns
 import matplotlib.ticker as ticker
 import numpy as np
 
-def plotVectors(df, title="Vectors"):
+
+def plotVectors(df, title="Vectors", folder=""):
     plt.rc('axes', titlesize=18)  # fontsize of the x and y titles
     plt.rc('axes', labelsize=18)  # fontsize of the x and y labels
     plt.rc('xtick', labelsize=18)  # fontsize of the tick labels
@@ -23,6 +24,10 @@ def plotVectors(df, title="Vectors"):
     ns = np.where(df.GroundTruth.values == None)[0][0]
     frame1.axes.yaxis.set_ticklabels(list(df["GroundTruth"].dropna().unique()), rotation='horizontal')
     frame1.axes.yaxis.set_major_locator(ticker.FixedLocator([ns / 2 + it * (ns + 1) for it in range(8)]))
-    postfix = "_emb_size" + str(len(df["Emb"].values[0])) + "samples_per_group" + str(ns)
     plt.tight_layout()
-    plt.savefig("img/" + title + postfix, dpi=140, pad_inches=0.01)
+    if title is not None and isinstance(title, str):
+        plt.tight_layout()
+        postfix = ""
+        if folder == "":
+            postfix = "_emb_size" + str(len(df["Emb"].values[0])) + "samples_per_group" + str(ns)
+        plt.savefig(folder + "img/" + title + postfix, dpi=140, pad_inches=0.01)
