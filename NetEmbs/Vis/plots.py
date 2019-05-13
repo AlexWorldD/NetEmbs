@@ -125,7 +125,7 @@ def plotHist(df, title="Histogram", normalized=False):
             plt.savefig("img/" + title + k, dpi=140, pad_inches=0.01)
 
 
-def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", rand_state=1):
+def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", rand_state=1, legend_shift = 1.3):
     import os
     import matplotlib.pyplot as plt
     from sklearn.manifold import TSNE
@@ -145,11 +145,18 @@ def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", ran
             cur_m = cur_m + 1 if len(markers) - 1 > cur_m else 0
             n_gr = 0
         plt.scatter(group["x"].values, group["y"].values, s=150, marker=markers[cur_m], label=name)
-    plt.legend(bbox_to_anchor=(1.3, 1), loc="upper right", frameon=False, markerscale=1)
+    plt.legend(bbox_to_anchor=(legend_shift, 1), loc="upper right", frameon=False, markerscale=1)
     if legend_title == "GroundTruth":
         plt.title("Embeddings visualisation with t-SNE, Ground Truth")
     elif legend_title == "label":
-        plt.title("Embeddings visualisation with t-SNE, predicted labels")
+        v_score = ""
+        if "GroundTruth" in list(fsn_embs):
+            str_labels = list(fsn_embs.GroundTruth.unique())
+            real_labels = dict(zip(str_labels, range(len(str_labels))))
+            from sklearn.metrics import v_measure_score
+            fsn_embs["true_labels"] = fsn_embs.GroundTruth.apply(lambda x: real_labels[x])
+            v_score = ", V-Score is "+str(v_measure_score(fsn_embs.true_labels.values, fsn_embs.label.values).round(3))
+        plt.title("Embeddings visualisation with t-SNE, predicted labels"+v_score)
 
     if title is not None and isinstance(title, str):
         plt.tight_layout()
