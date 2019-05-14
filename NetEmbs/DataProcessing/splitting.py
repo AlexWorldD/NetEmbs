@@ -12,8 +12,11 @@ def split_to_debit_credit(df, value_col="Value"):
     :param df: original DataFrame
     :return: FSN-ready DF
     """
-    df.loc[:, "Debit"] = df.loc[df[value_col] > 0.0, value_col]
-    df.loc[:, "Credit"] = -df.loc[df[value_col] < 0.0, value_col]
+    try:
+        df.loc[:, "Debit"] = df.loc[df[value_col] > 0.0, value_col]
+        df.loc[:, "Credit"] = -df.loc[df[value_col] < 0.0, value_col]
+    except KeyError:
+        raise KeyError("The Value column is not in the ist... Might be try prepareData(..., split=False, ...) ")
     # df.loc[df[value_col] > 0.0, "Debit"] = df.loc[df[value_col] > 0.0, value_col]
     # df.loc[df[value_col] < 0.0, "Credit"] = -df.loc[df[value_col] < 0.0, value_col]
     return df

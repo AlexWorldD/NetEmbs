@@ -60,20 +60,22 @@ def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=Tru
     if PRINT_STATUS:
         print("After normalization shape of DataFrame is ", str(original_df.shape))
     if LOG:
-        local_logger.info("After normalization shape of DataFrame is "+ str(original_df.shape))
+        local_logger.info("After normalization shape of DataFrame is " + str(original_df.shape))
     if unique:
         original_df = unique_BPs(original_df)
     if PRINT_STATUS:
         print("Final shape of DataFrame is ", original_df.shape)
     if LOG:
-        local_logger.info("Final shape of DataFrame is "+str(original_df.shape))
+        local_logger.info("Final shape of DataFrame is " + str(original_df.shape))
     return original_df
 
 
-def prepare_dataMarcel(original_df, merge_fa=True, add_from=True, norm=True, unique=True):
+def prepare_dataMarcel(original_df, clean_columns=["Value"],
+                       split=True, merge_fa=True, add_from=True, norm=True, unique=True):
     """
     General function for data preprocessing with given 'type' column
     :param original_df:
+    :param clean_columns: a list of titles for columns to be cleaned
     :param add_from: True if Data hasn't "from" column (require for FSN construction)
     :param merge_fa: True if need to merge rows with the same affected FAs
     :param norm: True if Data has to be normalized wrt ID
@@ -87,17 +89,18 @@ def prepare_dataMarcel(original_df, merge_fa=True, add_from=True, norm=True, uni
     if LOG:
         local_logger.info("Original shape of DataFrame is " + str(original_df.shape))
     # Delete all NaNs and Strings values from "Value" column
-    original_df = delStrings(original_df, col_names=["Value"])
+    original_df = delStrings(original_df, col_names=clean_columns)
     if PRINT_STATUS:
         print("Deleted all NaNs and Strings values from 'Value' column: ", str(original_df.shape))
     if LOG:
         local_logger.info("Deleted all NaNs and Strings values from 'Value' column: " + str(original_df.shape))
-    # Splitting into Credit and Debit columns
-    original_df = original_df.apply(CreditDebit, axis=1)
-    try:
-        original_df.drop(columns=["Value", "type"], inplace=True)
-    except KeyError:
-        raise KeyError("Cannot find 'amount' and 'type' columns in given DataFrame!")
+    if split:
+        # Splitting into Credit and Debit columns
+        original_df = original_df.apply(CreditDebit, axis=1)
+        try:
+            original_df.drop(columns=["Value", "type"], inplace=True)
+        except KeyError:
+            raise KeyError("Cannot find 'amount' and 'type' columns in given DataFrame!")
     if PRINT_STATUS:
         print("Splitting into Credit and Debit columns: ", str(original_df.shape))
     if LOG:
@@ -123,11 +126,11 @@ def prepare_dataMarcel(original_df, merge_fa=True, add_from=True, norm=True, uni
     if PRINT_STATUS:
         print("After normalization shape of DataFrame is ", str(original_df.shape))
     if LOG:
-        local_logger.info("After normalization shape of DataFrame is "+ str(original_df.shape))
+        local_logger.info("After normalization shape of DataFrame is " + str(original_df.shape))
     if unique:
         original_df = unique_BPs(original_df)
     if PRINT_STATUS:
         print("Final shape of DataFrame is ", original_df.shape)
     if LOG:
-        local_logger.info("Final shape of DataFrame is "+str(original_df.shape))
+        local_logger.info("Final shape of DataFrame is " + str(original_df.shape))
     return original_df

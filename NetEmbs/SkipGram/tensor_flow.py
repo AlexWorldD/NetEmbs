@@ -13,7 +13,8 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
-from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, WORK_FOLDER, MODE, LOG_LEVEL, NEGATIVE_SAMPLES
+from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, MODE, LOG_LEVEL, NEGATIVE_SAMPLES
+from NetEmbs import CONFIG
 from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
 import os
 
@@ -84,7 +85,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
         if use_prev_embs:
             print("Loading previous embeddings from cache... wait...")
             try:
-                embeddings = tf.Variable(pd.read_pickle(WORK_FOLDER[0] + WORK_FOLDER[1] + "cache/snapshot.pkl").values)
+                embeddings = tf.Variable(pd.read_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/snapshot.pkl").values)
             except FileNotFoundError:
                 print("No cached embeddings, initialize as random matrix...")
                 embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
@@ -140,7 +141,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
 
         # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
         merged = tf.summary.merge_all()
-        train_writer = tf.summary.FileWriter(WORK_FOLDER[0] + WORK_FOLDER[1] + '/train', graph)
+        train_writer = tf.summary.FileWriter(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + '/train', graph)
         # Add variable initializer.
         init = tf.global_variables_initializer()
 
@@ -216,9 +217,9 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
                         d = fsn_embs.merge(groundTruthDF.groupby("ID", as_index=False).agg({"GroundTruth": "first"}),
                                            on="ID")
                         #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
-                    plot_tSNE(d, legend_title="GroundTruth", folder=WORK_FOLDER[0] + WORK_FOLDER[1],
+                    plot_tSNE(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
                               title="progress/tSNE_GroundTruth" + str(chunk + vis_progress))
-                    plot_PCA(d, legend_title="GroundTruth", folder=WORK_FOLDER[0] + WORK_FOLDER[1],
+                    plot_PCA(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
                               title="progress/PCA_GroundTruth" + str(chunk + vis_progress))
                     print("Plotted the GroundTruth graph after " + str(chunk + vis_progress))
                 return final_embeddings
@@ -227,10 +228,10 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
     if not vis_progress:
         embs = run(graph, num_steps, skip_grams, batch_size, enc_dec)
     elif isinstance(vis_progress, int):
-        if not os.path.exists(WORK_FOLDER[0] + WORK_FOLDER[1] + "img/progress/"):
-            os.makedirs(WORK_FOLDER[0] + WORK_FOLDER[1] + "img/progress/", exist_ok=True)
+        if not os.path.exists(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "img/progress/"):
+            os.makedirs(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "img/progress/", exist_ok=True)
         embs = run_with_vis(graph, num_steps, skip_grams, batch_size, enc_dec)
-    pd.DataFrame(embs).to_pickle(WORK_FOLDER[0] + WORK_FOLDER[1] + "cache/snapshot.pkl")
+    pd.DataFrame(embs).to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/snapshot.pkl")
     end_time = time.time()
     print("Elapsed time: ", end_time - start_time)
     fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])

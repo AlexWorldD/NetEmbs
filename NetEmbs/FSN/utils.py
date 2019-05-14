@@ -9,12 +9,12 @@ from scipy.special import softmax
 import random
 import networkx as nx
 from networkx.algorithms import bipartite
-from NetEmbs.CONFIG import *
+from NetEmbs import CONFIG
 from collections import Counter
 import pandas as pd
 from NetEmbs.FSN.graph import FSN
 import logging
-from NetEmbs.CONFIG import LOG, PRESSURE, DOUBLE_NEAREST
+from NetEmbs.CONFIG import LOG, PRESSURE, DOUBLE_NEAREST, WINDOW_SIZE, STEPS_VERSIONS, WALKS_PER_NODE, PRINT_STATUS, WALKS_LENGTH, N_JOBS
 import time
 from pathos.multiprocessing import ProcessPool
 import itertools
@@ -490,6 +490,7 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     :return fsn: FSN class instance for given DataFrame
     :return tr: Encoder/Decoder for given DataFrame
     """
+    # TODO check current version vs. CONFIG.GLOBAL_FSN
     global GLOBAL_FSN
     GLOBAL_FSN = FSN()
     GLOBAL_FSN.build(df, left_title="FA_Name")
@@ -503,19 +504,19 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     if not use_cache:
         print("Sampling sequences... wait...")
         skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, direction))
-        with open(WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+        with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
             pickle.dump(skip_gr, file)
         print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
     elif use_cache:
         print("Loading sequences from cache... wait...")
         try:
-            with open(WORK_FOLDER[0] + "skip_grams_cached.pkl", "rb") as file:
+            with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "rb") as file:
                 skip_gr = pickle.load(file)
         except FileNotFoundError:
             print("File not found... Recalculate \n")
             print("Sampling sequences... wait...")
             skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, direction))
-            with open(WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+            with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
                 pickle.dump(skip_gr, file)
     else:
         raise ValueError(
