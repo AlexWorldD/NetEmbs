@@ -51,7 +51,7 @@ def analysisData(db):
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
     if MODE == "SimulatedData":
-        d = upload_data(db + "/FSN_Data.db", limit=1000)
+        d = upload_data(db + "/FSN_Data.db", limit=100)
         d = prepare_data(d)
 
     if MODE == "RealData":
@@ -99,7 +99,7 @@ def analysisData(db):
 
 
 if __name__ == '__main__':
-    for db in ["A", "B"]:
+    for db in ["../Simulation"]:
         analysisData(db)
 
     # Embeddings after small training, 10k for instance

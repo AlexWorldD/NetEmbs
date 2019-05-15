@@ -24,7 +24,14 @@ def countNaN(df, col=["Credit", "Debit"]):
 def countDirtyData(df, col=["Credit", "Debit"]):
     print("Strings in numeric columns: ", countStrings(df, col))
     print("NaN in numeric columns: ", countNaN(df, col))
+    print("Zeros BPs: ")
 
+def countZeros(df):
+    output = dict()
+    for title in ["isBadLeft", "isBadRight"]:
+        if title in list(df):
+            output[title] = df[title].sum()
+    return output
 
 def CreditDebit(row):
     try:

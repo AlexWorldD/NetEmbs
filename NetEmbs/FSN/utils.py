@@ -172,18 +172,27 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
     mask = {"IN": "OUT", "OUT": "IN"}
     indexes = ["IN", "OUT"]
     if len(ins) > 0:
-        ws = [edge[-1]["weight"] for edge in ins]
-        p_ws = ws / np.sum(ws)
-        ins = [edge[indexes.index(direction)] for edge in ins]
-        if mode == 0:
-            tmp_idx = np.random.choice(range(len(ins)))
-        else:
-            tmp_idx = np.random.choice(range(len(ins)), p=p_ws)
-        tmp_vertex = ins[tmp_idx]
-        tmp_weight = ws[tmp_idx]
-        if debug:
-            print(tmp_vertex)
-        output.append(tmp_vertex)
+        try:
+            ws = [edge[-1]["weight"] for edge in ins]
+            p_ws = ws / np.sum(ws)
+            ins = [edge[indexes.index(direction)] for edge in ins]
+            if mode == 0:
+                tmp_idx = np.random.choice(range(len(ins)))
+            else:
+                tmp_idx = np.random.choice(range(len(ins)), p=p_ws)
+            tmp_vertex = ins[tmp_idx]
+            tmp_weight = ws[tmp_idx]
+            if debug:
+                print(tmp_vertex)
+            output.append(tmp_vertex)
+        except Exception as e:
+            if LOG:
+                snapshot = {"CurrentBPNode": vertex,
+                            "NextCandidateFA": list(zip(ins, ws))}
+                local_logger = logging.getLogger("NetEmbs.Utils.step")
+                local_logger.error("Fatal ValueError during 1st sub-step", exc_info=True)
+                local_logger.info("Snapshot" + str(snapshot))
+        #     Return next vertex here
     else:
         return -1
     # ////// THE SECOND STEP TO OPPOSITE SET OF NODES (to original one) \\\\\
@@ -228,7 +237,7 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
                 snapshot = {"CurrentNode": tmp_vertex, "CurrentWeight": tmp_weight,
                             "NextCandidates": list(zip(outs, ws)), "Probas": probas}
                 local_logger = logging.getLogger("NetEmbs.Utils.step")
-                local_logger.error("Fatal ValueError during step", exc_info=True)
+                local_logger.error("Fatal ValueError during 2nd sub-step", exc_info=True)
                 local_logger.info("Snapshot" + str(snapshot))
         #     Return next vertex here
         if return_full_step:
@@ -287,19 +296,25 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
             # TODO modify to more robust behaviour
             break
         if new_v == -1:
-            if debug: print("Cannot continue walking... Termination.")
-            break
-        if return_full_path:
-            if isinstance(new_v, list):
-                context.extend(new_v)
+            # No edges in the set direction...
+            if direction != "COMBI":
+                if debug: print("Cannot continue walking... Termination.")
+                break
+            else:
+                if debug: print("Cannot continue walking... Change direction.")
+                cur_v = context[-1]
+        else:
+            if return_full_path:
+                if isinstance(new_v, list):
+                    context.extend(new_v)
+                else:
+                    context.append(new_v)
             else:
                 context.append(new_v)
-        else:
-            context.append(new_v)
-        #     TODO modification is here! check is it needed or not
-        if DOUBLE_NEAREST:
-            context.extend(context[-2:])
-        cur_v = context[-1]
+            #     TODO modification is here! check is it needed or not
+            if DOUBLE_NEAREST:
+                context.extend(context[-2:])
+            cur_v = context[-1]
     return context
 
 

@@ -50,7 +50,8 @@ def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=997):
         # Split into two columns: Debit and Credit
     local_logger.info("Data has been uploaded")
     db_data.rename(index=str, columns={"TID": "ID"}, inplace=True)
-    return db_data[db_data["Value"] != 0.0]
+    return db_data
+    # return db_data[db_data["Value"] != 0.0]
 
 
 def upload_JournalEntriesTruth(path_to_db='../Simulation/FSN_Data.db', limit=None):

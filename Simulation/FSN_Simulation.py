@@ -11,6 +11,9 @@ from Simulation.BusinessProcesses import *
 from Simulation.FinancialAccounts import *
 from Simulation.utils import getNoisyFAs
 from Simulation import CONFIG
+from Simulation.BusinessProcesses.BadTransaction import BadTransaction
+
+
 class PayrollDisbursementEvent:
 
     def __init__(self, env, averageDisbursementTerm):
@@ -333,6 +336,10 @@ class FSN_Simulation(object):
         # statement.addAccount(prepaidExpensesAccount)
         # statement.addAccount(fixedAssetsAccount)
         # statement.addAccount(deprExpenseAccount)
+        # Adding transaction with zero values
+        for bad_type in ["both", "left", "right"]:
+            for _ in range(2):
+                BadTransaction(name=bad_type, env=env, tax_rate=0.1).newTransaction()
 
         env.process(salesHigh.getTransactions(SalesNum[0]))
         env.process(salesLow.getTransactions(SalesNum[1]))
