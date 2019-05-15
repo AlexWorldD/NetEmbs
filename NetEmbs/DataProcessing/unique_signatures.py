@@ -19,9 +19,10 @@ def get_signature(df):
     signatureR = sorted(
         list(zip(df["FA_Name"][df["Debit"] > 0.0].values, df["Debit"][df["Debit"] > 0.0].values.round(N_DIGITS))),
         key=lambda x: x[0])
-    is_badL = df.Credit.values.sum() == 0.0
-    is_badR = df.Debit.values.sum() == 0.0
-    return pd.Series({"ID": df["ID"].values[0], "Signature": str((signatureL, signatureR)), "isBadLeft": is_badL, "isBadRight": is_badR})
+    # is_badL = df.Credit.values.sum() == 0.0
+    # is_badR = df.Debit.values.sum() == 0.0
+    return pd.Series({"ID": df["ID"].values[0], "Signature": str((signatureL, signatureR))})
+    # return pd.Series({"ID": df["ID"].values[0], "Signature": str((signatureL, signatureR)), "isBadLeft": is_badL, "isBadRight": is_badR})
 
 
 def get_signature_df(original_df):

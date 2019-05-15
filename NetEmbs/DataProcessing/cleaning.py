@@ -24,7 +24,17 @@ def countNaN(df, col=["Credit", "Debit"]):
 def countDirtyData(df, col=["Credit", "Debit"]):
     print("Strings in numeric columns: ", countStrings(df, col))
     print("NaN in numeric columns: ", countNaN(df, col))
-    print("Zeros BPs: ")
+    print("Zeros BPs: ", countZero(df))
+
+
+def countZero(df):
+    output = dict()
+    aggs = df.groupby("ID").agg({"Credit": sum, "Debit": sum})
+    for title in ["Credit", "Debit"]:
+        if title in list(df):
+            output[title] = aggs.loc[aggs[title] == 0.0, title].count()
+    return output
+
 
 def countZeros(df):
     output = dict()
@@ -32,6 +42,7 @@ def countZeros(df):
         if title in list(df):
             output[title] = df[title].sum()
     return output
+
 
 def CreditDebit(row):
     try:
