@@ -54,6 +54,9 @@ def CreditDebit(row):
 
 
 def delStrings(df, col_names=["Value"]):
+    drop_cl = list()
     for title in col_names:
-        df[title] = df[title].map(lambda x: x if type(x) is not str else None)
-    return df.dropna(subset=col_names)
+        if title in list(df):
+            df[title] = df[title].map(lambda x: x if type(x) is not str else None)
+            drop_cl.append(title)
+    return df.dropna(subset=drop_cl)

@@ -98,9 +98,67 @@ def analysisData(db):
     print("Plotted the Clustered graph!")
 
 
+def pairWiseSim(N, mode="DB"):
+    def getVectorized(row):
+        signatureL = dict(sorted(
+            list(
+                zip(row["FA_Name"][row["Credit"] > 0.0].values, row["Credit"][row["Credit"] > 0.0].values)),
+            key=lambda x: x[0]))
+        signatureR = dict(sorted(
+            list(zip(row["FA_Name"][row["Debit"] > 0.0].values, row["Debit"][row["Debit"] > 0.0].values)),
+            key=lambda x: x[0]))
+
+        cur_left = ALL_FAs.copy()
+        cur_right = ALL_FAs.copy()
+        cur_left.update(signatureL)
+        cur_right.update(signatureR)
+        return pd.Series(
+            {"ID": row["ID"].values[0], "OneHots": np.array(list(cur_left.values()) + list(cur_right.values()))})
+
+    def getVectorizedDF(df):
+        res = df.groupby("ID", as_index=False).apply(getVectorized)
+        return res
+
+    vect_mean = np.vectorize(lambda x: np.mean(x))
+    from sklearn import preprocessing
+    def getPairWise(df):
+        # For exactly the same BPs one gets 0.0, hence, in terms of similarity we should substruct it from 1.0
+        arr = preprocessing.normalize(1.0-vect_mean(np.power(np.subtract.outer(*[df.OneHots] * 2).T, 2)), axis=1)
+        return pd.concat((df['ID'], pd.DataFrame(arr, columns=df['ID'])), axis=1)
+
+    if mode == "DB":
+        d = upload_data("../Simulation/FSN_Data.db", limit=N)
+        d = prepare_data(d)
+    else:
+        from NetEmbs.GenerateData.complex_df import sales_collections
+        d = sales_collections(N, noise=[])
+        d = prepare_data(d, split=False)
+
+    ALL_FAs = dict(zip(sorted(d.FA_Name.unique()), [0.0] * d.FA_Name.nunique()))
+    vect_d = getVectorizedDF(d)
+
+    res = getPairWise(vect_d)
+    res.set_index("ID", inplace=True)
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    # plot heatmap
+    ax = sns.heatmap(res.T, cmap="Blues")
+
+    # turn the axis label
+    for item in ax.get_yticklabels():
+        item.set_rotation(0)
+
+    for item in ax.get_xticklabels():
+        item.set_rotation(90)
+    plt.show()
+    print(d.shape)
+
+
 if __name__ == '__main__':
-    for db in ["../Simulation"]:
-        analysisData(db)
+    pairWiseSim(100, mode="DB")
+
+    # for db in ["../Simulation"]:
+    #     analysisData(db)
 
     # Embeddings after small training, 10k for instance
     # embs = pd.read_pickle("model/<YOUR FOLDER TO 10K TRAIN STEPS>/cache/Embeddings.pkl")
