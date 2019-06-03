@@ -24,8 +24,8 @@ LOG_LEVEL = "cost"
 
 # /////// Sampling parameters \\\\\\\
 # STEP configuration
-STEP_VERSION = "MetaDiff"
-DIRECTION = "COMBI"
+STEP_VERSION = "OriginalRandomWalk"
+DIRECTION = "RANDOM"
 PRESSURE = 30
 WINDOW_SIZE = 3
 DOUBLE_NEAREST = False
@@ -34,7 +34,7 @@ WALKS_LENGTH = 50
 # Signatures round to decimals
 N_DIGITS = 5
 
-all_sampling_strategies = ["DefUniform", "DefWeighted", "MetaUniform", "MetaWeighted", "MetaDiff"]
+all_sampling_strategies = ["OriginalRandomWalk", "DefUniform", "DefWeighted", "MetaUniform", "MetaWeighted", "MetaDiff"]
 
 # /////// Logging configuration \\\\\\\
 MAIN_LOGGER = None

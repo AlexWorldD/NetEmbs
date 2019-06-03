@@ -53,10 +53,16 @@ def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debu
     # Get the neighborhood of current node regard the chosen direction
     if direction == "IN":
         ins = G.in_edges(vertex, data=True)
+        ins = list(zip([edge[0] for edge in ins], [edge[-1]["weight"] for edge in ins]))
     elif direction == "OUT":
         ins = G.out_edges(vertex, data=True)
+        list(zip([edge[1] for edge in ins], [edge[-1]["weight"] for edge in ins]))
+    elif direction == "RANDOM":
+        ins = (G.in_edges(vertex, data=True), G.out_edges(vertex, data=True))
+        ins = list(zip([edge[0] for edge in ins[0]], [edge[-1]["weight"] for edge in ins[0]])) + \
+              list(zip([edge[1] for edge in ins[1]], [edge[-1]["weight"] for edge in ins[1]]))
     else:
-        raise ValueError("Wrong direction argument! {!s} used, but IN or OUT are allowed!".format(direction))
+        raise ValueError("Wrong direction argument! {!s} used, but IN, OUT or RANDOM are allowed!".format(direction))
     output = list()
     indexes = ["IN", "OUT"]
     # Check that we can make step, otherwise return special value -1
@@ -64,15 +70,15 @@ def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debu
         try:
             # Apply weighted probabilities
             if mode == 1:
-                ws = [edge[-1]["weight"] for edge in ins]
+                ws = [edge[-1] for edge in ins]
                 p_ws = ws / np.sum(ws)
-                ins = [edge[indexes.index(direction)] for edge in ins]
+                ins = [edge[0] for edge in ins]
                 tmp_idx = np.random.choice(range(len(ins)), p=p_ws)
                 tmp_vertex = ins[tmp_idx]
                 tmp_weight = ws[tmp_idx]
             #     Apply uniform probabilities
             elif mode == 0:
-                ins = [edge[indexes.index(direction)] for edge in ins]
+                ins = [edge[0] for edge in ins]
                 tmp_vertex = np.random.choice(ins)
             if debug:
                 print(tmp_vertex)
@@ -87,25 +93,31 @@ def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debu
     else:
         return -1
     # ///////////// \\\\\\\\\\\\\\\
-    #     Second sub-step, from FA to BP
+    # Get the neighborhood of current node regard the chosen direction
     if direction == "IN":
         ins = G.in_edges(tmp_vertex, data=True)
+        ins = list(zip([edge[0] for edge in ins], [edge[-1]["weight"] for edge in ins]))
     elif direction == "OUT":
         ins = G.out_edges(tmp_vertex, data=True)
+        list(zip([edge[1] for edge in ins], [edge[-1]["weight"] for edge in ins]))
+    elif direction == "RANDOM":
+        ins = (G.in_edges(tmp_vertex, data=True), G.out_edges(tmp_vertex, data=True))
+        ins = list(zip([edge[0] for edge in ins[0]], [edge[-1]["weight"] for edge in ins[0]])) + \
+              list(zip([edge[1] for edge in ins[1]], [edge[-1]["weight"] for edge in ins[1]]))
     else:
-        raise ValueError("Wrong direction argument! {!s} used while IN or OUT are allowed!".format(direction))
+        raise ValueError("Wrong direction argument! {!s} used, but IN, OUT or RANDOM are allowed!".format(direction))
     # Check that we can make step, otherwise return special value -1
     if len(ins) > 0:
         try:
             if mode == 1:
-                ws = [edge[-1]["weight"] for edge in ins]
+                ws = [edge[-1] for edge in ins]
                 p_ws = ws / np.sum(ws)
-                ins = [edge[indexes.index(direction)] for edge in ins]
+                ins = [edge[0] for edge in ins]
                 tmp_idx = np.random.choice(range(len(ins)), p=p_ws)
                 tmp_vertex = ins[tmp_idx]
                 tmp_weight = ws[tmp_idx]
             elif mode == 0:
-                ins = [edge[indexes.index(direction)] for edge in ins]
+                ins = [edge[0] for edge in ins]
                 tmp_vertex = np.random.choice(ins)
             if debug:
                 print(tmp_vertex)
@@ -387,8 +399,8 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
                     new_v = default_step(G, cur_v, direction, mode=0, return_full_step=return_full_path, debug=debug)
                 if new_v == -1:
                     # No edges in the set direction...
-                        if debug: print("Cannot continue walking... Termination.")
-                        break
+                    if debug: print("Cannot continue walking... Termination.")
+                    break
             elif version == "DefWeighted":
                 if direction == "COMBI":
                     new_v = default_step(G, cur_v, cur_direction, mode=1, return_full_step=return_full_path,
@@ -398,8 +410,8 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
                     new_v = default_step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
                 if new_v == -1:
                     # No edges in the set direction...
-                        if debug: print("Cannot continue walking... Termination.")
-                        break
+                    if debug: print("Cannot continue walking... Termination.")
+                    break
             elif version == "MetaUniform":
                 new_v = step(G, cur_v, direction, mode=0, return_full_step=return_full_path, debug=debug)
             elif version == "MetaWeighted":
@@ -410,6 +422,11 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
                     cur_direction = mask[cur_direction]
                 else:
                     new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
+            elif version == "OriginalRandomWalk":
+                #         The direct implementation of Perozi randomWalk
+                new_v = default_step(G, cur_v, direction="RANDOM", mode=0, return_full_step=return_full_path,
+                                     debug=debug)
+
         except nx.NetworkXError:
             # TODO modify to more robust behaviour
             break
@@ -472,6 +489,11 @@ def wrappedRandomWalkOUT(node):
             in range(global_walks_per_node)]
 
 
+def wrappedOriginalRandomWalk(node):
+    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction="RANDOM", version=global_version) for _
+            in range(global_walks_per_node)]
+
+
 def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_node=None, direction="COMBI"):
     """
     Construction a sequences of nodes from given FSN
@@ -505,7 +527,7 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
         local_logger.info("Total size of broadcasting arguments is " + str(get_size(BPs)) + " bytes ")
         local_logger.info("Total size of FSN is " + str(get_size(GLOBAL_FSN)) + " bytes ")
 
-    if direction not in ["ALL", "IN", "OUT", "COMBI"]:
+    if direction not in ["ALL", "IN", "OUT", "COMBI", "RANDOM"]:
         raise ValueError(
             "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
                 ["ALL", "IN", "OUT"]))
@@ -543,7 +565,7 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
         except KeyboardInterrupt:
             print('got ^C while pool mapping, terminating the pool')
             pool.terminate()
-    elif direction in ["COMBI", "IN", "OUT"]:
+    elif direction in ["COMBI", "IN", "OUT", "RANDOM"]:
         # sampled = [wrappedRandomWalk(node) for node in tqdm(GLOBAL_FSN.get_BP())]
         try:
             with tqdm(total=n_BPs) as pbar:
@@ -590,10 +612,10 @@ def get_pairs(n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, d
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
-    if direction not in ["ALL", "IN", "OUT", "COMBI"]:
+    if direction not in ["ALL", "IN", "OUT", "COMBI", "RANDOM"]:
         raise ValueError(
             "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
-                ["ALL", "IN", "OUT"]))
+                ["ALL", "IN", "OUT", "COMBI", "RANDOM"]))
     if PRINT_STATUS:
         print("--------- Started the SAMPLING the sequences from FSN ---------")
     start_time = time.time()
