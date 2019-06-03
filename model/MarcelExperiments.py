@@ -10,6 +10,7 @@ import pandas as pd
 import os
 from NetEmbs import CONFIG
 import numpy as np
+import logging
 
 
 # MODE = "RealData"
@@ -38,7 +39,7 @@ def create_working_folder():
         os.makedirs(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "img/", exist_ok=True)
     if not os.path.exists(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/"):
         os.makedirs(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/", exist_ok=True)
-    print("Working directory is ", "model/" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
+    print("Working directory is ", CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
 
 
 def analysisData(db):
@@ -51,7 +52,7 @@ def analysisData(db):
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
     if MODE == "SimulatedData":
-        d = upload_data(db + "/FSN_Data.db", limit=100)
+        d = upload_data(db + "/FSN_Data.db", limit=None)
         d = prepare_data(d)
 
     if MODE == "RealData":
@@ -76,8 +77,15 @@ def analysisData(db):
     print("Current config parameters: \n Embedding size: ", EMBD_SIZE, "\n Walks per node: ", WALKS_PER_NODE,
           "\n Steps in TF model: ", STEPS)
     # ///////// Getting embeddings \\\\\\\\\\\\
-    embds = get_embs_TF(d, embed_size=EMBD_SIZE, walks_per_node=WALKS_PER_NODE, num_steps=STEPS,
+    try:
+        embds = get_embs_TF(d, embed_size=EMBD_SIZE, walks_per_node=WALKS_PER_NODE, num_steps=STEPS, step_version=STEP_VERSION,
                         use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False, groundTruthDF=None)
+    except Exception as e:
+        if LOG:
+            local_logger = logging.getLogger("NetEmbs.MarcelExperiments")
+            local_logger.error("We've got an error in get_embs_TF function... ", exc_info=True)
+        raise e
+
     # //////// Merge with GroundTruth \\\\\\\\\
     if MODE == "SimulatedData":
         d = add_ground_truth(embds)
@@ -155,10 +163,11 @@ def pairWiseSim(N, mode="DB"):
 
 
 if __name__ == '__main__':
-    pairWiseSim(100, mode="DB")
+    # pairWiseSim(100, mode="DB")
 
-    # for db in ["../Simulation"]:
-    #     analysisData(db)
+    for db in ["../Simulation"]:
+    # for db in ["A", "B"]:
+        analysisData(db)
 
     # Embeddings after small training, 10k for instance
     # embs = pd.read_pickle("model/<YOUR FOLDER TO 10K TRAIN STEPS>/cache/Embeddings.pkl")

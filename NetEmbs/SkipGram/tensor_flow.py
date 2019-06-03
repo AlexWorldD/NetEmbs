@@ -13,7 +13,7 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.DataProcessing.connect_db import upload_JournalEntriesTruth
-from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, MODE, LOG_LEVEL, NEGATIVE_SAMPLES
+from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, MODE, LOG_LEVEL, NEGATIVE_SAMPLES, DIRECTION
 from NetEmbs import CONFIG
 from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
 import os
@@ -21,7 +21,7 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
-def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, num_steps=10000, walk_length=10,
+def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="MetaDiff", embed_size=None, num_steps=10000, walk_length=10,
                 walks_per_node=10, use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False,
                 groundTruthDF=None):
     """
@@ -50,7 +50,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), embed_size=None, 
                 type(input_data)))
     print("Total number of BPs in given dataset is ", d.ID.nunique())
     skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=walks_per_node, walk_length=walk_length,
-                                             use_cache=use_cached_skip_grams)
+                                             use_cache=use_cached_skip_grams, version=step_version, direction=DIRECTION)
     print(skip_grams[:5])
     #
     #     TensorFlow stuff

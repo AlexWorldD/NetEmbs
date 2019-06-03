@@ -14,7 +14,8 @@ from collections import Counter
 import pandas as pd
 from NetEmbs.FSN.graph import FSN
 import logging
-from NetEmbs.CONFIG import LOG, PRESSURE, DOUBLE_NEAREST, WINDOW_SIZE, STEPS_VERSIONS, WALKS_PER_NODE, PRINT_STATUS, WALKS_LENGTH, N_JOBS
+from NetEmbs.CONFIG import LOG, PRESSURE, DOUBLE_NEAREST, WINDOW_SIZE, all_sampling_strategies, WALKS_PER_NODE, \
+    PRINT_STATUS, WALKS_LENGTH, N_JOBS
 import time
 from pathos.multiprocessing import ProcessPool
 import itertools
@@ -24,6 +25,7 @@ from tqdm import *
 import pickle
 
 np.seterr(all="raise")
+global global_version, global_walk_length, global_walks_per_node, global_direction
 
 
 def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debug=False):
@@ -54,7 +56,104 @@ def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debu
     elif direction == "OUT":
         ins = G.out_edges(vertex, data=True)
     else:
+        raise ValueError("Wrong direction argument! {!s} used, but IN or OUT are allowed!".format(direction))
+    output = list()
+    indexes = ["IN", "OUT"]
+    # Check that we can make step, otherwise return special value -1
+    if len(ins) > 0:
+        try:
+            # Apply weighted probabilities
+            if mode == 1:
+                ws = [edge[-1]["weight"] for edge in ins]
+                p_ws = ws / np.sum(ws)
+                ins = [edge[indexes.index(direction)] for edge in ins]
+                tmp_idx = np.random.choice(range(len(ins)), p=p_ws)
+                tmp_vertex = ins[tmp_idx]
+                tmp_weight = ws[tmp_idx]
+            #     Apply uniform probabilities
+            elif mode == 0:
+                ins = [edge[indexes.index(direction)] for edge in ins]
+                tmp_vertex = np.random.choice(ins)
+            if debug:
+                print(tmp_vertex)
+            output.append(tmp_vertex)
+        except Exception as e:
+            if LOG:
+                snapshot = {"CurrentBPNode": vertex,
+                            "NextCandidateFA": list(zip(ins, ws))}
+                local_logger = logging.getLogger("NetEmbs.Utils.step")
+                local_logger.error("Fatal ValueError during 1st sub-step", exc_info=True)
+                local_logger.info("Snapshot" + str(snapshot))
+    else:
+        return -1
+    # ///////////// \\\\\\\\\\\\\\\
+    #     Second sub-step, from FA to BP
+    if direction == "IN":
+        ins = G.in_edges(tmp_vertex, data=True)
+    elif direction == "OUT":
+        ins = G.out_edges(tmp_vertex, data=True)
+    else:
         raise ValueError("Wrong direction argument! {!s} used while IN or OUT are allowed!".format(direction))
+    # Check that we can make step, otherwise return special value -1
+    if len(ins) > 0:
+        try:
+            if mode == 1:
+                ws = [edge[-1]["weight"] for edge in ins]
+                p_ws = ws / np.sum(ws)
+                ins = [edge[indexes.index(direction)] for edge in ins]
+                tmp_idx = np.random.choice(range(len(ins)), p=p_ws)
+                tmp_vertex = ins[tmp_idx]
+                tmp_weight = ws[tmp_idx]
+            elif mode == 0:
+                ins = [edge[indexes.index(direction)] for edge in ins]
+                tmp_vertex = np.random.choice(ins)
+            if debug:
+                print(tmp_vertex)
+            output.append(tmp_vertex)
+        except Exception as e:
+            if LOG:
+                snapshot = {"CurrentBPNode": vertex,
+                            "NextCandidateFA": list(zip(ins, ws))}
+                local_logger = logging.getLogger("NetEmbs.Utils.step")
+                local_logger.error("Fatal ValueError during 1st sub-step", exc_info=True)
+                local_logger.info("Snapshot" + str(snapshot))
+        if return_full_step:
+            return output
+        else:
+            return output[-1]
+    else:
+        return -1
+
+
+def default_step_old(G, vertex, direction="IN", mode=0, return_full_step=False, debug=False):
+    """
+     One step according to the original implementation of RandomWalk by Perozzi et al.
+     (uniform probabilities, follows the same direction)
+    :param G: graph/network on which step should be done
+    :param vertex: current vertex
+    :param direction: the direction of step: IN or OUT
+    :param mode: use the edge's weight for transition probability
+    :param return_full_step: if True, then step includes intermediate node of FA type
+    :param debug: print intermediate stages
+    :return: next step if succeeded or -1 if failed
+    """
+    if vertex in [-1, -2, -3]:
+        #         Step cannot be made, return -1
+        return vertex
+    elif not G.has_node(vertex):
+        raise ValueError("Vertex {!r} is not in FSN!".format(vertex))
+    if mode in [0, 1]:
+        pass
+    else:
+        raise ValueError(
+            "For DefaultStep only two modes available: 0 (uniform) or 1(weighted) byt given {!r}!".format(mode))
+    # Get the neighborhood of current node regard the chosen direction
+    if direction == "IN":
+        ins = G.in_edges(vertex, data=True)
+    elif direction == "OUT":
+        ins = G.out_edges(vertex, data=True)
+    else:
+        raise ValueError("Wrong direction argument! {!s} used, but IN or OUT are allowed!".format(direction))
     output = list()
     indexes = ["IN", "OUT"]
     # Check that we can make step, otherwise return special value -1
@@ -265,9 +364,9 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     :param debug: Debug boolean flag, print intermediate steps
     :return: Sampled sequence of nodes
     """
-    if version not in STEPS_VERSIONS:
+    if version not in all_sampling_strategies:
         raise ValueError(
-            "Given not supported step version {!s}!".format(version) + "\nAllowed only " + str(STEPS_VERSIONS))
+            "Given not supported step version {!s}!".format(version) + "\nAllowed only " + str(all_sampling_strategies))
     context = list()
     if vertex is None:
         context.append(random.choice(list(G.nodes)))
@@ -278,10 +377,29 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     cur_direction = "IN"
     while len(context) < length + 1:
         try:
+            # TODO, June 2, here
             if version == "DefUniform":
-                new_v = default_step(G, cur_v, direction, mode=0, return_full_step=return_full_path, debug=debug)
+                if direction == "COMBI":
+                    new_v = default_step(G, cur_v, cur_direction, mode=0, return_full_step=return_full_path,
+                                         debug=debug)
+                    cur_direction = mask[cur_direction]
+                else:
+                    new_v = default_step(G, cur_v, direction, mode=0, return_full_step=return_full_path, debug=debug)
+                if new_v == -1:
+                    # No edges in the set direction...
+                        if debug: print("Cannot continue walking... Termination.")
+                        break
             elif version == "DefWeighted":
-                new_v = default_step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
+                if direction == "COMBI":
+                    new_v = default_step(G, cur_v, cur_direction, mode=1, return_full_step=return_full_path,
+                                         debug=debug)
+                    cur_direction = mask[cur_direction]
+                else:
+                    new_v = default_step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
+                if new_v == -1:
+                    # No edges in the set direction...
+                        if debug: print("Cannot continue walking... Termination.")
+                        break
             elif version == "MetaUniform":
                 new_v = step(G, cur_v, direction, mode=0, return_full_step=return_full_path, debug=debug)
             elif version == "MetaWeighted":
@@ -340,7 +458,17 @@ def get_size(obj, seen=None):
 
 
 def wrappedRandomWalk(node):
-    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction=global_direction, version=global_version) for _
+    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction=CONFIG.DIRECTION, version=global_version) for _
+            in range(global_walks_per_node)]
+
+
+def wrappedRandomWalkIN(node):
+    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction="IN", version=global_version) for _
+            in range(global_walks_per_node)]
+
+
+def wrappedRandomWalkOUT(node):
+    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction="OUT", version=global_version) for _
             in range(global_walks_per_node)]
 
 
@@ -390,7 +518,31 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
         #                                in
         #                                range(walks_per_node) for node
         #                                in fsn.get_BP()]
-        pass
+        print("Chosen ALL direction, hence, run both IN and OUT randomWalks from each node...")
+        if LOG:
+            local_logger = logging.getLogger("NetEmbs.Utils.graph_sampling")
+            local_logger.info("Chosen direction ALL, hence, run both IN and OUT randomWalks from each node! ")
+        try:
+            with tqdm(total=n_BPs) as pbar:
+                for i, res in tqdm(enumerate(
+                        pool.uimap(wrappedRandomWalkIN, BPs))):
+                    sampled.append(res)
+                    pbar.update()
+        except KeyboardInterrupt:
+            print('got ^C while pool mapping, terminating the pool')
+            pool.terminate()
+        pool.terminate()
+        pool.restart()
+        print("Done with IN direction!")
+        try:
+            with tqdm(total=n_BPs) as pbar:
+                for i, res in tqdm(enumerate(
+                        pool.uimap(wrappedRandomWalkOUT, BPs))):
+                    sampled.append(res)
+                    pbar.update()
+        except KeyboardInterrupt:
+            print('got ^C while pool mapping, terminating the pool')
+            pool.terminate()
     elif direction in ["COMBI", "IN", "OUT"]:
         # sampled = [wrappedRandomWalk(node) for node in tqdm(GLOBAL_FSN.get_BP())]
         try:
@@ -413,6 +565,10 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
     res = list(itertools.chain(*sampled))
     pool.terminate()
     pool.restart()
+    if LOG:
+        local_logger = logging.getLogger("NetEmbs.Utils.graph_sampling")
+        local_logger.info("Total number of raw sampled sequences is " + str(len(res)))
+        local_logger.info("Average length of sequences is " + str(sum(map(len, res)) / float(len(res))))
     return res
 
 
@@ -459,6 +615,9 @@ def get_pairs(n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, d
         pairs = [item for sublist in pairs for item in sublist]
     pool.terminate()
     pool.restart()
+    if LOG:
+        local_logger = logging.getLogger("NetEmbs.Utils.get_pairs")
+        local_logger.info("Total number of raw sampled pairs is " + str(len(pairs)))
     return pairs
 
 
@@ -510,15 +669,15 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     GLOBAL_FSN = FSN()
     GLOBAL_FSN.build(df, left_title="FA_Name")
     tr = TransformationBPs(GLOBAL_FSN.get_BP())
-    # Global variables for using in forked sub-processes in parallel execution
     global global_version, global_walk_length, global_walks_per_node, global_direction
+    # Global variables for using in forked sub-processes in parallel execution
     global_direction = direction
     global_version = version
     global_walk_length = walk_length
     global_walks_per_node = walks_per_node
     if not use_cache:
         print("Sampling sequences... wait...")
-        skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, direction))
+        skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, CONFIG.DIRECTION))
         with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
             pickle.dump(skip_gr, file)
         print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
@@ -530,7 +689,7 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
         except FileNotFoundError:
             print("File not found... Recalculate \n")
             print("Sampling sequences... wait...")
-            skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, direction))
+            skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, CONFIG.DIRECTION))
             with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
                 pickle.dump(skip_gr, file)
     else:
