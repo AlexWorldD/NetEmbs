@@ -3,6 +3,8 @@ pandas
 networkx
 matplotlib
 seaborn
+plotly
+ipywidgets
 sklearn
 scipy
 simpy
