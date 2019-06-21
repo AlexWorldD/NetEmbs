@@ -42,6 +42,7 @@ def create_working_folder():
     print("Working directory is ", CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
 
 
+
 def analysisData(db):
     # Creating current working place for storing intermediate cache and final images
     CONFIG.WORK_FOLDER = (db + path_postfix_samplings, path_postfix_tf)
