@@ -8,10 +8,12 @@ import numpy as np
 import pandas as pd
 import logging
 
+
 # TODO try another kind of normalization, unit-normal etc.
 def normalize(df, by="ID"):
     dfN = df.copy()
     titles = ["Debit", "Credit"]
+    dfN["amount"] = dfN.apply(lambda row: max(row[t] for t in titles), axis=1)
     groups = dfN.groupby(by)
     sums = groups[titles].transform(np.sum)
     for column in titles:
@@ -20,4 +22,3 @@ def normalize(df, by="ID"):
         except ZeroDivisionError as e:
             logging.exception("Exception occurred", e)
     return dfN
-
