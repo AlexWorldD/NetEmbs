@@ -3,9 +3,9 @@ pandas
 networkx>=2.2
 matplotlib
 seaborn
-plotly>=3.10.0
-cufflinks==0.15
-ipywidgets>=7.4.2
+#plotly>=3.10.0
+#cufflinks==0.15
+#ipywidgets>=7.4.2
 sklearn
 scipy
 simpy>=3.0.11
