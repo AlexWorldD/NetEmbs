@@ -1,14 +1,19 @@
 numpy
 pandas
 networkx>=2.2
-matplotlib
-seaborn
-#plotly>=3.10.0
-#cufflinks==0.15
-#ipywidgets>=7.4.2
 sklearn
 scipy
+# Additional package for Data Simulation
 simpy>=3.0.11
+# Multiprocessing
 pathos>=0.2.3
-tensorflow>=1.12.0
 tqdm
+# For Skip-Gram model
+tensorflow>=1.12.0
+# For visualisation
+matplotlib
+seaborn
+plotly>=3.10.0
+cufflinks==0.15
+ipywidgets>=7.4.2
+wordcloud
