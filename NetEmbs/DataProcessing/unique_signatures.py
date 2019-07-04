@@ -9,20 +9,28 @@ from NetEmbs.CONFIG import N_DIGITS
 
 
 def get_signature(df):
-    # TODO change list to set
-    # Old version
-    # signatureL = list(zip(df["FA_Name"][df["Credit"] > 0.0].values, df["Credit"][df["Credit"] > 0.0].values))
-    # signatureR = list(zip(df["FA_Name"][df["Debit"] > 0.0].values, df["Debit"][df["Debit"] > 0.0].values))
-    signatureL = sorted(
-        list(zip(df["FA_Name"][df["Credit"] > 0.0].values, df["Credit"][df["Credit"] > 0.0].values.round(N_DIGITS))),
-        key=lambda x: x[0])
-    signatureR = sorted(
-        list(zip(df["FA_Name"][df["Debit"] > 0.0].values, df["Debit"][df["Debit"] > 0.0].values.round(N_DIGITS))),
-        key=lambda x: x[0])
-    # is_badL = df.Credit.values.sum() == 0.0
-    # is_badR = df.Debit.values.sum() == 0.0
+    """
+    Aggregation function over GroupBy object: to extract unique signature for the given business process
+    :param df: Unique business process as GroupBy DataFrame
+    :return: Pandas Series with ID and Signature
+    If business process includes only 1-1 flow (e.g. from Cash to Tax), used amount value.
+    If business process includes more than 2 transactions, used Credit/Debit values respectfully.
+    """
+    if df.shape[0] == 2:
+        signatureL = list(
+            zip(df["FA_Name"][df["Credit"] > 0.0].values, df["amount"][df["Credit"] > 0.0].values.round(N_DIGITS)))
+        signatureR = list(
+            zip(df["FA_Name"][df["Debit"] > 0.0].values, df["amount"][df["Debit"] > 0.0].values.round(N_DIGITS)))
+    elif df.shape[0] > 2:
+        # Business process includes more that 2 transactions, hence, can use relative amount for creation signature
+        signatureL = sorted(
+            list(
+                zip(df["FA_Name"][df["Credit"] > 0.0].values, df["Credit"][df["Credit"] > 0.0].values.round(N_DIGITS))),
+            key=lambda x: x[0])
+        signatureR = sorted(
+            list(zip(df["FA_Name"][df["Debit"] > 0.0].values, df["Debit"][df["Debit"] > 0.0].values.round(N_DIGITS))),
+            key=lambda x: x[0])
     return pd.Series({"ID": df["ID"].values[0], "Signature": str((signatureL, signatureR))})
-    # return pd.Series({"ID": df["ID"].values[0], "Signature": str((signatureL, signatureR)), "isBadLeft": is_badL, "isBadRight": is_badR})
 
 
 def get_signature_df(original_df):
