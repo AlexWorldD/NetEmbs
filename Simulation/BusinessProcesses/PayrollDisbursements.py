@@ -25,8 +25,8 @@ class PayrollDisbursementsTransaction(Transaction):
         cur_transaction = self.new(postfix=unique_id)
         #         Generating amounts
         self.cash = self.eb_pay
-        self.addRecord("EBPayables_" + str(unique_id), "EBPayables", self.eb_pay, cur_transaction)
         self.addRecord("Cash" + str(unique_id), "Cash", -self.cash, cur_transaction)
+        self.addRecord("EBPayables_" + str(unique_id), "EBPayables", self.eb_pay, cur_transaction)
 
         if PRINT:
             self.printTransaction()

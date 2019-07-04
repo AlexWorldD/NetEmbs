@@ -18,8 +18,8 @@ def set_font(s=16, reset=False):
     plt.rc('font', size=s)  # controls default text sizes
     plt.rc('axes', titlesize=s)  # fontsize of the axes title
     plt.rc('axes', labelsize=s)  # fontsize of the x and y labels
-    plt.rc('xtick', labelsize=s - 2)  # fontsize of the tick labels
-    plt.rc('ytick', labelsize=s - 2)  # fontsize of the tick labels
+    plt.rc('xtick', labelsize=s)  # fontsize of the tick labels
+    plt.rc('ytick', labelsize=s)  # fontsize of the tick labels
     plt.rc('legend', fontsize=s)  # legend fontsize
     plt.rc('figure', titlesize=s)  # fontsize of the figure title
 

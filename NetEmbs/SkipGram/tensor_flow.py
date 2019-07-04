@@ -240,6 +240,5 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
 
 
 def add_ground_truth(df, path_file="../Simulation/FSN_Data.db"):
-    journal_truth = upload_JournalEntriesTruth(path_file)[["ID", "FA_Name", "Time"]]
-    journal_truth.rename(index=str, columns={"FA_Name": "GroundTruth"}, inplace=True)
+    journal_truth = upload_JournalEntriesTruth(path_file)[["ID", "GroundTruth", "Time"]]
     return df.merge(journal_truth, on="ID")

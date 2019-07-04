@@ -201,9 +201,9 @@ class FSN_Simulation(object):
         salesTransactionHigh = SalesTransaction("Sales 21 btw", 0.21, env)  # Sales with high tax percentage
         salesTransactionLow = SalesTransaction("Sales 6 btw", 0.06, env)  # sales with low tax percentage
 
-        disbursementTransactionTax = TaxDisbursementsTransaction("Tax disbursement", env, taxPayablesAccount)
+        disbursementTransactionTax = TaxDisbursementsTransaction("Sales tax", env, taxPayablesAccount)
 
-        cosTransaction = GoodsDeliveryTransaction("Cost of Sales", env)
+        cosTransaction = GoodsDeliveryTransaction("Good delivery", env)
         collectionTransaction = CollectionsTransaction("Collections", env)
         payrollTransaction = PayrollTransaction("Payroll", env, 1500)
         payrollDisbursementTransaction = PayrollDisbursementsTransaction("Payroll Disbursement", env, EBPayableAccount)

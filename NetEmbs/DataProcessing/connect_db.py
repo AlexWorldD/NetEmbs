@@ -70,5 +70,6 @@ def upload_JournalEntriesTruth(path_to_db='../Simulation/FSN_Data.db', limit=Non
     else:
         db_data = pd.read_sql_query("SELECT * FROM main.JournalEntries", cnx)
         # Split into two columns: Debit and Credit
+    # TODO add renaming
     local_logger.info("Data has been uploaded")
-    return db_data
+    return db_data.rename(index=str, columns={"FA_Name": "GroundTruth"})

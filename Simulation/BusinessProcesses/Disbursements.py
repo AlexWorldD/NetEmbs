@@ -24,7 +24,7 @@ class DisbursementsTransaction(Transaction):
         cur_transaction = self.new(postfix=unique_id)
         #         Generating amounts
         self.trade_pay = self.__trade_payables.container.level * 0.75
-        self.cash = -1.0 * self.trade_pay
+        self.cash = 1.0 * self.trade_pay
         self.addRecord("TradePayables_" + str(unique_id), "TradePayables", -self.trade_pay, cur_transaction)
         self.addRecord("Cash" + str(unique_id), "Cash", self.cash, cur_transaction)
 

@@ -241,7 +241,7 @@ def make_pairs(sampled_seq, window=None, debug=False):
         print(sampled_seq)
     output = list()
     if window is None:
-        window = WINDOW_SIZE
+        window = CONFIG.WINDOW_SIZE
     try:
         for cur_idx in range(len(sampled_seq)):
             for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
@@ -254,7 +254,7 @@ def make_pairs(sampled_seq, window=None, debug=False):
         print("t")
 
 
-def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=PRESSURE, debug=False):
+def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=CONFIG.PRESSURE, debug=False):
     """
      Meta-Random step with changing direction.
     :param G: graph/network on which step should be done
@@ -327,7 +327,8 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
                 # Transition probability depends on the difference between monetary flows
                 probas = diff_function(tmp_weight, ws, pressure)
                 if debug:
-                    print(list(zip(outs, ws)))
+                    print(f"Pressure is {pressure}, weight is {tmp_weight}")
+                    print(list(zip(outs, list(zip(ws, probas)))))
                 tmp_vertex = np.random.choice(outs, p=probas)
                 output.append(tmp_vertex)
             elif mode == 1:
@@ -387,7 +388,7 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
     cur_v = context[-1]
     mask = {"IN": "OUT", "OUT": "IN"}
     cur_direction = "IN"
-    while len(context) < length + 1:
+    while len(context) < length:
         try:
             # TODO, June 2, here
             if version == "DefUniform":
@@ -417,7 +418,9 @@ def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", ret
             elif version == "MetaWeighted":
                 new_v = step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
             elif version == "MetaDiff":
-                if direction == "COMBI":
+                if direction == "TRIPLE":
+                    pass
+                elif direction == "COMBI":
                     new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
                     cur_direction = mask[cur_direction]
                 else:
@@ -595,7 +598,7 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
 
 
 def get_pairs(n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI",
-              drop_duplicates=True):
+              drop_duplicates=True, use_cache=True):
     """
     Construction a pairs (skip-grams) of nodes according to sampled sequences
     :param fsn: Researched FSN
@@ -616,12 +619,32 @@ def get_pairs(n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, d
         raise ValueError(
             "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
                 ["ALL", "IN", "OUT", "COMBI", "RANDOM"]))
-    if PRINT_STATUS:
-        print("--------- Started the SAMPLING the sequences from FSN ---------")
-    start_time = time.time()
-    sequences = graph_sampling(n_jobs, version, walk_length, walks_per_node, direction)
-    end_time = time.time()
-    print("Elapsed time for sampling: ", end_time - start_time)
+    if not use_cache:
+        if PRINT_STATUS:
+            print("--------- Started the SAMPLING the sequences from FSN ---------")
+
+        start_time = time.time()
+        sequences = graph_sampling(n_jobs, version, walk_length, walks_per_node, direction)
+        end_time = time.time()
+        print("Elapsed time for sampling: ", end_time - start_time)
+        print("Cashing sampled sequences...")
+        with open(CONFIG.WORK_FOLDER[0] + "sampled_seqs_cached.pkl", "wb") as file:
+            pickle.dump(sequences, file)
+    elif use_cache:
+        print("Loading sequences from cache... wait...")
+        try:
+            with open(CONFIG.WORK_FOLDER[0] + "sampled_seqs_cached.pkl", "rb") as file:
+                sequences = pickle.load(file)
+        except FileNotFoundError:
+            print("File not found... Recalculate \n")
+            print("Sampling sequences... wait...")
+            start_time = time.time()
+            sequences = graph_sampling(n_jobs, version, walk_length, walks_per_node, direction)
+            end_time = time.time()
+            print("Elapsed time for sampling: ", end_time - start_time)
+            print("Cashing sampled sequences...")
+            with open(CONFIG.WORK_FOLDER[0] + "sampled_seqs_cached.pkl", "wb") as file:
+                pickle.dump(sequences, file)
     if PRINT_STATUS:
         print("--------- Ended the SAMPLING the sequences from FSN ---------")
     max_processes = min(n_jobs, os.cpu_count())
@@ -698,20 +721,22 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     global_walk_length = walk_length
     global_walks_per_node = walks_per_node
     if not use_cache:
-        print("Sampling sequences... wait...")
-        skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, CONFIG.DIRECTION))
+        print("Start sampling... wait...")
+        skip_gr = tr.encode_pairs(
+            get_pairs(N_JOBS, version, walk_length, walks_per_node, CONFIG.DIRECTION, use_cache=use_cache))
         with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
             pickle.dump(skip_gr, file)
         print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
     elif use_cache:
-        print("Loading sequences from cache... wait...")
+        print("Loading SkipGrams from cache... wait...")
         try:
             with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "rb") as file:
                 skip_gr = pickle.load(file)
         except FileNotFoundError:
             print("File not found... Recalculate \n")
-            print("Sampling sequences... wait...")
-            skip_gr = tr.encode_pairs(get_pairs(N_JOBS, version, walk_length, walks_per_node, CONFIG.DIRECTION))
+            print("Start sampling... wait...")
+            skip_gr = tr.encode_pairs(
+                get_pairs(N_JOBS, version, walk_length, walks_per_node, CONFIG.DIRECTION, use_cache=use_cache))
             with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
                 pickle.dump(skip_gr, file)
     else:

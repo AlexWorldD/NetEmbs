@@ -13,13 +13,13 @@ DB_PATH = "../Simulation/FSN_Data.db"
 
 if __name__ == '__main__':
     # Creating current working place for storing intermediate cache and final images
-    CONFIG.WORK_FOLDER = ("../RefactoringExperiments" + path_postfix_samplings, path_postfix_tf)
+    CONFIG.WORK_FOLDER = ("../RefactoringExperimentsJuly4" + path_postfix_samplings, path_postfix_tf)
     print(CONFIG.WORK_FOLDER)
     create_working_folder()
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
     print("Welcome to refactoring experiments!")
-    d = upload_data(DB_PATH, limit=None)
+    d = upload_data(DB_PATH, limit=1000)
     d = prepare_data(d)
 
     # let's check it
