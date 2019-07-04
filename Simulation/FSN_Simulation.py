@@ -208,7 +208,7 @@ class FSN_Simulation(object):
         payrollTransaction = PayrollTransaction("Payroll", env, 1500)
         payrollDisbursementTransaction = PayrollDisbursementsTransaction("Payroll Disbursement", env, EBPayableAccount)
         purchaseTransaction = PurchaseTransaction("Purchase", env)
-        disbursementTransaction = PayrollDisbursementsTransaction("Disbursement", env, tradePayablesAccount)
+        disbursementTransaction = DisbursementsTransaction("Disbursement", env, tradePayablesAccount)
         fixesAssetsTransaction = AddFixedAssetsTransaction("Fixed Assets", env)
         depreciationTransaction = DepreciationTransaction("Depreciation", env)
 

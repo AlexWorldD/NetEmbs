@@ -35,7 +35,7 @@ class FSN(nx.DiGraph):
         if LOG:
             local_logger = logging.getLogger("NetEmbs.FSN.build")
             local_logger.info("FSN constructed!")
-            local_logger.info("Financial accounts are " + str(self.get_BP()))
+            local_logger.info("Business processes nodes are " + str(self.get_BP()))
 
     def build_default(self):
         """

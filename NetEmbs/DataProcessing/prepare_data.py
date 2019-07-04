@@ -41,7 +41,8 @@ def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=Tru
         original_df = merge_FAs(original_df)
         if LOG:
             local_logger.info(
-                "After merging FAs columns titles are: " + str(list(original_df)) + " shape is " + str(original_df.shape))
+                "After merging FAs columns titles are: " + str(list(original_df)) + " shape is " + str(
+                    original_df.shape))
     if add_from:
         original_df = add_from_column(original_df)
 
@@ -55,8 +56,7 @@ def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=Tru
         local_logger.info("After normalization shape of DataFrame is " + str(original_df.shape))
     if unique:
         original_df = unique_BPs(original_df)
-    if PRINT_STATUS:
-        print("Final shape of DataFrame is ", original_df.shape)
+    print("Final shape of DataFrame is ", original_df.shape)
     if LOG:
         local_logger.info("Final shape of DataFrame is " + str(original_df.shape))
     return original_df
