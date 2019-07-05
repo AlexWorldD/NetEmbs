@@ -14,8 +14,7 @@ from collections import Counter
 import pandas as pd
 from NetEmbs.FSN.graph import FSN
 import logging
-from NetEmbs.CONFIG import LOG, PRESSURE, DOUBLE_NEAREST, WINDOW_SIZE, all_sampling_strategies, WALKS_PER_NODE, \
-    PRINT_STATUS, WALKS_LENGTH, N_JOBS
+from NetEmbs.CONFIG import LOG, DOUBLE_NEAREST, all_sampling_strategies, PRINT_STATUS, N_JOBS
 import time
 from pathos.multiprocessing import ProcessPool
 import itertools
@@ -25,7 +24,6 @@ from tqdm import *
 import pickle
 
 np.seterr(all="raise")
-global global_version, global_walk_length, global_walks_per_node, global_direction
 
 
 def default_step(G, vertex, direction="IN", mode=0, return_full_step=False, debug=False):
@@ -254,7 +252,8 @@ def make_pairs(sampled_seq, window=None, debug=False):
         print("t")
 
 
-def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=CONFIG.PRESSURE, debug=False):
+def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=CONFIG.PRESSURE,
+         debug=False):
     """
      Meta-Random step with changing direction.
     :param G: graph/network on which step should be done
@@ -360,7 +359,8 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
         return -2
 
 
-def randomWalk(G, vertex=None, length=3, direction="IN", version="MetaDiff", return_full_path=False, debug=False):
+def randomWalk(G, vertex=None, length=CONFIG.WALKS_LENGTH, direction="IN", version="MetaDiff", return_full_path=False,
+               debug=False):
     """
     RandomWalk th
     :param G: Bipartite graph, an instance of networkx
@@ -478,71 +478,59 @@ def get_size(obj, seen=None):
 
 
 def wrappedRandomWalk(node):
-    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction=CONFIG.DIRECTION, version=global_version) for _
-            in range(global_walks_per_node)]
+    return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, direction=CONFIG.DIRECTION,
+                       version=CONFIG.STEP_VERSION)
+            for _
+            in range(CONFIG.WALKS_PER_NODE)]
 
 
 def wrappedRandomWalkIN(node):
-    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction="IN", version=global_version) for _
-            in range(global_walks_per_node)]
+    return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, direction="IN", version=CONFIG.STEP_VERSION)
+            for _
+            in range(CONFIG.WALKS_PER_NODE)]
 
 
 def wrappedRandomWalkOUT(node):
-    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction="OUT", version=global_version) for _
-            in range(global_walks_per_node)]
+    return [
+        randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, direction="OUT", version=CONFIG.STEP_VERSION)
+        for _
+        in range(CONFIG.WALKS_PER_NODE)]
 
 
 def wrappedOriginalRandomWalk(node):
-    return [randomWalk(GLOBAL_FSN, node, global_walk_length, direction="RANDOM", version=global_version) for _
-            in range(global_walks_per_node)]
+    return [
+        randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, direction="RANDOM", version=CONFIG.STEP_VERSION)
+        for _
+        in range(CONFIG.WALKS_PER_NODE)]
 
 
-def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_node=None, direction="COMBI"):
+def graph_sampling(n_jobs=4, direction=None):
     """
     Construction a sequences of nodes from given FSN
-    :param fsn: Researched FSN
     :param n_jobs: Number of parallel processes to be created
-    :param version: Applying version of step method
-    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
-    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
-    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
-    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
-    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
-    :param walk_length: max length of RandomWalk
-    :param walks_per_node: max number of RandomWalks per each node in FSN
     :param direction: initial direction
     :return: array of sampled nodes
     """
-    if walks_per_node is None:
-        walks_per_node = WALKS_PER_NODE
-    if walk_length is None:
-        walk_length = WALKS_LENGTH
+    if direction is None:
+        direction = CONFIG.DIRECTION
     max_processes = min(n_jobs, os.cpu_count())
     pool = ProcessPool(nodes=max_processes)
-    BPs = GLOBAL_FSN.get_BP()
+    pool.terminate()
+    pool.restart()
+    BPs = CONFIG.GLOBAL_FSN.get_BP()
     n_BPs = len(BPs)
     sampled = list()
-    # all_arguments = zip(BPs, [version] * n_BPs, [walk_length] * n_BPs, [walks_per_node] * n_BPs,
-    #                     [direction] * n_BPs)
     if LOG:
         local_logger = logging.getLogger("NetEmbs.Utils.graph_sampling")
         local_logger.info("Created a Pool with " + str(max_processes) + " processes ")
         local_logger.info("Total size of broadcasting arguments is " + str(get_size(BPs)) + " bytes ")
-        local_logger.info("Total size of FSN is " + str(get_size(GLOBAL_FSN)) + " bytes ")
+        local_logger.info("Total size of FSN is " + str(get_size(CONFIG.GLOBAL_FSN)) + " bytes ")
 
     if direction not in ["ALL", "IN", "OUT", "COMBI", "RANDOM"]:
         raise ValueError(
-            "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
+            "Given not supported yet direction of walking {!s}!".format(direction) + "\nAllowed only " + str(
                 ["ALL", "IN", "OUT"]))
     if direction == "ALL":
-        #     Apply RandomWalk for both IN and OUT direction
-        # sampled = [randomWalk(fsn, node, walk_length, direction="IN", version=version) for _ in
-        #            range(walks_per_node) for node
-        #            in fsn.get_BP()] + [randomWalk(fsn, node, walk_length, direction="OUT", version=version)
-        #                                for _
-        #                                in
-        #                                range(walks_per_node) for node
-        #                                in fsn.get_BP()]
         print("Chosen ALL direction, hence, run both IN and OUT randomWalks from each node...")
         if LOG:
             local_logger = logging.getLogger("NetEmbs.Utils.graph_sampling")
@@ -576,14 +564,6 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
                         pool.uimap(wrappedRandomWalk, BPs))):
                     sampled.append(res)
                     pbar.update()
-            # sampled = pool.uimap(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
-            #                    [walks_per_node] * n_BPs, [direction] * n_BPs)
-            # sampled = pool.map(wrappedRandomWalk, [fsn] * n_BPs, BPs, [version] * n_BPs, [walk_length] * n_BPs,
-            #                    [walks_per_node] * n_BPs, [direction] * n_BPs)
-            # while not sampled.ready():
-            #     time.sleep(1)
-            #     print(".", end=' ')
-            # sampled = sampled.get()
         except KeyboardInterrupt:
             print('got ^C while pool mapping, terminating the pool')
             pool.terminate()
@@ -597,34 +577,34 @@ def graph_sampling(n_jobs=4, version="MetaDiff", walk_length=None, walks_per_nod
     return res
 
 
-def get_pairs(n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI",
-              drop_duplicates=True, use_cache=True):
+def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_cache=True):
     """
     Construction a pairs (skip-grams) of nodes according to sampled sequences
-    :param fsn: Researched FSN
     :param n_jobs: Number of parallel processes to be created
-    :param version: Applying version of step method
-    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
-    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
-    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
-    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
-    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
-    :param walk_length: max length of RandomWalk
-    :param walks_per_node: max number of RandomWalks per each node in FSN
     :param direction: initial direction
     :param drop_duplicates: True, delete pairs with equal elements
     :return: array of pairs(joint appearance of two BP nodes)
     """
     if direction not in ["ALL", "IN", "OUT", "COMBI", "RANDOM"]:
         raise ValueError(
-            "Given not supported yet direction of walking {!s}!".format(version) + "\nAllowed only " + str(
+            "Given not supported yet direction of walking {!s}!".format(direction) + "\nAllowed only " + str(
                 ["ALL", "IN", "OUT", "COMBI", "RANDOM"]))
     if not use_cache:
         if PRINT_STATUS:
             print("--------- Started the SAMPLING the sequences from FSN ---------")
 
         start_time = time.time()
-        sequences = graph_sampling(n_jobs, version, walk_length, walks_per_node, direction)
+        sequences = graph_sampling(n_jobs)
+        if CONFIG.HACK:
+            #             Explicitly sample the 1-hop neighbours
+            _tmps = (CONFIG.WALKS_LENGTH, CONFIG.WALKS_PER_NODE)
+            CONFIG.WALKS_PER_NODE = int(
+                CONFIG.HACK * CONFIG.WALKS_PER_NODE * CONFIG.WALKS_LENGTH * CONFIG.WALKS_LENGTH / CONFIG.WINDOW_SIZE)
+            CONFIG.WALKS_LENGTH = 2
+            print("Additionally sample the nearest neighbours...")
+            sequences.extend(graph_sampling(n_jobs))
+            CONFIG.WALKS_LENGTH = _tmps[0]
+            CONFIG.WALKS_PER_NODE = _tmps[1]
         end_time = time.time()
         print("Elapsed time for sampling: ", end_time - start_time)
         print("Cashing sampled sequences...")
@@ -639,7 +619,17 @@ def get_pairs(n_jobs=4, version="MetaDiff", walk_length=10, walks_per_node=10, d
             print("File not found... Recalculate \n")
             print("Sampling sequences... wait...")
             start_time = time.time()
-            sequences = graph_sampling(n_jobs, version, walk_length, walks_per_node, direction)
+            sequences = graph_sampling(n_jobs)
+            if CONFIG.HACK:
+                #             Explicitly sample the 1-hop neighbours
+                _tmps = (CONFIG.WALKS_LENGTH, CONFIG.WALKS_PER_NODE)
+                CONFIG.WALKS_PER_NODE = int(
+                    CONFIG.HACK * CONFIG.WALKS_PER_NODE * CONFIG.WALKS_LENGTH * CONFIG.WALKS_LENGTH / CONFIG.WINDOW_SIZE)
+                CONFIG.WALKS_LENGTH = 2
+                print("Additionally sample the nearest neighbours...")
+                sequences.extend(graph_sampling(n_jobs))
+                CONFIG.WALKS_LENGTH = _tmps[0]
+                CONFIG.WALKS_PER_NODE = _tmps[1]
             end_time = time.time()
             print("Elapsed time for sampling: ", end_time - start_time)
             print("Cashing sampled sequences...")
@@ -710,20 +700,20 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     :return tr: Encoder/Decoder for given DataFrame
     """
     # TODO check current version vs. CONFIG.GLOBAL_FSN
-    global GLOBAL_FSN
-    GLOBAL_FSN = FSN()
-    GLOBAL_FSN.build(df, left_title="FA_Name")
-    tr = TransformationBPs(GLOBAL_FSN.get_BP())
-    global global_version, global_walk_length, global_walks_per_node, global_direction
-    # Global variables for using in forked sub-processes in parallel execution
-    global_direction = direction
-    global_version = version
-    global_walk_length = walk_length
-    global_walks_per_node = walks_per_node
+
+    CONFIG.GLOBAL_FSN = FSN()
+    CONFIG.GLOBAL_FSN.build(df, left_title="FA_Name")
+    tr = TransformationBPs(CONFIG.GLOBAL_FSN.get_BP())
+    # Update CONFIG parameters w.r.t the given arguments
+    CONFIG.WALKS_LENGTH = walk_length
+    CONFIG.WALKS_PER_NODE = walks_per_node
+    CONFIG.DIRECTION = direction
+    CONFIG.STEP_VERSION = version
+
     if not use_cache:
         print("Start sampling... wait...")
         skip_gr = tr.encode_pairs(
-            get_pairs(N_JOBS, version, walk_length, walks_per_node, CONFIG.DIRECTION, use_cache=use_cache))
+            get_pairs(N_JOBS, CONFIG.DIRECTION, use_cache=use_cache))
         with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
             pickle.dump(skip_gr, file)
         print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
@@ -736,13 +726,64 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
             print("File not found... Recalculate \n")
             print("Start sampling... wait...")
             skip_gr = tr.encode_pairs(
-                get_pairs(N_JOBS, version, walk_length, walks_per_node, CONFIG.DIRECTION, use_cache=use_cache))
+                get_pairs(N_JOBS, CONFIG.DIRECTION, use_cache=use_cache))
             with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
                 pickle.dump(skip_gr, file)
     else:
         raise ValueError(
             "Use True or False for skip_gr argument! {!s}!".format(use_cache) + " was given")
-    return skip_gr, GLOBAL_FSN, tr
+    return skip_gr, CONFIG.GLOBAL_FSN, tr
+
+
+def get_SkipGrams2(df, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI", use_cache=False):
+    """
+    Get Skip-Grams for given DataFrame with Entries records
+    :param df: original DataFrame
+    :param version: Version of step:
+    "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+    "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+    "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+    "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+    "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
+    :param walk_length: max length of RandomWalk
+    :param walks_per_node: max number of RandomWalks per each node in FSN
+    :param direction: initial direction
+    :param use_cache: If True, cache the intermediate SkipGrams sequences
+    :return: list of all pairs
+    :return fsn: FSN class instance for given DataFrame
+    :return tr: Encoder/Decoder for given DataFrame
+    """
+    # TODO check current version vs. CONFIG.GLOBAL_FSN
+
+    CONFIG.GLOBAL_FSN = FSN()
+    CONFIG.GLOBAL_FSN.build(df, left_title="FA_Name")
+    # Update CONFIG parameters w.r.t the given arguments
+    CONFIG.WALKS_LENGTH = walk_length
+    CONFIG.WALKS_PER_NODE = walks_per_node
+    CONFIG.DIRECTION = direction
+    CONFIG.STEP_VERSION = version
+
+    if not use_cache:
+        print("Start sampling... wait...")
+        skip_gr = get_pairs(N_JOBS, CONFIG.DIRECTION, use_cache=use_cache)
+        with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+            pickle.dump(skip_gr, file)
+        print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
+    elif use_cache:
+        print("Loading SkipGrams from cache... wait...")
+        try:
+            with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "rb") as file:
+                skip_gr = pickle.load(file)
+        except FileNotFoundError:
+            print("File not found... Recalculate \n")
+            print("Start sampling... wait...")
+            skip_gr = get_pairs(N_JOBS, CONFIG.DIRECTION, use_cache=use_cache)
+            with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+                pickle.dump(skip_gr, file)
+    else:
+        raise ValueError(
+            "Use True or False for skip_gr argument! {!s}!".format(use_cache) + " was given")
+    return skip_gr
 
 
 class TransformationBPs:

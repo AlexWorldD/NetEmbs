@@ -13,13 +13,13 @@ DB_PATH = "../Simulation/FSN_Data.db"
 
 if __name__ == '__main__':
     # Creating current working place for storing intermediate cache and final images
-    CONFIG.WORK_FOLDER = ("../RefactoringExperimentsJuly4" + path_postfix_samplings, path_postfix_tf)
+    CONFIG.WORK_FOLDER = ("../July5/Data2Vis" + path_postfix_samplings, path_postfix_tf)
     print(CONFIG.WORK_FOLDER)
     create_working_folder()
     MAIN_LOGGER = log_me()
     MAIN_LOGGER.info("Started..")
     print("Welcome to refactoring experiments!")
-    d = upload_data(DB_PATH, limit=1000)
+    d = upload_data(DB_PATH, limit=None)
     d = prepare_data(d)
 
     # let's check it
@@ -45,3 +45,7 @@ if __name__ == '__main__':
     d.to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/Embeddings.pkl")
     print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
     print("tensorboard --logdir=model/" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
+    #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
+    plot_tSNE(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
+              title="GroundTruth")
+    print("Plotted the GroundTruth graph!")

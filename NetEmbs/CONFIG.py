@@ -26,6 +26,7 @@ LOG_LEVEL = "cost"
 # STEP configuration
 STEP_VERSION = "OriginalRandomWalk"
 DIRECTION = "RANDOM"
+HACK = 0
 PRESSURE = 30
 WINDOW_SIZE = 3
 DOUBLE_NEAREST = False
@@ -44,7 +45,6 @@ LOG = True
 NUM_CL_MAX = 10
 GLOBAL_FSN = None
 
-
 # /////// Overwrite default setting for experiments here \\\\\\\\\\
 # July 4 Experiments
 EMBD_SIZE = 32
@@ -54,19 +54,20 @@ NEGATIVE_SAMPLES = 32
 
 STEP_VERSION = "MetaDiff"
 DIRECTION = "COMBI"
+HACK = 0.1
 DOUBLE_NEAREST = False
 PRESSURE = 30
 WINDOW_SIZE = 2
-WALKS_PER_NODE = 30
-WALKS_LENGTH = 10
+WALKS_PER_NODE = 20
+WALKS_LENGTH = 8
 
 # Current working folder
 path_postfix_samplings = "_" + "version" + str(STEP_VERSION) \
                          + "_direction" + str(DIRECTION) \
                          + "_walks" + str(WALKS_PER_NODE) \
                          + "_pressure" + str(PRESSURE) \
-                         + "_window" + str(WINDOW_SIZE) + "/"
+                         + "_window" + str(WINDOW_SIZE) \
+                         + "_1hopFraction" + str(HACK) + "/"
 path_postfix_tf = "TFsteps" + str(STEPS) \
                   + "batch" + str(BATCH_SIZE) \
                   + "_emb" + str(EMBD_SIZE) + "/"
-

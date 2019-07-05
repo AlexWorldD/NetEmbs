@@ -59,13 +59,4 @@ def test_add_from():
     assert max(df['from'].values == (df['Credit'] > 0).values) == True
 
 
-def test_signatures():
-    df = rename_columns(pd.DataFrame(test_data))
-    df = unique_BPs(df)
-    for group in df.groupby("ID"):
-        signatureL = list(
-            zip(group[1]["FA_Name"][group[1]["Credit"] > 0.0].values,
-                group[1]["Credit"][group[1]["Credit"] > 0.0].values))
-        signatureR = list(
-            zip(group[1]["FA_Name"][group[1]["Debit"] > 0.0].values, group[1]["Debit"][group[1]["Debit"] > 0.0].values))
-        assert group[1]['Signature'].values[0] == str((signatureL, signatureR))
+

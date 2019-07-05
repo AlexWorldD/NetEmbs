@@ -21,7 +21,8 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
-def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="MetaDiff", embed_size=None, num_steps=10000, walk_length=10,
+def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="MetaDiff", embed_size=None,
+                num_steps=10000, walk_length=10,
                 walks_per_node=10, use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False,
                 groundTruthDF=None):
     """
@@ -85,7 +86,8 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
         if use_prev_embs:
             print("Loading previous embeddings from cache... wait...")
             try:
-                embeddings = tf.Variable(pd.read_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/snapshot.pkl").values)
+                embeddings = tf.Variable(
+                    pd.read_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/snapshot.pkl").values)
             except FileNotFoundError:
                 print("No cached embeddings, initialize as random matrix...")
                 embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
@@ -220,7 +222,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
                     plot_tSNE(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
                               title="progress/tSNE_GroundTruth" + str(chunk + vis_progress))
                     plot_PCA(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
-                              title="progress/PCA_GroundTruth" + str(chunk + vis_progress))
+                             title="progress/PCA_GroundTruth" + str(chunk + vis_progress))
                     print("Plotted the GroundTruth graph after " + str(chunk + vis_progress))
                 return final_embeddings
     #     Run

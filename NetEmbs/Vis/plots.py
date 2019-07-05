@@ -129,6 +129,8 @@ def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", ran
     import os
     import matplotlib.pyplot as plt
     from sklearn.manifold import TSNE
+    from NetEmbs.Vis.helpers import set_font
+    set_font(14)
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
     tsne = TSNE(random_state=rand_state)
     embdf = pd.DataFrame(list(map(np.ravel, fsn_embs["Emb"])))
