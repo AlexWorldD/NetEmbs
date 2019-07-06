@@ -20,7 +20,7 @@ from pathos.multiprocessing import ProcessPool
 import itertools
 import os
 import sys
-from tqdm import *
+from tqdm.auto import tqdm
 import pickle
 
 np.seterr(all="raise")
