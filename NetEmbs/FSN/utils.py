@@ -537,8 +537,7 @@ def graph_sampling(n_jobs=4, direction=None):
             local_logger.info("Chosen direction ALL, hence, run both IN and OUT randomWalks from each node! ")
         try:
             with tqdm(total=n_BPs) as pbar:
-                for i, res in tqdm(enumerate(
-                        pool.uimap(wrappedRandomWalkIN, BPs))):
+                for i, res in enumerate(pool.uimap(wrappedRandomWalkIN, BPs)):
                     sampled.append(res)
                     pbar.update()
         except KeyboardInterrupt:
@@ -549,8 +548,7 @@ def graph_sampling(n_jobs=4, direction=None):
         print("Done with IN direction!")
         try:
             with tqdm(total=n_BPs) as pbar:
-                for i, res in tqdm(enumerate(
-                        pool.uimap(wrappedRandomWalkOUT, BPs))):
+                for i, res in enumerate(pool.uimap(wrappedRandomWalkOUT, BPs)):
                     sampled.append(res)
                     pbar.update()
         except KeyboardInterrupt:
@@ -560,8 +558,7 @@ def graph_sampling(n_jobs=4, direction=None):
         # sampled = [wrappedRandomWalk(node) for node in tqdm(GLOBAL_FSN.get_BP())]
         try:
             with tqdm(total=n_BPs) as pbar:
-                for i, res in tqdm(enumerate(
-                        pool.uimap(wrappedRandomWalk, BPs))):
+                for i, res in enumerate(pool.uimap(wrappedRandomWalk, BPs)):
                     sampled.append(res)
                     pbar.update()
         except KeyboardInterrupt:
