@@ -12,10 +12,12 @@ import numpy as np
 from sklearn import preprocessing
 from NetEmbs.DataProcessing.stats import getHistCounts
 import pandas as pd
-from NetEmbs.CONFIG import FIG_SIZE, BATCH_SIZE, WALKS_PER_NODE, EMBD_SIZE, STEPS
-
-plt.rcParams["figure.figsize"] = FIG_SIZE
+from NetEmbs import CONFIG
+from NetEmbs.utils.dimensionality_reduction import dim_reduction
 from NetEmbs.FSN.graph import FSN
+from NetEmbs.Vis.helpers import getColors_Markers
+
+plt.rcParams["figure.figsize"] = CONFIG.FIG_SIZE
 
 
 def plotFSN(input_data, colors=("Red", "Blue"), edge_labels=False, node_labels=True, title=None, text_size=16):
@@ -125,18 +127,12 @@ def plotHist(df, title="Histogram", normalized=False):
             plt.savefig("img/" + title + k, dpi=140, pad_inches=0.01)
 
 
-def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", rand_state=1, legend_shift = 1.3):
-    import os
+def plot_tSNE_old(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", rand_state=1, legend_shift=1.3):
     import matplotlib.pyplot as plt
-    from sklearn.manifold import TSNE
     from NetEmbs.Vis.helpers import set_font
     set_font(14)
-    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-    tsne = TSNE(random_state=rand_state)
-    embdf = pd.DataFrame(list(map(np.ravel, fsn_embs["Emb"])))
-    embed_tsne = tsne.fit_transform(embdf)
-    fsn_embs["x"] = pd.Series(embed_tsne[:, 0])
-    fsn_embs["y"] = pd.Series(embed_tsne[:, 1])
+
+    fsn_embs = dim_reduction(fsn_embs, rand_state=rand_state)
     markers = ["o", "v", "s"]
     cur_m = 0
     plt.clf()
@@ -157,19 +153,75 @@ def plot_tSNE(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", ran
             real_labels = dict(zip(str_labels, range(len(str_labels))))
             from sklearn.metrics import v_measure_score
             fsn_embs["true_labels"] = fsn_embs.GroundTruth.apply(lambda x: real_labels[x])
-            v_score = ", V-Score is "+str(v_measure_score(fsn_embs.true_labels.values, fsn_embs.label.values).round(3))
-        plt.title("Embeddings visualisation with t-SNE, predicted labels"+v_score)
+            v_score = ", V-Score is " + str(
+                v_measure_score(fsn_embs.true_labels.values, fsn_embs.label.values).round(3))
+        plt.title("Embeddings visualisation with t-SNE, predicted labels" + v_score)
 
     if title is not None and isinstance(title, str):
         plt.tight_layout()
         postfix = ""
         if folder == "":
-            postfix = "_" + "batch" + str(BATCH_SIZE) \
-                      + "_emb" + str(EMBD_SIZE) \
-                      + "_walks" + str(WALKS_PER_NODE) \
-                      + "_TFsteps" + str(STEPS)
+            postfix = "_" + "batch" + str(CONFIG.BATCH_SIZE) \
+                      + "_emb" + str(CONFIG.EMBD_SIZE) \
+                      + "_walks" + str(CONFIG.WALKS_PER_NODE) \
+                      + "_TFsteps" + str(CONFIG.STEPS)
         plt.savefig(folder + "img/" + title + postfix, dpi=140, pad_inches=0.01)
     # plt.show()
+
+
+def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_full"):
+    cmap, mmap = getColors_Markers(df[legend_title].unique(), n_colors=8, markers=["o", "v", "s"])
+    dpi = 140
+    fig_size = (13, 10)
+    #     set_font(14, True)
+    if context == "paper_half":
+        sns.set_context("paper", font_scale=1.5)
+        fig_size = (6.4, 4.8)
+    if context == "paper_full":
+        sns.set_context("paper", font_scale=1.8)
+    if context == "talk_half":
+        sns.set_context("paper", font_scale=3.5)
+    if context == "talk_full":
+        sns.set_context("paper", font_scale=2)
+    fig = plt.figure(figsize=fig_size)
+    ax = fig.add_subplot(111)
+    sns.scatterplot(
+        x="x", y="y",
+        hue=legend_title,
+        palette=cmap,
+        style=legend_title,
+        markers=mmap,
+        data=df.sort_values(legend_title),
+        alpha=0.75, linewidth=0.5,
+        s=100, ax=ax
+    )
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.set_xlabel("Dimension X")
+    ax.yaxis.set_ticks_position('left')
+    ax.set_ylabel("Dimension Y")
+    ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", frameon=False, markerscale=2)
+    if legend_title == "GroundTruth":
+        ax.set_title("t-SNE visualisation with coloring based on Ground Truth", y=1.08)
+    elif legend_title == "label":
+        v_score = ""
+        if "GroundTruth" in list(df):
+            str_labels = list(df.GroundTruth.unique())
+            real_labels = dict(zip(str_labels, range(len(str_labels))))
+            from sklearn.metrics import v_measure_score
+            v_score = ", V-Score is " + str(
+                v_measure_score(df.GroundTruth.apply(lambda x: real_labels[x]).values, df.label.values).round(3))
+        ax.set_title("t-SNE visualisation with coloring based on predicted labels" + v_score, y=1.08)
+    if title is not None and isinstance(title, str):
+        postfix = ""
+        if folder == "":
+            postfix = "_" + "batch" + str(CONFIG.BATCH_SIZE) \
+                      + "_emb" + str(CONFIG.EMBD_SIZE) \
+                      + "_walks" + str(CONFIG.WALKS_PER_NODE) \
+                      + "_TFsteps" + str(CONFIG.STEPS)
+        fig.savefig(folder + "img/" + legend_title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
+                    pad_inches=0.05)
 
 
 def plot_PCA(fsn_embs, title="PCA", folder="", legend_title="GroundTruth", rand_state=1):
@@ -202,8 +254,8 @@ def plot_PCA(fsn_embs, title="PCA", folder="", legend_title="GroundTruth", rand_
         plt.tight_layout()
         postfix = ""
         if folder == "":
-            postfix = "_" + "batch" + str(BATCH_SIZE) \
-                      + "_emb" + str(EMBD_SIZE) \
-                      + "_walks" + str(WALKS_PER_NODE) \
-                      + "_TFsteps" + str(STEPS)
+            postfix = "_" + "batch" + str(CONFIG.BATCH_SIZE) \
+                      + "_emb" + str(CONFIG.EMBD_SIZE) \
+                      + "_walks" + str(CONFIG.WALKS_PER_NODE) \
+                      + "_TFsteps" + str(CONFIG.STEPS)
         plt.savefig(folder + "img/" + title + postfix, dpi=140, pad_inches=0.01)

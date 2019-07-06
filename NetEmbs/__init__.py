@@ -12,3 +12,4 @@ from NetEmbs.SkipGram import *
 from NetEmbs.Vis import *
 from NetEmbs.CONFIG import *
 from NetEmbs.Analysis import *
+from NetEmbs.utils import *

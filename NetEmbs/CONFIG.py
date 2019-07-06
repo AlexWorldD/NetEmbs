@@ -46,7 +46,7 @@ NUM_CL_MAX = 10
 GLOBAL_FSN = None
 
 # /////// Overwrite default setting for experiments here \\\\\\\\\\
-# July 4 Experiments
+# Last Experiments
 EMBD_SIZE = 32
 STEPS = 100000
 BATCH_SIZE = 64
@@ -54,8 +54,7 @@ NEGATIVE_SAMPLES = 32
 
 STEP_VERSION = "MetaDiff"
 DIRECTION = "COMBI"
-HACK = 0.1
-DOUBLE_NEAREST = False
+HACK = 0
 PRESSURE = 30
 WINDOW_SIZE = 2
 WALKS_PER_NODE = 20

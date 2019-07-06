@@ -13,7 +13,7 @@ DB_PATH = "../Simulation/FSN_Data.db"
 
 if __name__ == '__main__':
     # Creating current working place for storing intermediate cache and final images
-    CONFIG.WORK_FOLDER = ("../July5/Data2Vis" + path_postfix_samplings, path_postfix_tf)
+    CONFIG.WORK_FOLDER = ("../UvA/SensitivityAnalysis/" + path_postfix_samplings, path_postfix_tf)
     print(CONFIG.WORK_FOLDER)
     create_working_folder()
     MAIN_LOGGER = log_me()
@@ -40,12 +40,14 @@ if __name__ == '__main__':
             local_logger.error("We've got an error in get_embs_TF function... ", exc_info=True)
         raise e
 
-    # //////// Merge with GroundTruth \\\\\\\\\
-    d = add_ground_truth(embds)
+    # //////// Add X/Y for plotting and Merge with GroundTruth \\\\\\\\\
+    d = add_ground_truth(dim_reduction(embds))
     d.to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/Embeddings.pkl")
     print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
     print("tensorboard --logdir=model/" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
     #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
     plot_tSNE(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
-              title="GroundTruth")
+              title="GroundTruth", context="paper_half")
+    plot_tSNE(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
+              title="GroundTruth", context="paper_full")
     print("Plotted the GroundTruth graph!")

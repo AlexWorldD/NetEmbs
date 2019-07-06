@@ -7,6 +7,9 @@ Created by lex at 2019-05-02.
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+import itertools
+import matplotlib
+import numpy as np
 
 
 def set_font(s=16, reset=False):
@@ -25,11 +28,6 @@ def set_font(s=16, reset=False):
 
 
 # Transform Matplotlib colormap into plotly colorscale:
-import itertools
-import matplotlib
-import numpy as np
-
-
 def matplotlib_to_plotly(color_map="tab10", pl_entries=10):
     """
     Transform Matplotlib colormap into Plotly colormap
@@ -48,17 +46,18 @@ def matplotlib_to_plotly(color_map="tab10", pl_entries=10):
     return pl_colorscale
 
 
-def getColors_Markers(keys, cm="tab10", n_color=10, markers=["circle", "diamond", "square"]):
+def getColors_Markers(keys, cm="tab10", n_colors=10, markers=["circle", "diamond", "square"]):
     """
     Construct dictionaries with the given keys and requested colors/markers. Used for deterministic behaviour of vis.
     :param keys: The list of the given keys, e.g. unique labels or values of GroundTruth
     :param cm: Name of colormap, Default is "tab10"
-    :param n_color: Number of colors, Default is 10
+    :param n_colors: Number of colors, Default is 10
     :param markers: The list of markers. Used if len(keys)>n_color
     :return: Two dictionaries: with key-color and key-marker mappings.
     """
     keys = sorted(keys)
-    color_map = dict(zip(keys, matplotlib_to_plotly(cm, n_color) * (len(keys) // n_color + 1)))
+    color_map = dict(zip(keys, sns.color_palette(cm, n_colors) * (len(keys) // n_colors + 1)))
     marker_map = dict(
-        zip(keys, list(itertools.chain(*[[m] * n_color for m in markers])) * (len(keys) // (3 * n_color) + 1)))
+        zip(keys,
+            list(itertools.chain(*[[m] * n_colors for m in markers])) * (len(keys) // (len(markers) * n_colors) + 1)))
     return color_map, marker_map

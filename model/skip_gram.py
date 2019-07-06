@@ -4,13 +4,8 @@ __author__ = 'Aleksei Maliutin'
 skip_gram.py
 Created by lex at 2019-04-05.
 """
-import numpy as np
 import tensorflow as tf
 from NetEmbs.FSN.utils import *
-from NetEmbs.DataProcessing.prepare_data import prepare_data
-from NetEmbs.DataProcessing.connect_db import upload_data
-import math
-import time
 
 
 # class SquareTest(tf.test.TestCase):
