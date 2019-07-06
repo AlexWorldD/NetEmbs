@@ -203,7 +203,7 @@ class FSN_Simulation(object):
 
         disbursementTransactionTax = TaxDisbursementsTransaction("Sales tax", env, taxPayablesAccount)
 
-        cosTransaction = GoodsDeliveryTransaction("Good delivery", env)
+        cosTransaction = GoodsDeliveryTransaction("Goods delivery", env)
         collectionTransaction = CollectionsTransaction("Collections", env)
         payrollTransaction = PayrollTransaction("Payroll", env, 1500)
         payrollDisbursementTransaction = PayrollDisbursementsTransaction("Payroll Disbursement", env, EBPayableAccount)
