@@ -220,7 +220,7 @@ def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_
                       + "_emb" + str(CONFIG.EMBD_SIZE) \
                       + "_walks" + str(CONFIG.WALKS_PER_NODE) \
                       + "_TFsteps" + str(CONFIG.STEPS)
-        fig.savefig(folder + "img/" + legend_title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
+        fig.savefig(folder + "img/" + title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
                     pad_inches=0.05)
 
 

@@ -108,6 +108,7 @@ venv.bak/
 
 \.DS_Store
 
+*.pkl
 Simulation*/*.pkl
 model/*.pkl
 model/*/

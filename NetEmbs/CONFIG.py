@@ -48,8 +48,8 @@ GLOBAL_FSN = None
 # /////// Overwrite default setting for experiments here \\\\\\\\\\
 # Last Experiments
 EMBD_SIZE = 32
-STEPS = 100000
-BATCH_SIZE = 64
+STEPS = 200000
+BATCH_SIZE = 512
 NEGATIVE_SAMPLES = 32
 
 STEP_VERSION = "MetaDiff"
