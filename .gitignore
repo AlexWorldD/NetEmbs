@@ -108,10 +108,17 @@ venv.bak/
 
 \.DS_Store
 
-*.pkl
+Simulation*/*.pkl
+model/*.pkl
+model/*/
+Simulation_*
 
 Simulation_versionDefUniform_directionIN_walks30_pressure30_window3/
 
 Simulation_versionOriginalRandomWalk_directionRANDOM_walks30_pressure30_window3/
 
 Archive\.zip
+
+July5/
+
+tmp_embs\.pkl

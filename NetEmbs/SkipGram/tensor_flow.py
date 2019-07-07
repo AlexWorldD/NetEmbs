@@ -13,7 +13,7 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.utils.IO.connect_db import upload_JournalEntriesTruth, upload_data
-from NetEmbs.CONFIG import EMBD_SIZE, BATCH_SIZE, MODE, LOG_LEVEL, NEGATIVE_SAMPLES, DIRECTION
+from NetEmbs.CONFIG import EMBD_SIZE, MODE, LOG_LEVEL, NEGATIVE_SAMPLES, DIRECTION
 from NetEmbs import CONFIG
 from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
 import os
@@ -22,7 +22,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="MetaDiff", embed_size=None,
-                num_steps=10000, walk_length=10,
+                num_steps=10000, batch_size=CONFIG.BATCH_SIZE, walk_length=10,
                 walks_per_node=10, use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False,
                 groundTruthDF=None):
     """
@@ -55,7 +55,6 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
     print(skip_grams[:5])
     #
     #     TensorFlow stuff
-    batch_size = BATCH_SIZE
     if embed_size is not None:
         embedding_size = embed_size
     else:
