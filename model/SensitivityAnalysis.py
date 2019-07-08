@@ -1,7 +1,7 @@
 # encoding: utf-8
 __author__ = 'Aleksei Maliutin'
 """
-refactoring_experiments.py
+SensitivityAnalysis.py
 Created by lex at 2019-07-04.
 """
 from NetEmbs import *
@@ -68,6 +68,8 @@ if __name__ == '__main__':
     for sampling_exp in [1, 2]:
         for tf_exp in [1, 2]:
             print(f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
+            logging.getLogger(CONFIG.MAIN_LOGGER).info(
+                f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
             CONFIG.EXPERIMENT = (sampling_exp, tf_exp)
             # 4. Update CONFIG file w.r.t. the new arguments if applicable
             try:
@@ -78,7 +80,7 @@ if __name__ == '__main__':
             except IOError as e:
                 logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
                 raise IOError("Critical error during CONFIG update. Stop execution!")
-            cur_params = {"ExperimentNum": CONFIG.EXPERIMENT, "Strategy": CONFIG.STEP_VERSION,
+            cur_params = {"ExperimentNum": CONFIG.EXPERIMENT, "Strategy": CONFIG.STRATEGY,
                           "Pressure": CONFIG.PRESSURE,
                           "WalkPerNode": CONFIG.WALKS_PER_NODE,
                           "WalkLength": CONFIG.WALKS_LENGTH, "WindowSize": CONFIG.WINDOW_SIZE,
@@ -87,7 +89,8 @@ if __name__ == '__main__':
             # TODO update CONFIG values and create tmps folders
             print("Loading Embeddings from cache... wait...")
             try:
-                with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/Embeddings.pkl", "rb") as file:
+                with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl",
+                          "rb") as file:
                     embeddings = pickle.load(file)
                     run_times = {"Sampling time": 0.0, "TF time": 0.0}
             except FileNotFoundError:
@@ -105,14 +108,17 @@ if __name__ == '__main__':
 
                 # 7. Dimensionality reduction for visualisation purposes
                 embeddings = dim_reduction(embeddings)
-                embeddings.to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/Embeddings.pkl")
+                embeddings.to_pickle(
+                    CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
 
             #  8.  ////////// Clustering in embedding space \\\\\\\
             cl_labs = cl_Agglomerative(embeddings, N_CL)
             # 8.1 Plot t-SNE visualisation
-            plot_tSNE(cl_labs, "label", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1], title="Predicted label",
+            plot_tSNE(cl_labs, "label", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+                      title="Predicted label",
                       context="paper_full")
-            plot_tSNE(cl_labs, "GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
+            plot_tSNE(cl_labs, "GroundTruth",
+                      folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                       title="Ground Truth",
                       context="paper_full")
             print("Plotted required graphs!")

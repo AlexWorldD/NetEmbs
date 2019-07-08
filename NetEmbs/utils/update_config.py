@@ -12,19 +12,21 @@ from NetEmbs.utils.Logs import log_me
 
 def updateCONFIG():
     # Current working folder
-    CONFIG.path_postfix_samplings = "ver" + str(CONFIG.STEP_VERSION) \
+    CONFIG.path_postfix_samplings = "ver" + str(CONFIG.STRATEGY) \
                                     + "_dir" + str(CONFIG.DIRECTION) \
                                     + "_walks" + str(CONFIG.WALKS_PER_NODE) \
                                     + "_pressure" + str(CONFIG.PRESSURE) \
-                                    + "_window" + str(CONFIG.WINDOW_SIZE) \
                                     + "_1hopFraction" + str(CONFIG.HACK) \
                                     + "_" + str(CONFIG.EXPERIMENT[0]) + "/"
     CONFIG.path_postfix_tf = "EMB" + str(CONFIG.EMBD_SIZE) \
                              + "_batch" + str(CONFIG.BATCH_SIZE) \
                              + "_TFsteps" + str(CONFIG.STEPS) \
                              + "_ " + str(CONFIG.EXPERIMENT[1]) + "/"
+    CONFIG.path_postfix_win = "windowSize" + str(CONFIG.WINDOW_SIZE) + "/"
 
-    CONFIG.WORK_FOLDER = (CONFIG.ROOT_FOLDER + CONFIG.path_postfix_samplings, CONFIG.path_postfix_tf)
+    # The following structure of folders: Sampling parameters -> Window parameter -> TF parameters
+    CONFIG.WORK_FOLDER = (
+    CONFIG.ROOT_FOLDER + CONFIG.path_postfix_samplings, CONFIG.path_postfix_win, CONFIG.path_postfix_tf)
     print("Config file has been updated!")
     local_logger = logging.getLogger(CONFIG.MAIN_LOGGER + ".CONFIG")
     local_logger.info("Config file has been updated!")

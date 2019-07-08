@@ -448,14 +448,14 @@ def randomWalk(G, vertex=None, length=10, direction="IN", pressure=30, version="
 def wrappedRandomWalk(node):
     return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
                        direction=CONFIG.DIRECTION,
-                       version=CONFIG.STEP_VERSION)
+                       version=CONFIG.STRATEGY)
             for _
             in range(CONFIG.WALKS_PER_NODE)]
 
 
 def wrappedRandomWalkIN(node):
     return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
-                       direction="IN", version=CONFIG.STEP_VERSION)
+                       direction="IN", version=CONFIG.STRATEGY)
             for _
             in range(CONFIG.WALKS_PER_NODE)]
 
@@ -463,7 +463,7 @@ def wrappedRandomWalkIN(node):
 def wrappedRandomWalkOUT(node):
     return [
         randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
-                   direction="OUT", version=CONFIG.STEP_VERSION)
+                   direction="OUT", version=CONFIG.STRATEGY)
         for _
         in range(CONFIG.WALKS_PER_NODE)]
 
@@ -471,7 +471,7 @@ def wrappedRandomWalkOUT(node):
 def wrappedOriginalRandomWalk(node):
     return [
         randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
-                   direction="RANDOM", version=CONFIG.STEP_VERSION)
+                   direction="RANDOM", version=CONFIG.STRATEGY)
         for _
         in range(CONFIG.WALKS_PER_NODE)]
 
@@ -598,12 +598,12 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
         end_time = time.time()
         print("Elapsed time for sampling: ", end_time - start_time)
         print("Cashing sampled sequences...")
-        with open(CONFIG.WORK_FOLDER[0] + "sampled_seqs_cached.pkl", "wb") as file:
+        with open(CONFIG.WORK_FOLDER[0] + "sampled_sequences_cached.pkl", "wb") as file:
             pickle.dump(sequences, file)
     elif use_cache:
         print("Loading sequences from cache... wait...")
         try:
-            with open(CONFIG.WORK_FOLDER[0] + "sampled_seqs_cached.pkl", "rb") as file:
+            with open(CONFIG.WORK_FOLDER[0] + "sampled_sequences_cached.pkl", "rb") as file:
                 sequences = pickle.load(file)
         except FileNotFoundError:
             print("File not found... Recalculate \n")
@@ -623,7 +623,7 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
             end_time = time.time()
             print("Elapsed time for sampling: ", end_time - start_time)
             print("Cashing sampled sequences...")
-            with open(CONFIG.WORK_FOLDER[0] + "sampled_seqs_cached.pkl", "wb") as file:
+            with open(CONFIG.WORK_FOLDER[0] + "sampled_sequences_cached.pkl", "wb") as file:
                 pickle.dump(sequences, file)
     if PRINT_STATUS:
         print("--------- Ended the SAMPLING the sequences from FSN ---------")
@@ -717,32 +717,32 @@ def get_SkipGrams(df=None, version=None, walk_length=None, walks_per_node=None, 
     if direction is not None:
         CONFIG.DIRECTION = direction
     if version is not None:
-        CONFIG.STEP_VERSION = version
+        CONFIG.STRATEGY = version
 
     print(f"Current SAMPLING parameters: \n WindowSize:  {CONFIG.WINDOW_SIZE} \n Pressure:  {CONFIG.PRESSURE}"
-          f"\n Strategy:  {CONFIG.STEP_VERSION}")
+          f"\n Strategy:  {CONFIG.STRATEGY}")
     logging.getLogger(CONFIG.MAIN_LOGGER + ".FSN.utils").info(
         f"Current SAMPLING parameters: \n WindowSize:  {CONFIG.WINDOW_SIZE} \n Pressure:  {CONFIG.PRESSURE}"
-        f"\n Strategy:  {CONFIG.STEP_VERSION}")
+        f"\n Strategy:  {CONFIG.STRATEGY}")
     # TODO before that stage, all CONFIG has to be updated!
     if not use_cache:
         print("Start sampling... wait...")
         skip_gr = tr.encode_pairs(
             get_pairs(N_JOBS, CONFIG.DIRECTION, use_cache=use_cache))
-        with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+        with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "skip_grams_cached.pkl", "wb") as file:
             pickle.dump(skip_gr, file)
         print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
     elif use_cache:
         print("Loading SkipGrams from cache... wait...")
         try:
-            with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "rb") as file:
+            with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "skip_grams_cached.pkl", "rb") as file:
                 skip_gr = pickle.load(file)
         except FileNotFoundError:
             print("File not found... Recalculate \n")
             print("Start sampling... wait...")
             skip_gr = tr.encode_pairs(
                 get_pairs(N_JOBS, CONFIG.DIRECTION, use_cache=use_cache))
-            with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+            with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "skip_grams_cached.pkl", "wb") as file:
                 pickle.dump(skip_gr, file)
     else:
         raise ValueError(
@@ -776,12 +776,12 @@ def get_SkipGrams_raw(df, version="MetaDiff", walk_length=10, walks_per_node=10,
     CONFIG.WALKS_LENGTH = walk_length
     CONFIG.WALKS_PER_NODE = walks_per_node
     CONFIG.DIRECTION = direction
-    CONFIG.STEP_VERSION = version
+    CONFIG.STRATEGY = version
 
     if not use_cache:
         print("Start sampling... wait...")
         skip_gr = get_pairs(N_JOBS, CONFIG.DIRECTION, use_cache=use_cache)
-        with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+        with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "skip_grams_cached.pkl", "wb") as file:
             pickle.dump(skip_gr, file)
         print("Sampled SkipGrams are saved in cache... Total size is ", get_size(skip_gr), " bytes")
     elif use_cache:
@@ -793,7 +793,7 @@ def get_SkipGrams_raw(df, version="MetaDiff", walk_length=10, walks_per_node=10,
             print("File not found... Recalculate \n")
             print("Start sampling... wait...")
             skip_gr = get_pairs(N_JOBS, CONFIG.DIRECTION, use_cache=use_cache)
-            with open(CONFIG.WORK_FOLDER[0] + "skip_grams_cached.pkl", "wb") as file:
+            with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "skip_grams_cached.pkl", "wb") as file:
                 pickle.dump(skip_gr, file)
     else:
         raise ValueError(

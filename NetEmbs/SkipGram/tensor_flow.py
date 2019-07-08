@@ -4,6 +4,7 @@ __author__ = 'Aleksei Maliutin'
 tensor_flow.py
 Created by lex at 2019-04-12.
 """
+import os
 import tensorflow as tf
 import math
 from NetEmbs.SkipGram.generate_batch import generate_batch
@@ -16,7 +17,6 @@ from NetEmbs.utils.IO.connect_db import upload_JournalEntriesTruth, upload_data
 from NetEmbs.CONFIG import MODE, LOG_LEVEL
 from NetEmbs import CONFIG
 from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
-import os
 import logging
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -85,7 +85,7 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
         CONFIG.BATCH_SIZE = batch_size
     print(f"Current TensorFlow parameters: \n Embedding size:  {CONFIG.EMBD_SIZE} \n Steps:  {CONFIG.STEPS}"
           f"\n Batch size:  {CONFIG.BATCH_SIZE}")
-    logging.getLogger(CONFIG.MAIN_LOGGER+".SkipGram").info(
+    logging.getLogger(CONFIG.MAIN_LOGGER + ".SkipGram").info(
         f"Current TensorFlow parameters: \n Embedding size:  {CONFIG.EMBD_SIZE} \n Steps:  {CONFIG.STEPS}"
         f"\n Batch size:  {CONFIG.BATCH_SIZE}")
     #     TensorFlow stuff
@@ -114,7 +114,8 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
             print("Loading previous embeddings from cache... wait...")
             try:
                 embeddings = tf.Variable(
-                    pd.read_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/snapshot.pkl").values)
+                    pd.read_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2]
+                                   + "snapshot.pkl").values)
             except FileNotFoundError:
                 print("No cached embeddings, initialize as random matrix...")
                 embeddings = tf.Variable(tf.random_uniform((total_size, CONFIG.EMBD_SIZE), -1.0, 1.0))
@@ -170,7 +171,8 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
 
         # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
         merged = tf.summary.merge_all()
-        train_writer = tf.summary.FileWriter(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + '/train', graph)
+        train_writer = tf.summary.FileWriter(
+            CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + '/train', graph)
         # Add variable initializer.
         init = tf.global_variables_initializer()
 
@@ -245,9 +247,11 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
                         d = fsn_embs.merge(groundTruthDF.groupby("ID", as_index=False).agg({"GroundTruth": "first"}),
                                            on="ID")
                         #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
-                    plot_tSNE(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
+                    plot_tSNE(d, legend_title="GroundTruth",
+                              folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                               title="progress/tSNE_GroundTruth" + str(chunk + vis_progress))
-                    plot_PCA(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
+                    plot_PCA(d, legend_title="GroundTruth",
+                             folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[1],
                              title="progress/PCA_GroundTruth" + str(chunk + vis_progress))
                     print("Plotted the GroundTruth graph after " + str(chunk + vis_progress))
                 return final_embeddings
@@ -257,19 +261,21 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
     if not vis_progress:
         embs = run(graph, skip_grams)
     elif isinstance(vis_progress, int):
-        if not os.path.exists(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "img/progress/"):
-            os.makedirs(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "img/progress/", exist_ok=True)
+        if not os.path.exists(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "img/progress/"):
+            os.makedirs(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "img/progress/",
+                        exist_ok=True)
         embs = run_with_vis(graph, skip_grams, enc_dec)
-    pd.DataFrame(embs).to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/snapshot.pkl")
+    pd.DataFrame(embs).to_pickle(
+        CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "snapshot.pkl")
     end_time = time.time()
     print("Elapsed time: ", end_time - start_time)
     fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])
     print("Done with TensorFlow!")
     print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
-    print("tensorboard --logdir=model/" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
+    print("tensorboard --logdir=model/" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2])
     local_logger.info(
         "Use the following command to see the Tensorboard with all collected stats during last running: \n"
-        f"tensorboard --logdir=model/{CONFIG.WORK_FOLDER[0]}{CONFIG.WORK_FOLDER[1]}")
+        f"tensorboard --logdir=model/{CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2]}")
     if not evaluate_time:
         return fsn_embs
     elif evaluate_time:

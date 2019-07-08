@@ -14,7 +14,7 @@ def log_me(name="NetEmbs", folder=None, file_name="logs.log", level=logging.INFO
     if folder is not None:
         file_name = folder + file_name
     else:
-        file_name = CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + file_name
+        file_name = CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + file_name
     # create the logging file handler
     with open(file_name, 'w'):
         pass
