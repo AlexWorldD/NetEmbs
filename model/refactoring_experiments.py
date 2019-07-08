@@ -5,49 +5,124 @@ refactoring_experiments.py
 Created by lex at 2019-07-04.
 """
 from NetEmbs import *
-from NetEmbs.Logs.custom_logger import log_me
+from NetEmbs import CONFIG
 from NetEmbs.utils import *
 import logging
+import pandas as pd
+import pickle
 
+# TODO Marcel, replace here ROOT_FOLDER to folder, where you would like to store all tmps and final Results
+CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
 DB_PATH = "../Simulation/FSN_Data.db"
+RESULT_FILE = "Results.xlsx"
+LIMIT = 1000
+N_CL = 11
 
 if __name__ == '__main__':
-    # Creating current working place for storing intermediate cache and final images
-    CONFIG.WORK_FOLDER = ("../UvA/SensitivityAnalysis/" + path_postfix_samplings, path_postfix_tf)
-    print(CONFIG.WORK_FOLDER)
-    create_working_folder()
-    MAIN_LOGGER = log_me()
-    MAIN_LOGGER.info("Started..")
-    print("Welcome to refactoring experiments!")
-    d = upload_data(DB_PATH, limit=None)
-    d = prepare_data(d)
+    create_folder(CONFIG.ROOT_FOLDER)
 
+    CONFIG.PRESSURE = 10
+    CONFIG.STEPS = 15000
+    # 0. Loggers adding
+    log_me(name=CONFIG.MAIN_LOGGER, folder=CONFIG.ROOT_FOLDER, file_name="GlobalLogs")
+    logging.getLogger(CONFIG.MAIN_LOGGER).info("Started..")
+    # 0.1 Add DataFrame to store the obtain results
+    try:
+        # Open file with already existing results
+        res = pd.read_excel(CONFIG.ROOT_FOLDER + RESULT_FILE, index_col=0)
+    except FileNotFoundError as e:
+        # If could not find that file, create new empty one
+        res = pd.DataFrame(
+            columns=['ExperimentNum', 'Strategy', 'Pressure', 'WalkPerNode', 'WalkLength', 'WindowSize', 'EMBD size',
+                     'Train steps', 'Batch size', 'Adjusted Rand index', 'Adjusted Mutual Information', 'V-measure',
+                     'Fowlkes-Mallows index', 'Sampling time', 'TF time'])
+        res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
+    print("Welcome to refactoring experiments!")
+    if CONFIG.MODE == "SimulatedData":
+        # 1. Upload JournaEntries into memory
+        d = upload_data(DB_PATH, limit=LIMIT, logger_name=CONFIG.MAIN_LOGGER)
+        journal_truth = upload_JournalEntriesTruth(DB_PATH)[["ID", "GroundTruth", "Time"]]
+        # 2. Data pre-processing
+        d = prepare_data(d, logger_name=CONFIG.MAIN_LOGGER)
+
+    if CONFIG.MODE == "RealData":
+        # //////// TODO UPLOAD your data HERE \\\\\\\\\\
+        # d = bData()
+        # //////// END  \\\\\\\\\\
+        d = rename_columns(d, names={"transactionID": "ID", "accountID": "FA_Name", "BR": "GroundTruth",
+                                     "amount": "Value"})
+        # TODO pay attention for the split argument below!
+        if "Value" in list(d):
+            need_split = True
+        else:
+            need_split = False
+        d = prepare_dataMarcel(d, split=need_split, logger_name=CONFIG.MAIN_LOGGER)
+        journal_truth = d.groupby("ID", as_index=False).agg({"GroundTruth": "first"})
     # let's check it
     countDirtyData(d, ["Debit", "Credit"])
-    # Save visualisation of current FSN
-    # plotFSN(d, edge_labels=False, node_labels=False, title="Marcel/FSN_Vis")
-    # ----- SET required parameters in CONFIG file -------
-    print("Current config parameters: \n Embedding size: ", EMBD_SIZE, "\n Walks per node: ", WALKS_PER_NODE,
-          "\n Steps in TF model: ", STEPS)
-    # ///////// Getting embeddings \\\\\\\\\\\\
-    try:
-        embds = get_embs_TF(d, embed_size=EMBD_SIZE, walks_per_node=WALKS_PER_NODE, num_steps=STEPS,
-                            step_version=STEP_VERSION,
-                            use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False, groundTruthDF=None)
-    except Exception as e:
-        if LOG:
-            local_logger = logging.getLogger("NetEmbs.MarcelExperiments")
-            local_logger.error("We've got an error in get_embs_TF function... ", exc_info=True)
-        raise e
+    # 3. Create Financial Statement Network object
+    CONFIG.GLOBAL_FSN = FSN()
+    CONFIG.GLOBAL_FSN.build(d, left_title="FA_Name")
+    print("FSN sucessfully constructed: \n", CONFIG.GLOBAL_FSN.info())
+    logging.getLogger(CONFIG.MAIN_LOGGER).info(f"FSN successfully constructed: \n, {str(CONFIG.GLOBAL_FSN.info())}")
+    for sampling_exp in [1, 2]:
+        for tf_exp in [1, 2]:
+            print(f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
+            CONFIG.EXPERIMENT = (sampling_exp, tf_exp)
+            # 4. Update CONFIG file w.r.t. the new arguments if applicable
+            try:
+                updateCONFIG()
+            except TypeError as e:
+                logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
+                raise TypeError("Critical error during CONFIG update. Stop execution!")
+            except IOError as e:
+                logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
+                raise IOError("Critical error during CONFIG update. Stop execution!")
+            cur_params = {"ExperimentNum": CONFIG.EXPERIMENT, "Strategy": CONFIG.STEP_VERSION,
+                          "Pressure": CONFIG.PRESSURE,
+                          "WalkPerNode": CONFIG.WALKS_PER_NODE,
+                          "WalkLength": CONFIG.WALKS_LENGTH, "WindowSize": CONFIG.WINDOW_SIZE,
+                          "EMBD size": CONFIG.EMBD_SIZE,
+                          "Train steps": CONFIG.STEPS, "Batch size": CONFIG.BATCH_SIZE}
+            # TODO update CONFIG values and create tmps folders
+            print("Loading Embeddings from cache... wait...")
+            try:
+                with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/Embeddings.pkl", "rb") as file:
+                    embeddings = pickle.load(file)
+                    run_times = {"Sampling time": 0.0, "TF time": 0.0}
+            except FileNotFoundError:
+                print("File not found... Recalculate \n")
+                print("Sampling sequences... wait...")
+                # 5.  ///////// Getting embeddings \\\\\\\\\\\\
+                try:
+                    embeddings, run_times = get_embs_TF(evaluate_time=True)
+                except Exception as e:
+                    logging.getLogger(CONFIG.MAIN_LOGGER).error("We've got an error in get_embs_TF function... ",
+                                                                exc_info=True)
 
-    # //////// Add X/Y for plotting and Merge with GroundTruth \\\\\\\\\
-    d = add_ground_truth(dim_reduction(embds))
-    d.to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/Embeddings.pkl")
-    print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
-    print("tensorboard --logdir=model/" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
-    #     ////////// Plotting tSNE graphs with ground truth vs. labeled \\\\\\\
-    plot_tSNE(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
-              title="GroundTruth", context="paper_half")
-    plot_tSNE(d, legend_title="GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
-              title="GroundTruth", context="paper_full")
-    print("Plotted the GroundTruth graph!")
+                # 6. //////// Merge with GroundTruth \\\\\\\\\
+                embeddings = embeddings.merge(journal_truth, on="ID")
+
+                # 7. Dimensionality reduction for visualisation purposes
+                embeddings = dim_reduction(embeddings)
+                embeddings.to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/Embeddings.pkl")
+
+            #  8.  ////////// Clustering in embedding space \\\\\\\
+            cl_labs = cl_Agglomerative(embeddings, N_CL)
+            # 8.1 Plot t-SNE visualisation
+            plot_tSNE(cl_labs, "label", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1], title="Predicted label",
+                      context="paper_full")
+            plot_tSNE(cl_labs, "GroundTruth", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1],
+                      title="Ground Truth",
+                      context="paper_full")
+            print("Plotted required graphs!")
+            # 8.2 ////////// Evaluate clustering quality \\\\\\\
+            all_metrics = evaluate_all(cl_labs)
+            # 9. Construct one row with given parameters and obtained results
+            cur_params.update(all_metrics)
+            cur_params.update(run_times)
+            # Upload previous Results file
+            res = pd.read_excel(CONFIG.ROOT_FOLDER + RESULT_FILE, index_col=0)
+            # Append new result to DataFrame and save as Excel file
+            res = res.append(cur_params, ignore_index=True)
+            res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)

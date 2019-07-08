@@ -8,12 +8,15 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.manifold import TSNE
+import logging
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 def dim_reduction(df, n_dim=2, rand_state=1):
     if "Emb" in list(df):
+        local_logger = logging.getLogger("NetEmbs.utils.DimRedution")
+        local_logger.info("Dimensionality reduction for visualisation purposes")
         if n_dim > 3:
             raise ValueError(
                 f"Currently only reduction into 2D/3D space is supported, while was given {n_dim} as number of components!")

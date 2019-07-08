@@ -4,10 +4,8 @@ __author__ = 'Aleksei Maliutin'
 MarcelExperiments.py
 Created by lex at 2019-05-05.
 """
-from NetEmbs import *
-from NetEmbs.Logs.custom_logger import log_me
+from utils.Logs import log_me
 import pandas as pd
-import os
 from NetEmbs import CONFIG
 import numpy as np
 import logging

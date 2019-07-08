@@ -7,7 +7,6 @@ Last modified by lex at 2019-03-14.
 from NetEmbs.DataProcessing import *
 from NetEmbs.Clustering import *
 from NetEmbs.FSN import *
-from NetEmbs.Logs import *
 from NetEmbs.SkipGram import *
 from NetEmbs.Vis import *
 from NetEmbs.CONFIG import *

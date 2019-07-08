@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import AgglomerativeClustering
 from NetEmbs.Clustering.find_optimal import find_optimal_nClusters
+import logging
 
 
 def cl_Agglomerative(df, n_cl=7, to_string=False):
@@ -29,4 +30,5 @@ def cl_Agglomerative(df, n_cl=7, to_string=False):
     if to_string:
         predicted_labels = [str(item) for item in predicted_labels]
     with_cl["label"] = pd.Series(predicted_labels)
+    logging.getLogger("NetEmbs.Clustering").info("Agglomerative clustering - DONE")
     return with_cl

@@ -7,6 +7,7 @@ Last modified by lex at 2019-03-14.
 import networkx as nx
 from NetEmbs.CONFIG import LOG
 import logging
+from NetEmbs.utils.get_size import get_size
 
 
 class FSN(nx.DiGraph):
@@ -16,6 +17,7 @@ class FSN(nx.DiGraph):
 
     def __init__(self):
         super().__init__()
+        self.information = dict()
 
     def build(self, df, left_title="FA_Name", right_title="ID"):
         """
@@ -32,6 +34,7 @@ class FSN(nx.DiGraph):
         self.add_weighted_edges_from(
             [(row[right_title], row[left_title], row["Debit"]) for idx, row in df[df["from"] == False].iterrows()],
             weight='weight', type="DEBIT")
+        self.information = {"left_title": left_title, "right_title": right_title}
         if LOG:
             local_logger = logging.getLogger("NetEmbs.FSN.build")
             local_logger.info("FSN constructed!")
@@ -82,6 +85,13 @@ class FSN(nx.DiGraph):
         """
         return len(self.get_BP())
 
+    def number_of_FA(self):
+        """
+        Return total number of Financial Accounts (FA) nodes in network
+        :return: integer value
+        """
+        return len(self.get_FA())
+
     def projection(self, on="BP"):
         """
         Returns the projection of original FSN onto chosen set of nodes
@@ -96,3 +106,12 @@ class FSN(nx.DiGraph):
         else:
             raise ValueError("Wrong projection argument! {!s} used while FA or BP are allowed!".format(on))
         return bipartite.weighted_projected_graph(self, project_to)
+
+    def info(self):
+        """
+        Return available info about FSN: number of nodes, total size etc
+        :return:
+        """
+        out_info = self.information.copy()
+        out_info.update({"BPs": self.number_of_BP(), "FAs": self.number_of_FA(), "Total size": get_size(self)})
+        return out_info

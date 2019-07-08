@@ -19,7 +19,7 @@ import time
 from pathos.multiprocessing import ProcessPool
 import itertools
 import os
-import sys
+from NetEmbs.utils.get_size import get_size
 from tqdm.auto import tqdm
 import pickle
 
@@ -227,32 +227,7 @@ def diff_function(prev_edge, new_edges, pressure):
     return softmax((1.0 - abs(new_edges - prev_edge)) * pressure)
 
 
-def make_pairs(sampled_seq, window=None, debug=False):
-    """
-    Helper function for construction pairs from sequence of nodes with given window size
-    :param sampled_seq: Original sequence of nodes (output of RandomWalk procedure)
-    :param window: window size, how much predecessors and successors one takes into account
-    :param debug: print intermediate stages
-    :return:
-    """
-    if debug:
-        print(sampled_seq)
-    output = list()
-    if window is None:
-        window = CONFIG.WINDOW_SIZE
-    try:
-        for cur_idx in range(len(sampled_seq)):
-            for drift in range(max(0, cur_idx - window), min(cur_idx + window + 1, len(sampled_seq))):
-                if drift != cur_idx:
-                    output.append((sampled_seq[cur_idx], sampled_seq[drift]))
-        if len(output) < 2 and debug:
-            print(output)
-        return output
-    except TypeError:
-        print("t")
-
-
-def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=CONFIG.PRESSURE,
+def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=30,
          debug=False):
     """
      Meta-Random step with changing direction.
@@ -302,6 +277,9 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
                 local_logger = logging.getLogger("NetEmbs.Utils.step")
                 local_logger.error("Fatal ValueError during 1st sub-step", exc_info=True)
                 local_logger.info("Snapshot" + str(snapshot))
+                local_logger = logging.getLogger(CONFIG.MAIN_LOGGER + ".Utils.step")
+                local_logger.error("Fatal ValueError during 1st sub-step", exc_info=True)
+                local_logger.info("Snapshot" + str(snapshot))
         #     Return next vertex here
     else:
         return -1
@@ -347,7 +325,12 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
             if LOG:
                 snapshot = {"CurrentNode": tmp_vertex, "CurrentWeight": tmp_weight,
                             "NextCandidates": list(zip(outs, ws)), "Probas": probas}
+                # Local logger
                 local_logger = logging.getLogger("NetEmbs.Utils.step")
+                local_logger.error("Fatal ValueError during 2nd sub-step", exc_info=True)
+                local_logger.info("Snapshot" + str(snapshot))
+                #         Global logger
+                local_logger = logging.getLogger(CONFIG.MAIN_LOGGER + ".Utils.step")
                 local_logger.error("Fatal ValueError during 2nd sub-step", exc_info=True)
                 local_logger.info("Snapshot" + str(snapshot))
         #     Return next vertex here
@@ -359,7 +342,7 @@ def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=Fa
         return -2
 
 
-def randomWalk(G, vertex=None, length=CONFIG.WALKS_LENGTH, direction="IN", version="MetaDiff", return_full_path=False,
+def randomWalk(G, vertex=None, length=10, direction="IN", pressure=30, version="MetaDiff", return_full_path=False,
                debug=False):
     """
     RandomWalk th
@@ -367,6 +350,7 @@ def randomWalk(G, vertex=None, length=CONFIG.WALKS_LENGTH, direction="IN", versi
     :param vertex: initial node
     :param length: the maximum length of RandomWalk
     :param direction: The direction of walking. IN - go via source financial accounts, OUT - go via target financial accounts
+    :param pressure: The strength of selection process during walking
     :param version: Version of step:
     "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
     "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
@@ -414,17 +398,21 @@ def randomWalk(G, vertex=None, length=CONFIG.WALKS_LENGTH, direction="IN", versi
                     if debug: print("Cannot continue walking... Termination.")
                     break
             elif version == "MetaUniform":
-                new_v = step(G, cur_v, direction, mode=0, return_full_step=return_full_path, debug=debug)
+                new_v = step(G, cur_v, direction, pressure=pressure, mode=0, return_full_step=return_full_path,
+                             debug=debug)
             elif version == "MetaWeighted":
-                new_v = step(G, cur_v, direction, mode=1, return_full_step=return_full_path, debug=debug)
+                new_v = step(G, cur_v, direction, pressure=pressure, mode=1, return_full_step=return_full_path,
+                             debug=debug)
             elif version == "MetaDiff":
                 if direction == "TRIPLE":
                     pass
                 elif direction == "COMBI":
-                    new_v = step(G, cur_v, cur_direction, mode=2, return_full_step=return_full_path, debug=debug)
+                    new_v = step(G, cur_v, cur_direction, pressure=pressure, mode=2, return_full_step=return_full_path,
+                                 debug=debug)
                     cur_direction = mask[cur_direction]
                 else:
-                    new_v = step(G, cur_v, direction, mode=2, return_full_step=return_full_path, debug=debug)
+                    new_v = step(G, cur_v, direction, pressure=pressure, mode=2, return_full_step=return_full_path,
+                                 debug=debug)
             elif version == "OriginalRandomWalk":
                 #         The direct implementation of Perozi randomWalk
                 new_v = default_step(G, cur_v, direction="RANDOM", mode=0, return_full_step=return_full_path,
@@ -456,50 +444,34 @@ def randomWalk(G, vertex=None, length=CONFIG.WALKS_LENGTH, direction="IN", versi
     return context
 
 
-def get_size(obj, seen=None):
-    """Recursively finds size of objects"""
-    size = sys.getsizeof(obj)
-    if seen is None:
-        seen = set()
-    obj_id = id(obj)
-    if obj_id in seen:
-        return 0
-    # Important mark as seen *before* entering recursion to gracefully handle
-    # self-referential objects
-    seen.add(obj_id)
-    if isinstance(obj, dict):
-        size += sum([get_size(v, seen) for v in obj.values()])
-        size += sum([get_size(k, seen) for k in obj.keys()])
-    elif hasattr(obj, '__dict__'):
-        size += get_size(obj.__dict__, seen)
-    elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
-        size += sum([get_size(i, seen) for i in obj])
-    return size
-
-
+# Feed the CONFIG values into each sampling methods within Pathos multiprocessing
 def wrappedRandomWalk(node):
-    return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, direction=CONFIG.DIRECTION,
+    return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
+                       direction=CONFIG.DIRECTION,
                        version=CONFIG.STEP_VERSION)
             for _
             in range(CONFIG.WALKS_PER_NODE)]
 
 
 def wrappedRandomWalkIN(node):
-    return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, direction="IN", version=CONFIG.STEP_VERSION)
+    return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
+                       direction="IN", version=CONFIG.STEP_VERSION)
             for _
             in range(CONFIG.WALKS_PER_NODE)]
 
 
 def wrappedRandomWalkOUT(node):
     return [
-        randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, direction="OUT", version=CONFIG.STEP_VERSION)
+        randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
+                   direction="OUT", version=CONFIG.STEP_VERSION)
         for _
         in range(CONFIG.WALKS_PER_NODE)]
 
 
 def wrappedOriginalRandomWalk(node):
     return [
-        randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, direction="RANDOM", version=CONFIG.STEP_VERSION)
+        randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
+                   direction="RANDOM", version=CONFIG.STEP_VERSION)
         for _
         in range(CONFIG.WALKS_PER_NODE)]
 
@@ -515,6 +487,7 @@ def graph_sampling(n_jobs=4, direction=None):
         direction = CONFIG.DIRECTION
     max_processes = min(n_jobs, os.cpu_count())
     pool = ProcessPool(nodes=max_processes)
+    # required to restart pool to update CONFIG inside the parallel part
     pool.terminate()
     pool.restart()
     BPs = CONFIG.GLOBAL_FSN.get_BP()
@@ -574,12 +547,32 @@ def graph_sampling(n_jobs=4, direction=None):
     return res
 
 
+def make_pairs(sampled_seq):
+    """
+    Helper function for construction pairs from sequence of nodes with given window size
+    :param sampled_seq: Original sequence of nodes (output of RandomWalk procedure)
+    !NOTE: Window size is used from CONFIG file for better performance!
+    :return:
+    """
+    output = list()
+    try:
+        for cur_idx in range(len(sampled_seq)):
+            for drift in range(max(0, cur_idx - CONFIG.WINDOW_SIZE),
+                               min(cur_idx + CONFIG.WINDOW_SIZE + 1, len(sampled_seq))):
+                if drift != cur_idx:
+                    output.append((sampled_seq[cur_idx], sampled_seq[drift]))
+        return output
+    except TypeError:
+        print("t")
+
+
 def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_cache=True):
     """
     Construction a pairs (skip-grams) of nodes according to sampled sequences
     :param n_jobs: Number of parallel processes to be created
     :param direction: initial direction
     :param drop_duplicates: True, delete pairs with equal elements
+    :param use_cache: True, then try to find cached Skip-Grams. Allows to save ~80% of execution time.
     :return: array of pairs(joint appearance of two BP nodes)
     """
     if direction not in ["ALL", "IN", "OUT", "COMBI", "RANDOM"]:
@@ -635,18 +628,20 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
     if PRINT_STATUS:
         print("--------- Ended the SAMPLING the sequences from FSN ---------")
     max_processes = min(n_jobs, os.cpu_count())
-    pool = ProcessPool(nodes=max_processes)
+    pool_pairs = ProcessPool(nodes=max_processes)
+    pool_pairs.terminate()
+    pool_pairs.restart()
     if PRINT_STATUS:
         print("--------- Started making pairs from the sequences ---------")
-    pairs = pool.map(make_pairs, sequences)
+    pairs = pool_pairs.map(make_pairs, sequences)
     if PRINT_STATUS:
         print("--------- Ended making pairs from the sequences ---------")
     if drop_duplicates:
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
         pairs = [item for sublist in pairs for item in sublist]
-    pool.terminate()
-    pool.restart()
+    pool_pairs.terminate()
+    pool_pairs.restart()
     if LOG:
         local_logger = logging.getLogger("NetEmbs.Utils.get_pairs")
         local_logger.info("Total number of raw sampled pairs is " + str(len(pairs)))
@@ -678,7 +673,7 @@ def get_top_similar(all_pairs, top=3, as_DataFrame=True, sort_ids=True, title="S
         return output_top
 
 
-def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI", use_cache=False):
+def get_SkipGrams(df=None, version=None, walk_length=None, walks_per_node=None, direction=None, use_cache=False):
     """
     Get Skip-Grams for given DataFrame with Entries records
     :param df: original DataFrame
@@ -696,17 +691,40 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     :return fsn: FSN class instance for given DataFrame
     :return tr: Encoder/Decoder for given DataFrame
     """
-    # TODO check current version vs. CONFIG.GLOBAL_FSN
 
-    CONFIG.GLOBAL_FSN = FSN()
-    CONFIG.GLOBAL_FSN.build(df, left_title="FA_Name")
+    if CONFIG.GLOBAL_FSN is None and isinstance(df, pd.DataFrame):
+        #     Cannot find already existing FSN object, construct new one
+        print("No FSN object in memory. Construct from scratch!")
+        try:
+            CONFIG.GLOBAL_FSN = FSN()
+            CONFIG.GLOBAL_FSN.build(df, left_title="FA_Name")
+        except ValueError:
+            raise RuntimeError(
+                f"Could not interpret the given argument: df is type of {type(df)}, while pd.DataFrame required! ")
+    elif isinstance(df, FSN):
+        CONFIG.GLOBAL_FSN = df
+    elif isinstance(CONFIG.GLOBAL_FSN, FSN):
+        pass
+    else:
+        raise TypeError("Cound not find FSN in memory as well as construct from scratch!")
     tr = TransformationBPs(CONFIG.GLOBAL_FSN.get_BP())
-    # Update CONFIG parameters w.r.t the given arguments
-    CONFIG.WALKS_LENGTH = walk_length
-    CONFIG.WALKS_PER_NODE = walks_per_node
-    CONFIG.DIRECTION = direction
-    CONFIG.STEP_VERSION = version
 
+    # //////// UPDATE CONFIG IF NEEDED w.r.t the given arguments \\\\\\\\\\\
+    if walks_per_node is not None:
+        CONFIG.WALKS_PER_NODE = walks_per_node
+    if walk_length is not None:
+        CONFIG.WALKS_LENGTH = walk_length
+    if direction is not None:
+        CONFIG.DIRECTION = direction
+    if version is not None:
+        CONFIG.STEP_VERSION = version
+
+    print(f"Current SAMPLING parameters: \n WindowSize:  {CONFIG.WINDOW_SIZE} \n Pressure:  {CONFIG.PRESSURE}"
+          f"\n Strategy:  {CONFIG.STEP_VERSION}")
+    logging.getLogger(CONFIG.MAIN_LOGGER + ".FSN.utils").info(
+        f"Current SAMPLING parameters: \n WindowSize:  {CONFIG.WINDOW_SIZE} \n Pressure:  {CONFIG.PRESSURE}"
+        f"\n Strategy:  {CONFIG.STEP_VERSION}")
+    # TODO before that stage, all CONFIG has to be updated!
     if not use_cache:
         print("Start sampling... wait...")
         skip_gr = tr.encode_pairs(
@@ -732,7 +750,7 @@ def get_SkipGrams(df, version="MetaDiff", walk_length=10, walks_per_node=10, dir
     return skip_gr, CONFIG.GLOBAL_FSN, tr
 
 
-def get_SkipGrams2(df, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI", use_cache=False):
+def get_SkipGrams_raw(df, version="MetaDiff", walk_length=10, walks_per_node=10, direction="COMBI", use_cache=False):
     """
     Get Skip-Grams for given DataFrame with Entries records
     :param df: original DataFrame
@@ -814,8 +832,7 @@ def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node
     if LOG:
         local_logger = logging.getLogger("NetEmbs.Utils.find_similar")
     if not isinstance(version, list) and not isinstance(direction, list):
-        pairs = get_pairs(fsn, N_JOBS, version=version, walk_length=walk_length, walks_per_node=walks_per_node,
-                          direction=direction)
+        pairs = get_pairs(fsn, N_JOBS)
         return get_top_similar(pairs, top=top_n, title=column_title)
     else:
         #         Multiple parameters, build grid over them
@@ -832,12 +849,10 @@ def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node
                 if _first:
                     _first = False
                     output_df = get_top_similar(
-                        get_pairs(fsn, N_JOBS, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
-                                  direction=_dir), top=top_n, title=str(ver + "_" + _dir))
+                        get_pairs(fsn, N_JOBS), top=top_n, title=str(ver + "_" + _dir))
                 else:
                     output_df[str(ver + "_" + _dir)] = get_top_similar(
-                        get_pairs(fsn, N_JOBS, version=ver, walk_length=walk_length, walks_per_node=walks_per_node,
-                                  direction=_dir), top=top_n, title=str(ver + "_" + _dir))[str(ver + "_" + _dir)]
+                        get_pairs(fsn, N_JOBS), top=top_n, title=str(ver + "_" + _dir))[str(ver + "_" + _dir)]
         return output_df
 
 

@@ -17,3 +17,4 @@ plotly>=3.10.0
 cufflinks==0.15
 ipywidgets>=7.4.2
 wordcloud
+openpyxl

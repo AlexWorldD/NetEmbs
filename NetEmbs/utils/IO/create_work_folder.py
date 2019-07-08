@@ -17,3 +17,9 @@ def create_working_folder():
     if not os.path.exists(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/"):
         os.makedirs(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/", exist_ok=True)
     print("Working directory is ", CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
+
+
+def create_folder(path):
+    # Create working folder for current execution
+    if not os.path.exists(path):
+        os.makedirs(path, exist_ok=True)

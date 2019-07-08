@@ -5,20 +5,12 @@ __author__ = 'Aleksei Maliutin'
 experiments.py
 Last modified by lex at 2019-02-11.
 """
-import networkx as nx
-from networkx.algorithms import bipartite
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn import preprocessing
-from NetEmbs.DataProcessing import *
-from NetEmbs.GenerateData.complex_df import sales_collections
-from NetEmbs.FSN.graph import FSN
-from NetEmbs.Vis.plots import plotFSN
-from NetEmbs.FSN.utils import get_pairs, find_similar, similar, get_JournalEntries, graph_sampling
-from NetEmbs.CONFIG import MAIN_LOGGER
-from NetEmbs.Logs.custom_logger import log_me
+from NetEmbs.FSN.utils import get_pairs
+from utils.Logs import log_me
 from NetEmbs.Clustering import *
-from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.cluster import KMeans
+
 PLOT = False
 
 import time

@@ -13,7 +13,7 @@ from NetEmbs.CONFIG import PRINT_STATUS, LOG
 import logging
 
 
-def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=True, unique=True):
+def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=True, unique=True, logger_name="NetEmbs"):
     """
     General function for data preprocessing
     :param original_df:
@@ -25,7 +25,7 @@ def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=Tru
     :return: Transformed DF
     """
     if LOG:
-        local_logger = logging.getLogger("NetEmbs.DataProcessing.prepare_data")
+        local_logger = logging.getLogger(logger_name+".DataProcessing.prepare_data")
         local_logger.info("Original shape of DataFrame is " + str(original_df.shape))
     # Delete all NaNs and Strings values from "Value" column
     original_df = delStrings(original_df)
@@ -63,7 +63,7 @@ def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=Tru
 
 
 def prepare_dataMarcel(original_df, clean_columns=["Value"],
-                       split=True, merge_fa=True, add_from=True, norm=True, unique=True):
+                       split=True, merge_fa=True, add_from=True, norm=True, unique=True, logger_name="NetEmbs"):
     """
     General function for data preprocessing with given 'type' column
     :param original_df:
@@ -77,7 +77,7 @@ def prepare_dataMarcel(original_df, clean_columns=["Value"],
     """
     # TODO rewrite that all...
     if LOG:
-        local_logger = logging.getLogger("NetEmbs.DataProcessing.prepare_data")
+        local_logger = logging.getLogger(logger_name+".DataProcessing.prepare_data")
     if PRINT_STATUS:
         print("Original shape of DataFrame is ", str(original_df.shape))
     if LOG:

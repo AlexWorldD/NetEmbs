@@ -16,6 +16,7 @@ from NetEmbs import CONFIG
 from NetEmbs.utils.dimensionality_reduction import dim_reduction
 from NetEmbs.FSN.graph import FSN
 from NetEmbs.Vis.helpers import getColors_Markers
+from NetEmbs.utils.evaluation import v_measure
 
 plt.rcParams["figure.figsize"] = CONFIG.FIG_SIZE
 
@@ -149,12 +150,7 @@ def plot_tSNE_old(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth",
     elif legend_title == "label":
         v_score = ""
         if "GroundTruth" in list(fsn_embs):
-            str_labels = list(fsn_embs.GroundTruth.unique())
-            real_labels = dict(zip(str_labels, range(len(str_labels))))
-            from sklearn.metrics import v_measure_score
-            fsn_embs["true_labels"] = fsn_embs.GroundTruth.apply(lambda x: real_labels[x])
-            v_score = ", V-Score is " + str(
-                v_measure_score(fsn_embs.true_labels.values, fsn_embs.label.values).round(3))
+            v_score = ", V-Score is " + str(v_measure(fsn_embs).round(3))
         plt.title("Embeddings visualisation with t-SNE, predicted labels" + v_score)
 
     if title is not None and isinstance(title, str):
@@ -170,7 +166,7 @@ def plot_tSNE_old(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth",
 
 
 def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_full"):
-    cmap, mmap = getColors_Markers(df[legend_title].unique(), n_colors=8, markers=["o", "v", "s"])
+    cmap, mmap = getColors_Markers(df[legend_title].unique(), n_colors=10, markers=["o", "v", "s"])
     dpi = 140
     fig_size = (13, 10)
     #     set_font(14, True)
@@ -207,11 +203,7 @@ def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_
     elif legend_title == "label":
         v_score = ""
         if "GroundTruth" in list(df):
-            str_labels = list(df.GroundTruth.unique())
-            real_labels = dict(zip(str_labels, range(len(str_labels))))
-            from sklearn.metrics import v_measure_score
-            v_score = ", V-Score is " + str(
-                v_measure_score(df.GroundTruth.apply(lambda x: real_labels[x]).values, df.label.values).round(3))
+            v_score = ", V-Score is " + str(v_measure(df).round(3))
         ax.set_title("t-SNE visualisation with coloring based on predicted labels" + v_score, y=1.08)
     if title is not None and isinstance(title, str):
         postfix = ""

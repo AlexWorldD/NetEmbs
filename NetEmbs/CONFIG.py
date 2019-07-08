@@ -8,6 +8,9 @@ FIG_SIZE = [20, 10]
 PRINT_STATUS = True
 # TODO here you can select with what kind of data you are going to work: Simulated or Real one
 MODE = "SimulatedData"
+# Parameters below are used only for creating hierarchical folders' structure for storing results/cache
+ROOT_FOLDER = ""
+EXPERIMENT = ["", ""]
 
 # /////// Running parameters \\\\\\\
 N_JOBS = 8
@@ -38,23 +41,22 @@ N_DIGITS = 5
 all_sampling_strategies = ["OriginalRandomWalk", "DefUniform", "DefWeighted", "MetaUniform", "MetaWeighted", "MetaDiff"]
 
 # /////// Logging configuration \\\\\\\
-MAIN_LOGGER = None
+MAIN_LOGGER = "GlobalLogs"
 LOG = True
 
 # /////// Clustering configuration \\\\\\\
-NUM_CL_MAX = 10
+NUM_CL_MAX = 11
 GLOBAL_FSN = None
 
 # /////// Overwrite default setting for experiments here \\\\\\\\\\
 # Last Experiments
 EMBD_SIZE = 32
-STEPS = 200000
-BATCH_SIZE = 62
+STEPS = 100000
+BATCH_SIZE = 64
 NEGATIVE_SAMPLES = 32
 
 STEP_VERSION = "MetaDiff"
 DIRECTION = "COMBI"
-HACK = 0
 PRESSURE = 30
 WINDOW_SIZE = 2
 WALKS_PER_NODE = 20

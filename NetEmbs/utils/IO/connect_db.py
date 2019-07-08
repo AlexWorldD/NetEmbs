@@ -31,14 +31,15 @@ def upload_data_old(path_to_db='DataSimulation/Sample.db', limit=10):
     return db_data
 
 
-def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=997):
+def upload_data(path_to_db='../Simulation/FSN_Data.db', limit=997, logger_name="NetEmbs"):
     """
     Uploading data from EntryRecords database
     :param path_to_db: path to sqlite3 database
     :param limit: number of rows to be uploaded, None - upload all data
+    :param logger_name: Name of logger to be used
     :return: DataFrame with required structure
     """
-    local_logger = logging.getLogger("NetEmbs.UploadData")
+    local_logger = logging.getLogger(logger_name+".UploadData")
     local_logger.info("Connection to DataBase")
     cnx = sqlite3.connect(path_to_db)
     # Loading data from db

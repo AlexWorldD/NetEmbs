@@ -13,23 +13,31 @@ import time
 import pandas as pd
 import numpy as np
 from NetEmbs.utils.IO.connect_db import upload_JournalEntriesTruth, upload_data
-from NetEmbs.CONFIG import EMBD_SIZE, MODE, LOG_LEVEL, NEGATIVE_SAMPLES, DIRECTION
+from NetEmbs.CONFIG import MODE, LOG_LEVEL
 from NetEmbs import CONFIG
 from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
 import os
+import logging
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
-def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="MetaDiff", embed_size=None,
-                num_steps=10000, batch_size=CONFIG.BATCH_SIZE, walk_length=10,
-                walks_per_node=10, use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False,
-                groundTruthDF=None):
+def get_embs_TF(input_data=None, step_version=None, embed_size=None,
+                num_steps=None, batch_size=None, walk_length=None,
+                walks_per_node=None, use_cached_skip_grams=True, use_prev_embs=False, vis_progress=False,
+                groundTruthDF=None, evaluate_time=False):
     """
     Wrapper around all representation stuff for FSN
     :param input_data: Input DataFrame with journal entries
+    :param step_version: Version of step passed into GraphSampling method
+        "DefUniform" - Pure RandomWalk (uniform probabilities, follows the direction),
+        "DefWeighted" - RandomWalk (weighted probabilities, follows the direction),
+        "MetaUniform" - Default Metapath-version (uniform probabilities, change directions),
+        "MetaWeighted" - Weighted Metapath version (weighted probabilities "rich gets richer", change directions),
+        "MetaDiff" - Modified Metapath version (probabilities depend on the differences between edges, change directions)
     :param embed_size: Dimensionality of embedding space
     :param num_steps: Number of training steps for TF model
+    :param batch_size: Number of sampled in batches for training TF model
     :param walk_length: Walk length for sampling strategy
     :param walks_per_node: Number of finWalks per each BP node in FSN
     :param use_cached_skip_grams: If True, use previously saved skip_grams. Default is True
@@ -37,30 +45,50 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
     :param vis_progress: Integer, plot tSNE after specified number of steps during TF model training. Not recommend,
     extremely expensive. Default is False, hence, no drawing at all.
     :param groundTruthDF: DataFrame with the ground truth column. Required if vis_progress is not False
+    :param evaluate_time: If True, then method additionally evaluate elapsed times for Sampling and TF training and returns is as Dictionary
     :return: DataFrame with normalized embeddings
     """
+    if input_data is None and CONFIG.GLOBAL_FSN is not None:
+        print(f"Found FSN object in memory!")
     # Check the input argument type: FSN or DataFrame
-    if isinstance(input_data, pd.DataFrame):
+    elif isinstance(input_data, pd.DataFrame):
         # #     Construct FSN object from the given df
         d = input_data
+        print("Total number of BPs in given dataset is ", d.ID.nunique())
     elif isinstance(input_data, tuple):
         d = prepare_data(upload_data(input_data[0], limit=input_data[1]))
+        print("Total number of BPs in given dataset is ", d.ID.nunique())
     else:
         raise ValueError(
             "As input data should be DataFrame with journal entries of the path to DataBase! Was given {!s}!".format(
                 type(input_data)))
-    print("Total number of BPs in given dataset is ", d.ID.nunique())
-    skip_grams, fsn, enc_dec = get_SkipGrams(d, walks_per_node=walks_per_node, walk_length=walk_length,
-                                             use_cache=use_cached_skip_grams, version=step_version, direction=DIRECTION)
+    if evaluate_time:
+        #     User asked for additional statistics about current execution
+        run_stats = dict()
+        start_time = time.time()
+    skip_grams, fsn, enc_dec = get_SkipGrams(df=input_data, version=step_version,
+                                             walk_length=walk_length, walks_per_node=walks_per_node,
+                                             direction=None, use_cache=use_cached_skip_grams)
+
+    local_logger = logging.getLogger("NetEmbs.SkipGram")
+    local_logger.info("Initialize TF model")
+    if evaluate_time:
+        run_stats["Sampling time"] = time.time() - start_time
     print(skip_grams[:5])
     #
-    #     TensorFlow stuff
+    # //////// UPDATE CONFIG IF NEEDED w.r.t the given arguments \\\\\\\\\\\
     if embed_size is not None:
-        embedding_size = embed_size
-    else:
-        embedding_size = EMBD_SIZE  # Dimension of the embedding vector
-
-    neg_number = NEGATIVE_SAMPLES
+        CONFIG.EMBD_SIZE = embed_size
+    if num_steps is not None:
+        CONFIG.STEPS = num_steps
+    if batch_size is not None:
+        CONFIG.BATCH_SIZE = batch_size
+    print(f"Current TensorFlow parameters: \n Embedding size:  {CONFIG.EMBD_SIZE} \n Steps:  {CONFIG.STEPS}"
+          f"\n Batch size:  {CONFIG.BATCH_SIZE}")
+    logging.getLogger(CONFIG.MAIN_LOGGER+".SkipGram").info(
+        f"Current TensorFlow parameters: \n Embedding size:  {CONFIG.EMBD_SIZE} \n Steps:  {CONFIG.STEPS}"
+        f"\n Batch size:  {CONFIG.BATCH_SIZE}")
+    #     TensorFlow stuff
     valid_size = 4
     total_size = fsn.number_of_BP()
     tf.reset_default_graph()
@@ -78,8 +106,8 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
                 tf.summary.scalar('min', tf.reduce_min(var))
 
         # Input variables
-        train_inputs = tf.placeholder(tf.int32, shape=[batch_size])
-        train_context = tf.placeholder(tf.int32, shape=[batch_size, 1])
+        train_inputs = tf.placeholder(tf.int32, shape=[CONFIG.BATCH_SIZE])
+        train_context = tf.placeholder(tf.int32, shape=[CONFIG.BATCH_SIZE, 1])
 
         # Embeddings matrix initialisation
         if use_prev_embs:
@@ -89,15 +117,15 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
                     pd.read_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/snapshot.pkl").values)
             except FileNotFoundError:
                 print("No cached embeddings, initialize as random matrix...")
-                embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
+                embeddings = tf.Variable(tf.random_uniform((total_size, CONFIG.EMBD_SIZE), -1.0, 1.0))
         else:
-            embeddings = tf.Variable(tf.random_uniform((total_size, embedding_size), -1.0, 1.0))
+            embeddings = tf.Variable(tf.random_uniform((total_size, CONFIG.EMBD_SIZE), -1.0, 1.0))
         embed = tf.nn.embedding_lookup(embeddings, train_inputs)
         # ----
         # Output layer parameters
         with tf.name_scope('weights'):
-            weights = tf.Variable(tf.truncated_normal((total_size, embedding_size),
-                                                      stddev=1.0 / math.sqrt(embedding_size)))
+            weights = tf.Variable(tf.truncated_normal((total_size, CONFIG.EMBD_SIZE),
+                                                      stddev=1.0 / math.sqrt(CONFIG.EMBD_SIZE)))
             if LOG_LEVEL == "full":
                 variable_summaries(weights)
         with tf.name_scope('biases'):
@@ -121,7 +149,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
         with tf.name_scope('cost'):
             loss = tf.nn.sampled_softmax_loss(weights, biases,
                                               train_context, embed,
-                                              neg_number, total_size)
+                                              CONFIG.NEGATIVE_SAMPLES, total_size)
 
             cost = tf.reduce_mean(loss)
             tf.summary.scalar('Cost', cost)
@@ -146,16 +174,15 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
         # Add variable initializer.
         init = tf.global_variables_initializer()
 
-        def run(graph, num_steps, data, batch_size, enc_dec):
+        def run(graph, data):
             with tf.Session(graph=graph) as session:
                 # We must initialize all variables before we use them.
                 init.run()
-                print('Initialized')
+                print('Initialized tf-model for the following parameters: ')
 
                 average_loss = 0
-                for step in range(num_steps + 1):
-                    batch_inputs, batch_context = generate_batch(data,
-                                                                 batch_size)
+                for step in range(CONFIG.STEPS + 1):
+                    batch_inputs, batch_context = generate_batch(data, CONFIG.BATCH_SIZE)
                     feed_dict = {train_inputs: batch_inputs, train_context: batch_context}
 
                     _, loss_train, summary_logs = session.run([optimizer, cost, merged], feed_dict=feed_dict)
@@ -168,6 +195,7 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
                             average_loss /= 5000
                         # The average loss is an estimate of the loss over the last 2000 batches.
                         print('Average train loss at step ', step, ': ', average_loss)
+                        local_logger.info(f"Average train loss at step {step}: {average_loss}")
                         average_loss = 0
 
                     # if step % 20000 == 0:
@@ -185,17 +213,16 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
                 final_embeddings = normalized_embeddings.eval()
                 return final_embeddings
 
-        def run_with_vis(graph, num_steps, data, batch_size, enc_dec):
+        def run_with_vis(graph, data, enc_dec):
             with tf.Session(graph=graph) as session:
                 # We must initialize all variables before we use them.
                 init.run()
                 print('Initialized')
 
                 average_loss = 0
-                for chunk in range(0, num_steps, vis_progress):
+                for chunk in range(0, CONFIG.STEPS, vis_progress):
                     for step in range(chunk, chunk + vis_progress):
-                        batch_inputs, batch_context = generate_batch(data,
-                                                                     batch_size)
+                        batch_inputs, batch_context = generate_batch(data, CONFIG.BATCH_SIZE)
                         feed_dict = {train_inputs: batch_inputs, train_context: batch_context}
 
                         _, loss_train, summary_logs = session.run([optimizer, cost, merged], feed_dict=feed_dict)
@@ -226,18 +253,28 @@ def get_embs_TF(input_data=("../Simulation/FSN_Data.db", 496), step_version="Met
                 return final_embeddings
     #     Run
     start_time = time.time()
+
     if not vis_progress:
-        embs = run(graph, num_steps, skip_grams, batch_size, enc_dec)
+        embs = run(graph, skip_grams)
     elif isinstance(vis_progress, int):
         if not os.path.exists(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "img/progress/"):
             os.makedirs(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "img/progress/", exist_ok=True)
-        embs = run_with_vis(graph, num_steps, skip_grams, batch_size, enc_dec)
+        embs = run_with_vis(graph, skip_grams, enc_dec)
     pd.DataFrame(embs).to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "cache/snapshot.pkl")
     end_time = time.time()
     print("Elapsed time: ", end_time - start_time)
     fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])
     print("Done with TensorFlow!")
-    return fsn_embs
+    print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
+    print("tensorboard --logdir=model/" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1])
+    local_logger.info(
+        "Use the following command to see the Tensorboard with all collected stats during last running: \n"
+        f"tensorboard --logdir=model/{CONFIG.WORK_FOLDER[0]}{CONFIG.WORK_FOLDER[1]}")
+    if not evaluate_time:
+        return fsn_embs
+    elif evaluate_time:
+        run_stats["TF time"] = end_time - start_time
+        return fsn_embs, run_stats
 
 
 def add_ground_truth(df, path_file="../Simulation/FSN_Data.db"):
