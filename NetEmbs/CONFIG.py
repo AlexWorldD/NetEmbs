@@ -20,6 +20,7 @@ EMBD_SIZE = 32
 STEPS = 100000
 BATCH_SIZE = 64
 NEGATIVE_SAMPLES = 32
+LOSS_FUNCTION = "NegativeSampling"
 
 # What save for TensorBoard during model training: "full" includes min/max/mean/std for weights/biases, but very expensive
 # LOG_LEVEL = "full"

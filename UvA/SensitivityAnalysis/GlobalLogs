@@ -1,27 +1,59 @@
-2019-07-08 20:41:02,728 - GlobalLogs - INFO - Started..
-2019-07-08 20:41:02,737 - GlobalLogs.UploadData - INFO - Connection to DataBase
-2019-07-08 20:41:02,747 - GlobalLogs.UploadData - INFO - Data has been uploaded
-2019-07-08 20:41:02,826 - GlobalLogs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (1000, 4)
-2019-07-08 20:41:02,832 - GlobalLogs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (1000, 4)
-2019-07-08 20:41:02,838 - GlobalLogs.DataProcessing.prepare_data - INFO - Split Values column into Credit and Debit ones: ['ID', 'Name', 'FA_Name', 'Value', 'Debit', 'Credit']
-2019-07-08 20:41:02,846 - GlobalLogs.DataProcessing.prepare_data - INFO - After merging FAs columns titles are: ['ID', 'FA_Name', 'Credit', 'Debit', 'Name', 'Value'] shape is (998, 6)
-2019-07-08 20:41:02,883 - GlobalLogs.DataProcessing.prepare_data - INFO - After normalization shape of DataFrame is (977, 8)
-2019-07-08 20:41:03,320 - GlobalLogs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is (954, 9)
-2019-07-08 20:41:03,448 - GlobalLogs - INFO - FSN successfully constructed: 
+2019-07-08 21:24:07,938 - GlobalLogs - INFO - Started..
+2019-07-08 21:24:07,965 - GlobalLogs.UploadData - INFO - Connection to DataBase
+2019-07-08 21:24:07,975 - GlobalLogs.UploadData - INFO - Data has been uploaded
+2019-07-08 21:24:08,030 - GlobalLogs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (1000, 4)
+2019-07-08 21:24:08,033 - GlobalLogs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (1000, 4)
+2019-07-08 21:24:08,037 - GlobalLogs.DataProcessing.prepare_data - INFO - Split Values column into Credit and Debit ones: ['ID', 'Name', 'FA_Name', 'Value', 'Debit', 'Credit']
+2019-07-08 21:24:08,042 - GlobalLogs.DataProcessing.prepare_data - INFO - After merging FAs columns titles are: ['ID', 'FA_Name', 'Credit', 'Debit', 'Name', 'Value'] shape is (998, 6)
+2019-07-08 21:24:08,069 - GlobalLogs.DataProcessing.prepare_data - INFO - After normalization shape of DataFrame is (977, 8)
+2019-07-08 21:24:08,441 - GlobalLogs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is (954, 9)
+2019-07-08 21:24:08,558 - GlobalLogs - INFO - FSN successfully constructed: 
 , {'left_title': 'FA_Name', 'right_title': 'ID', 'BPs': 173, 'FAs': 419, 'Total size': 789330}
-2019-07-08 20:41:03,450 - GlobalLogs - INFO - -------------- Experiment (1, 1) --------------
-2019-07-08 20:41:03,452 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-08 20:41:03,452 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('UvA/SensitivityAnalysis/verMetaDiff_dirCOMBI_walks20_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB32_batch64_TFsteps15000_ 1/')
-2019-07-08 20:41:05,408 - GlobalLogs - INFO - -------------- Experiment (1, 2) --------------
-2019-07-08 20:41:05,409 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-08 20:41:05,409 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('UvA/SensitivityAnalysis/verMetaDiff_dirCOMBI_walks20_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB32_batch64_TFsteps15000_ 2/')
-2019-07-08 20:41:07,367 - GlobalLogs - INFO - -------------- Experiment (2, 1) --------------
-2019-07-08 20:41:07,368 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-08 20:41:07,369 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('UvA/SensitivityAnalysis/verMetaDiff_dirCOMBI_walks20_pressure10_1hopFraction0_2/', 'windowSize2/', 'EMB32_batch64_TFsteps15000_ 1/')
-2019-07-08 20:41:09,348 - GlobalLogs - INFO - -------------- Experiment (2, 2) --------------
-2019-07-08 20:41:09,349 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-08 20:41:09,350 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('UvA/SensitivityAnalysis/verMetaDiff_dirCOMBI_walks20_pressure10_1hopFraction0_2/', 'windowSize2/', 'EMB32_batch64_TFsteps15000_ 2/')
+2019-07-08 21:24:08,558 - GlobalLogs - INFO - -------------- Experiment (1, 1) --------------
+2019-07-08 21:24:08,559 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-08 21:24:08,559 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/SensitivityAnalysis/verMetaDiff_dirCOMBI_walks20_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB32_batch64_TFsteps15000_ 1/')
+2019-07-08 21:24:08,559 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
+ WindowSize:  2 
+ Pressure:  10
+ Strategy:  MetaDiff
+2019-07-08 21:24:10,885 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
+ Embedding size:  32 
+ Steps:  15000
+ Batch size:  64
+2019-07-08 21:24:24,378 - GlobalLogs - INFO - -------------- Experiment (1, 2) --------------
+2019-07-08 21:24:24,378 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-08 21:24:24,378 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/SensitivityAnalysis/verMetaDiff_dirCOMBI_walks20_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB32_batch64_TFsteps15000_ 2/')
+2019-07-08 21:24:24,379 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
+ WindowSize:  2 
+ Pressure:  10
+ Strategy:  MetaDiff
+2019-07-08 21:24:24,389 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
+ Embedding size:  32 
+ Steps:  15000
+ Batch size:  64
+2019-07-08 21:24:37,109 - GlobalLogs - INFO - -------------- Experiment (2, 1) --------------
+2019-07-08 21:24:37,110 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-08 21:24:37,110 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/SensitivityAnalysis/verMetaDiff_dirCOMBI_walks20_pressure10_1hopFraction0_2/', 'windowSize2/', 'EMB32_batch64_TFsteps15000_ 1/')
+2019-07-08 21:24:37,111 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
+ WindowSize:  2 
+ Pressure:  10
+ Strategy:  MetaDiff
+2019-07-08 21:24:39,621 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
+ Embedding size:  32 
+ Steps:  15000
+ Batch size:  64
+2019-07-08 21:24:52,769 - GlobalLogs - INFO - -------------- Experiment (2, 2) --------------
+2019-07-08 21:24:52,769 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-08 21:24:52,769 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/SensitivityAnalysis/verMetaDiff_dirCOMBI_walks20_pressure10_1hopFraction0_2/', 'windowSize2/', 'EMB32_batch64_TFsteps15000_ 2/')
+2019-07-08 21:24:52,770 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
+ WindowSize:  2 
+ Pressure:  10
+ Strategy:  MetaDiff
+2019-07-08 21:24:52,782 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
+ Embedding size:  32 
+ Steps:  15000
+ Batch size:  64

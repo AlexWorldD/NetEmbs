@@ -15,6 +15,21 @@ import pickle
 CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
 DB_PATH = "../Simulation/FSN_Data.db"
 RESULT_FILE = "Results.xlsx"
+
+#  ---------- CONFIG Setting HERE ------------
+# .1 Sampling parameters
+CONFIG.STRATEGY = "MetaDiff"
+CONFIG.PRESSURE = 30
+CONFIG.WINDOW_SIZE = 2
+CONFIG.WALKS_PER_NODE = 20
+CONFIG.WALKS_LENGTH = 10
+# .2 TF parameters
+CONFIG.STEPS = 15000
+CONFIG.EMBD_SIZE = 32
+CONFIG.LOSS_FUNCTION = "NegativeSampling"  # or "NCE"
+CONFIG.BATCH_SIZE = 64
+# ---------------------------------------------
+
 LIMIT = 1000
 N_CL = 11
 

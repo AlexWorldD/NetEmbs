@@ -134,23 +134,16 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
             if LOG_LEVEL == "full":
                 variable_summaries(biases)
 
-        # ---- Version 1
-        # hidden_out = tf.matmul(embed, tf.transpose(weights)) + biases
-        # # ----
-        # # convert train_context to a one-hot format
-        # train_one_hot = tf.one_hot(train_context, total_size)
-        # cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=hidden_out,
-        #                                                                           labels=train_one_hot))
-        # # Construct the SGD optimizer using a learning rate of 1.0.
-        # optimizer = tf.train.GradientDescentOptimizer(0.2).minimize(cost)
-        # Compute the cosine similarity between minibatch examples and all embeddings.
-
-        #  ---- Version 2, like Marcel's example
         # Calculate the loss using negative sampling
         with tf.name_scope('cost'):
-            loss = tf.nn.sampled_softmax_loss(weights, biases,
-                                              train_context, embed,
-                                              CONFIG.NEGATIVE_SAMPLES, total_size)
+            if CONFIG.LOSS_FUNCTION == "NegativeSampling":
+                loss = tf.nn.sampled_softmax_loss(weights, biases,
+                                                  train_context, embed,
+                                                  CONFIG.NEGATIVE_SAMPLES, total_size)
+            elif CONFIG.LOSS_FUNCTION == "NCE":
+                loss = tf.nn.nce_loss(weights, biases,
+                                      train_context, embed,
+                                      CONFIG.NEGATIVE_SAMPLES, total_size)
 
             cost = tf.reduce_mean(loss)
             tf.summary.scalar('Cost', cost)
@@ -159,15 +152,15 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
         # Validation subset of BPs
         # pick 8 samples from (0,100) and (1000,1100) each ranges. lower id implies more frequent
 
-        valid_examples = np.random.randint(0, total_size, valid_size)
-        valid_dataset = tf.constant(valid_examples, dtype=tf.int32)
+        # valid_examples = np.random.randint(0, total_size, valid_size)
+        # valid_dataset = tf.constant(valid_examples, dtype=tf.int32)
 
         # We use the cosine distance:
         norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keepdims=True))
         normalized_embeddings = embeddings / norm
 
-        valid_embedding = tf.nn.embedding_lookup(normalized_embeddings, valid_dataset)
-        similarity = tf.matmul(valid_embedding, tf.transpose(normalized_embeddings))
+        # valid_embedding = tf.nn.embedding_lookup(normalized_embeddings, valid_dataset)
+        # similarity = tf.matmul(valid_embedding, tf.transpose(normalized_embeddings))
 
         # Merge all the summaries and write them out to /tmp/mnist_logs (by default)
         merged = tf.summary.merge_all()
@@ -180,7 +173,7 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
             with tf.Session(graph=graph) as session:
                 # We must initialize all variables before we use them.
                 init.run()
-                print('Initialized tf-model for the following parameters: ')
+                print('Initialized tf-model')
 
                 average_loss = 0
                 for step in range(CONFIG.STEPS + 1):
@@ -272,10 +265,10 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
     fsn_embs = pd.DataFrame(list(zip(enc_dec.original_bps, embs)), columns=["ID", "Emb"])
     print("Done with TensorFlow!")
     print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
-    print("tensorboard --logdir=model/" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2])
+    print("tensorboard --logdir=" + CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2])
     local_logger.info(
         "Use the following command to see the Tensorboard with all collected stats during last running: \n"
-        f"tensorboard --logdir=model/{CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2]}")
+        f"tensorboard --logdir={CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2]}")
     if not evaluate_time:
         return fsn_embs
     elif evaluate_time:
