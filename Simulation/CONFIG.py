@@ -6,7 +6,7 @@ Created by lex at 2019-03-24.
 """
 import numpy as np
 
-DB_PATH = "FSN_Data_v2.db"
+DB_PATH = "FSN_Data_5k.db"
 PRINT = False
 VARIANTS = list(range(13))
 TRANSACTIONS_LIMITS = {"Sales": (10, 1000), "Depreciation": (10, 100), "FixedAssets": (10, 100), "Purchase": (1, 100)}

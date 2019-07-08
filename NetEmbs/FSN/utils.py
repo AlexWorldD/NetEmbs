@@ -642,9 +642,6 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
         pairs = [item for sublist in pairs for item in sublist]
     pool_pairs.terminate()
     pool_pairs.restart()
-    if LOG:
-        local_logger = logging.getLogger("NetEmbs.Utils.get_pairs")
-        local_logger.info("Total number of raw sampled pairs is " + str(len(pairs)))
     return pairs
 
 
@@ -747,6 +744,7 @@ def get_SkipGrams(df=None, version=None, walk_length=None, walks_per_node=None, 
     else:
         raise ValueError(
             "Use True or False for skip_gr argument! {!s}!".format(use_cache) + " was given")
+    logging.getLogger("NetEmbs.utils.get_SkipGrams").info("Total number of raw sampled pairs is " + str(len(skip_gr)))
     return skip_gr, CONFIG.GLOBAL_FSN, tr
 
 

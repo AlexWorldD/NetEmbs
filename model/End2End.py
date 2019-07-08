@@ -12,8 +12,11 @@ import pandas as pd
 import pickle
 
 # TODO Marcel, replace here ROOT_FOLDER to folder, where you would like to store all tmps and final Results
-DB_NAME = "FSN_Data_v2.db"
-CONFIG.ROOT_FOLDER = "../UvA/MediumDataset/"
+# DB_NAME = "FSN_Data.db"
+# CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
+DB_NAME = "FSN_Data_5k.db"
+CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
+
 DB_PATH = "../Simulation/" + DB_NAME
 RESULT_FILE = "Results.xlsx"
 LIMIT = None
@@ -23,7 +26,7 @@ LIMIT = None
 CONFIG.STRATEGY = "MetaDiff"
 CONFIG.PRESSURE = 30
 CONFIG.WINDOW_SIZE = 2
-CONFIG.WALKS_PER_NODE = 20
+CONFIG.WALKS_PER_NODE = 30
 CONFIG.WALKS_LENGTH = 10
 # .2 TF parameters
 CONFIG.STEPS = 50000

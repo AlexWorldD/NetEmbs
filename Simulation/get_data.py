@@ -8,6 +8,6 @@ from Simulation.CreateDB import *
 from Simulation.FSN_Simulation import FSN_Simulation
 
 
-cleanDB(db_file="FSN_Data_v2.db")
+cleanDB(db_file="FSN_Data_5k.db")
 b = FSN_Simulation()
-financialStatement = b.simulate(SalesNum=(200, 200), until=1000)
+financialStatement = b.simulate(SalesNum=(500, 500), until=2500)

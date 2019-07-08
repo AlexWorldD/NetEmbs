@@ -1,0 +1,18 @@
+2019-07-09 01:32:35,305 - GlobalLogs - INFO - Started..
+2019-07-09 01:32:35,646 - GlobalLogs.UploadData - INFO - Connection to DataBase
+2019-07-09 01:32:35,742 - GlobalLogs.UploadData - INFO - Data has been uploaded
+2019-07-09 01:32:35,774 - GlobalLogs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (30382, 4)
+2019-07-09 01:32:35,793 - GlobalLogs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (30382, 4)
+2019-07-09 01:32:35,812 - GlobalLogs.DataProcessing.prepare_data - INFO - Split Values column into Credit and Debit ones: ['ID', 'Name', 'FA_Name', 'Value', 'Debit', 'Credit']
+2019-07-09 01:32:35,830 - GlobalLogs.DataProcessing.prepare_data - INFO - After merging FAs columns titles are: ['ID', 'FA_Name', 'Credit', 'Debit', 'Name', 'Value'] shape is (30282, 6)
+2019-07-09 01:32:36,368 - GlobalLogs.DataProcessing.prepare_data - INFO - After normalization shape of DataFrame is (30096, 8)
+2019-07-09 01:32:47,017 - GlobalLogs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is (29239, 9)
+2019-07-09 01:32:50,013 - GlobalLogs - INFO - FSN successfully constructed: 
+, {'left_title': 'FA_Name', 'right_title': 'ID', 'BPs': 5109, 'FAs': 663, 'Total size': 14969202}
+2019-07-09 01:32:50,013 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-09 01:32:50,014 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure30_1hopFraction0_/', 'windowSize2/', 'EMB32_batch256_NegSamples512_TFsteps50000_/')
+2019-07-09 01:32:50,017 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
+ WindowSize:  2 
+ Pressure:  30
+ Strategy:  MetaDiff
