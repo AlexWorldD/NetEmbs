@@ -153,14 +153,8 @@ for cur_parameters in get_GRID(myGRID):
         #  8.  ////////// Clustering in embedding space \\\\\\\
         cl_labs = cl_Agglomerative(embeddings, N_CL)
         # 8.1 Plot t-SNE visualisation
-        plot_tSNE(cl_labs, "label",
-                  folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
-                  title="Predicted label",
-                  context="paper_full")
-        plot_tSNE(cl_labs, "GroundTruth",
-                  folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
-                  title="Ground Truth",
-                  context="paper_full")
+        plot_tSNE(cl_labs, "label", title="Predicted label", context="paper_full")
+        plot_tSNE(cl_labs, "GroundTruth", title="Ground Truth", context="paper_full")
         print("Plotted required graphs!")
         # 8.2 ////////// Evaluate clustering quality \\\\\\\
         all_metrics = evaluate_all(cl_labs)

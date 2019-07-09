@@ -252,7 +252,11 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
     start_time = time.time()
 
     if not vis_progress:
-        embs = run(graph, skip_grams)
+        try:
+            embs = run(graph, skip_grams)
+        except tf.errors.InvalidArgumentError as error:
+            logging.getLogger("GlobalLogs.SkipGram").critical(f"Could not run TF model... , {error}")
+            logging.getLogger("NetEmbs.SkipGram").critical(f"Could not run TF model... , {error}")
     elif isinstance(vis_progress, int):
         if not os.path.exists(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "img/progress/"):
             os.makedirs(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "img/progress/",

@@ -17,9 +17,9 @@ N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
 EMBD_SIZE = 32
-STEPS = 10000
-BATCH_SIZE = 64
-NEGATIVE_SAMPLES = 32
+STEPS = 100000
+BATCH_SIZE = 256
+NEGATIVE_SAMPLES = 512
 LOSS_FUNCTION = "NegativeSampling"
 
 # What save for TensorBoard during model training: "full" includes min/max/mean/std for weights/biases, but very expensive
@@ -34,7 +34,7 @@ DIRECTION = "COMBI"
 PRESSURE = 30
 WINDOW_SIZE = 2
 WALKS_PER_NODE = 30
-WALKS_LENGTH = 2
+WALKS_LENGTH = 10
 # Inactive parameters below, under development...
 HACK = 0
 DOUBLE_NEAREST = False
@@ -50,20 +50,6 @@ LOG = True
 # /////// Clustering configuration \\\\\\\
 NUM_CL_MAX = 11
 GLOBAL_FSN = None
-
-# /////// Overwrite default setting for experiments here \\\\\\\\\\
-# Last Experiments
-EMBD_SIZE = 32
-STEPS = 100000
-BATCH_SIZE = 64
-NEGATIVE_SAMPLES = 32
-
-STRATEGY = "MetaDiff"
-DIRECTION = "COMBI"
-PRESSURE = 30
-WINDOW_SIZE = 2
-WALKS_PER_NODE = 20
-WALKS_LENGTH = 8
 
 # Current working folder
 path_postfix_samplings = "_" + "version" + str(STRATEGY) \

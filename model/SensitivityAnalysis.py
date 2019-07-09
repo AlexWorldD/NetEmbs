@@ -12,16 +12,16 @@ import pandas as pd
 import pickle
 
 # TODO Marcel, replace here ROOT_FOLDER to folder, where you would like to store all tmps and final Results
-CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
-DB_NAME = "FSN_Data.db"
-# DB_NAME = "FSN_Data_v2.db"
-# CONFIG.ROOT_FOLDER = "../UvA/MediumDataset/"
+# CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
+# DB_NAME = "FSN_Data.db"
+DB_NAME = "FSN_Data_5k.db"
+CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 
 RESULT_FILE = "Results.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 
-LIMIT = 1000
+LIMIT = None
 
 #  ---------- CONFIG Setting HERE ------------
 # .1 Sampling parameters
@@ -46,8 +46,11 @@ CONFIG.NEGATIVE_SAMPLES = 512
 #               "Embd_Size": [16, 32, 48]}
 
 myGRID = {"Strategy": ["MetaDiff"],
-          "Pressure": [1, 10]}
-
+          "Pressure": [30, 50]}
+# The number of experiments with the same settings for sampling
+SAMPLING_EXPS = 2
+# The number of experiments with the same settings for SkipGram model
+TF_EXPS = 2
 # ~Number of clusters
 N_CL = 11
 
@@ -102,8 +105,8 @@ if __name__ == '__main__':
         # Update CONFIG file according to the given arguments
         for key, value in cur_parameters.items():
             setattr(CONFIG, key, value)
-        for sampling_exp in [1, 2]:
-            for tf_exp in [1, 2]:
+        for sampling_exp in range(SAMPLING_EXPS):
+            for tf_exp in range(TF_EXPS):
                 print(f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
                 logging.getLogger(CONFIG.MAIN_LOGGER).info(
                     f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
@@ -139,6 +142,7 @@ if __name__ == '__main__':
                     except Exception as e:
                         logging.getLogger(CONFIG.MAIN_LOGGER).error("We've got an error in get_embs_TF function... ",
                                                                     exc_info=True)
+                        raise Exception("We've got an error in get_embs_TF function... ")
 
                     # 6. //////// Merge with GroundTruth \\\\\\\\\
                     embeddings = embeddings.merge(journal_truth, on="ID")
