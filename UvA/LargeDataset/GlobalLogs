@@ -16,3 +16,7 @@
  WindowSize:  2 
  Pressure:  30
  Strategy:  MetaDiff
+2019-07-09 01:39:34,713 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
+ Embedding size:  32 
+ Steps:  50000
+ Batch size:  256

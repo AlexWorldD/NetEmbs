@@ -208,12 +208,12 @@ def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_
     if title is not None and isinstance(title, str):
         postfix = ""
         if folder == "":
-            postfix = "_" + "batch" + str(CONFIG.BATCH_SIZE) \
-                      + "_emb" + str(CONFIG.EMBD_SIZE) \
-                      + "_walks" + str(CONFIG.WALKS_PER_NODE) \
-                      + "_TFsteps" + str(CONFIG.STEPS)
-        fig.savefig(folder + "img/" + title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
-                    pad_inches=0.05)
+            postfix = CONFIG.path_postfix_samplings[:-1] + CONFIG.path_postfix_win[:-1] + CONFIG.path_postfix_tf[:-1]
+            fig.savefig(title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
+                        pad_inches=0.05)
+        else:
+            fig.savefig(folder + "img/" + title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
+                        pad_inches=0.05)
 
 
 def plot_PCA(fsn_embs, title="PCA", folder="", legend_title="GroundTruth", rand_state=1):

@@ -17,7 +17,7 @@ N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
 EMBD_SIZE = 32
-STEPS = 100000
+STEPS = 10000
 BATCH_SIZE = 64
 NEGATIVE_SAMPLES = 32
 LOSS_FUNCTION = "NegativeSampling"

@@ -1,7 +1,7 @@
 # encoding: utf-8
 __author__ = 'Aleksei Maliutin'
 """
-refactoring_experiments.py
+SensitivityAnalysis.py
 Created by lex at 2019-07-04.
 """
 from NetEmbs import *
@@ -13,15 +13,49 @@ import pickle
 
 # TODO Marcel, replace here ROOT_FOLDER to folder, where you would like to store all tmps and final Results
 CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
-DB_PATH = "../Simulation/FSN_Data.db"
+DB_NAME = "FSN_Data.db"
+# DB_NAME = "FSN_Data_v2.db"
+# CONFIG.ROOT_FOLDER = "../UvA/MediumDataset/"
+
 RESULT_FILE = "Results.xlsx"
+
+DB_PATH = "../Simulation/" + DB_NAME
+
 LIMIT = 1000
+
+#  ---------- CONFIG Setting HERE ------------
+# .1 Sampling parameters
+CONFIG.STRATEGY = "MetaDiff"
+CONFIG.PRESSURE = 30
+CONFIG.WINDOW_SIZE = 2
+CONFIG.WALKS_PER_NODE = 20
+CONFIG.WALKS_LENGTH = 10
+# .2 TF parameters
+CONFIG.STEPS = 50000
+CONFIG.EMBD_SIZE = 32
+CONFIG.LOSS_FUNCTION = "NegativeSampling"  # or "NCE"
+CONFIG.BATCH_SIZE = 256
+CONFIG.NEGATIVE_SAMPLES = 512
+# ---------------------------------------------
+
+# myGRID_big = {"Strategy": ["MetaDiff"],
+#               "Pressure": [1, 10, 30],
+#               "Walks_Per_Node": [10, 30, 50],
+#               "Window_Size": [1, 2, 3],
+#               "Steps": [50000, 100000],
+#               "Embd_Size": [16, 32, 48]}
+
+myGRID = {"Strategy": ["MetaDiff"],
+          "Pressure": [10, 30],
+          "Walks_Per_Node": [30, 50],
+          "Window_Size": [1, 2, 3],
+          "Steps": [50000, 100000, 200000],
+          "Embd_Size": [16, 32, 48]}
+
+# ~Number of clusters
 N_CL = 11
 
 create_folder(CONFIG.ROOT_FOLDER)
-
-CONFIG.PRESSURE = 10
-CONFIG.STEPS = 15000
 # 0. Loggers adding
 log_me(name=CONFIG.MAIN_LOGGER, folder=CONFIG.ROOT_FOLDER, file_name="GlobalLogs")
 logging.getLogger(CONFIG.MAIN_LOGGER).info("Started..")
@@ -64,12 +98,18 @@ CONFIG.GLOBAL_FSN = FSN()
 CONFIG.GLOBAL_FSN.build(d, left_title="FA_Name")
 print("FSN sucessfully constructed: \n", CONFIG.GLOBAL_FSN.info())
 logging.getLogger(CONFIG.MAIN_LOGGER).info(f"FSN successfully constructed: \n, {str(CONFIG.GLOBAL_FSN.info())}")
-for sampling_exp in [1, 2]:
+for cur_parameters in get_GRID(myGRID):
+    print(f'---------------------------- Current parameters {str(cur_parameters)} ----------------------------')
+    logging.getLogger(CONFIG.MAIN_LOGGER).info(
+        f'---------------------------- Current parameters {str(cur_parameters)} ----------------------------')
+    # Update CONFIG file according to the given arguments
+    for key, value in cur_parameters.items():
+        setattr(CONFIG, key, value)
     for tf_exp in [1, 2]:
-        print(f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
+        print(f'-------------- Experiment {(None, tf_exp)} --------------')
         logging.getLogger(CONFIG.MAIN_LOGGER).info(
-            f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
-        CONFIG.EXPERIMENT = (sampling_exp, tf_exp)
+            f'-------------- Experiment {(None, tf_exp)} --------------')
+        CONFIG.EXPERIMENT[1] = tf_exp
         # 4. Update CONFIG file w.r.t. the new arguments if applicable
         try:
             updateCONFIG()
@@ -113,7 +153,8 @@ for sampling_exp in [1, 2]:
         #  8.  ////////// Clustering in embedding space \\\\\\\
         cl_labs = cl_Agglomerative(embeddings, N_CL)
         # 8.1 Plot t-SNE visualisation
-        plot_tSNE(cl_labs, "label", folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+        plot_tSNE(cl_labs, "label",
+                  folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                   title="Predicted label",
                   context="paper_full")
         plot_tSNE(cl_labs, "GroundTruth",
