@@ -15,9 +15,10 @@ import pickle
 # DB_NAME = "FSN_Data.db"
 # CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 DB_NAME = "FSN_Data_5k.db"
+DB_PATH = "../Simulation/" + DB_NAME
+
 CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 
-DB_PATH = "../Simulation/" + DB_NAME
 RESULT_FILE = "Results.xlsx"
 LIMIT = None
 

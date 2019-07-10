@@ -26,16 +26,16 @@ LIMIT = None
 #  ---------- CONFIG Setting HERE ------------
 # .1 Sampling parameters
 CONFIG.STRATEGY = "MetaDiff"
-CONFIG.PRESSURE = 30
+CONFIG.PRESSURE = 20
 CONFIG.WINDOW_SIZE = 2
-CONFIG.WALKS_PER_NODE = 20
+CONFIG.WALKS_PER_NODE = 10
 CONFIG.WALKS_LENGTH = 10
 # .2 TF parameters
-CONFIG.STEPS = 50000
-CONFIG.EMBD_SIZE = 32
+CONFIG.STEPS = 100000
+CONFIG.EMBD_SIZE = 16
 CONFIG.LOSS_FUNCTION = "NegativeSampling"  # or "NCE"
-CONFIG.BATCH_SIZE = 256
-CONFIG.NEGATIVE_SAMPLES = 512
+CONFIG.BATCH_SIZE = 64
+CONFIG.NEGATIVE_SAMPLES = 32
 # ---------------------------------------------
 
 # myGRID_big = {"Strategy": ["MetaDiff"],
@@ -46,7 +46,8 @@ CONFIG.NEGATIVE_SAMPLES = 512
 #               "Embd_Size": [16, 32, 48]}
 
 myGRID = {"Strategy": ["MetaDiff"],
-          "Pressure": [30, 50]}
+          "Pressure": [10],
+          "Walks_Per_Node": [30]}
 # The number of experiments with the same settings for sampling
 SAMPLING_EXPS = 2
 # The number of experiments with the same settings for SkipGram model
@@ -152,12 +153,19 @@ if __name__ == '__main__':
                     embeddings.to_pickle(
                         CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
 
+                #  8.  ////////// Clustering in embedding space, for N-1 number of cluster, expected output: all sales into one group \\\\\\\
+                cl_labs = cl_Agglomerative(embeddings, N_CL - 1)
+                # 8.1 Plot t-SNE visualisation
+                plot_tSNE(cl_labs, "label",
+                          folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+                          title="Predicted label_N-1",
+                          context="paper_full")
                 #  8.  ////////// Clustering in embedding space \\\\\\\
                 cl_labs = cl_Agglomerative(embeddings, N_CL)
                 # 8.1 Plot t-SNE visualisation
                 plot_tSNE(cl_labs, "label",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
-                          title="Predicted label",
+                          title="Predicted label_N",
                           context="paper_full")
                 plot_tSNE(cl_labs, "GroundTruth",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
