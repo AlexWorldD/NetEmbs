@@ -16,7 +16,7 @@ EXPERIMENT = ["", ""]
 N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
-EMBD_SIZE = 32
+EMBD_SIZE = 16
 STEPS = 100000
 BATCH_SIZE = 256
 NEGATIVE_SAMPLES = 512
@@ -31,7 +31,7 @@ LOG_LEVEL = "cost"
 # STEP configuration
 STRATEGY = "MetaDiff"
 DIRECTION = "COMBI"
-PRESSURE = 30
+PRESSURE = 10
 WINDOW_SIZE = 2
 WALKS_PER_NODE = 30
 WALKS_LENGTH = 10
