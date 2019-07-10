@@ -17,7 +17,7 @@ import pickle
 DB_NAME = "FSN_Data_5k.db"
 CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 
-RESULT_FILE = "Results.xlsx"
+RESULT_FILE = "ResultsBatch64.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 
@@ -34,8 +34,8 @@ CONFIG.WALKS_LENGTH = 10
 CONFIG.STEPS = 100000
 CONFIG.EMBD_SIZE = 16
 CONFIG.LOSS_FUNCTION = "NegativeSampling"  # or "NCE"
-CONFIG.BATCH_SIZE = 64
-CONFIG.NEGATIVE_SAMPLES = 32
+CONFIG.BATCH_SIZE = 512
+CONFIG.NEGATIVE_SAMPLES = 512
 # ---------------------------------------------
 
 # myGRID_big = {"Strategy": ["MetaDiff"],
@@ -51,7 +51,7 @@ myGRID = {"Strategy": ["MetaDiff"],
 # The number of experiments with the same settings for sampling
 SAMPLING_EXPS = 2
 # The number of experiments with the same settings for SkipGram model
-TF_EXPS = 2
+TF_EXPS = 1
 # ~Number of clusters
 N_CL = 11
 
