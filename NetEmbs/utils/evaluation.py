@@ -7,7 +7,7 @@ Created by lex at 2019-07-08.
 from sklearn.metrics import v_measure_score, adjusted_mutual_info_score, adjusted_rand_score, fowlkes_mallows_score
 
 
-def evaluate_all(df, column_true="GroundTruth", column_pred="label"):
+def evaluate_all(df, column_true="GroundTruth", column_pred="label", postfix=""):
     """
     Evaluate all possible metrics for clustering on the given DataFrame
     :param df: Input DataFrame with at least two columns: True and Predicted ones
@@ -21,14 +21,14 @@ def evaluate_all(df, column_true="GroundTruth", column_pred="label"):
     true_values = df[column_true].apply(lambda x: real_labels[x]).values
     predicted_values = df[column_pred].values
     #     ARI
-    output_result["Adjusted Rand index"] = adjusted_rand_score(true_values, predicted_values)
+    output_result["Adjusted Rand index" + postfix] = adjusted_rand_score(true_values, predicted_values)
     #     AMI
-    output_result["Adjusted Mutual Information"] = adjusted_mutual_info_score(true_values, predicted_values,
-                                                                              average_method="arithmetic")
+    output_result["Adjusted Mutual Information" + postfix] = adjusted_mutual_info_score(true_values, predicted_values,
+                                                                                        average_method="arithmetic")
     #     V-Score
-    output_result["V-measure"] = v_measure_score(true_values, predicted_values)
+    output_result["V-measure" + postfix] = v_measure_score(true_values, predicted_values)
     #     The Fowlkes-Mallows index
-    output_result["Fowlkes-Mallows index"] = fowlkes_mallows_score(true_values, predicted_values)
+    output_result["Fowlkes-Mallows index" + postfix] = fowlkes_mallows_score(true_values, predicted_values)
     return output_result
 
 

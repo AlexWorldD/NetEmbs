@@ -4,24 +4,9 @@ __author__ = 'Aleksei Maliutin'
 SensitivityAnalysis.py
 Created by lex at 2019-07-04.
 """
-from NetEmbs import *
-from NetEmbs import CONFIG
-from NetEmbs.utils import *
-import logging
-import pandas as pd
-import pickle
+from IPython.display import clear_output
 
-# TODO Marcel, replace here ROOT_FOLDER to folder, where you would like to store all tmps and final Results
-CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
-DB_NAME = "FSN_Data.db"
-# DB_NAME = "FSN_Data_v2.db"
-# CONFIG.ROOT_FOLDER = "../UvA/MediumDataset/"
-
-RESULT_FILE = "Results.xlsx"
-
-DB_PATH = "../Simulation/" + DB_NAME
-
-LIMIT = 1000
+LIMIT = None
 
 #  ---------- CONFIG Setting HERE ------------
 # .1 Sampling parameters
@@ -46,14 +31,17 @@ CONFIG.NEGATIVE_SAMPLES = 512
 #               "Embd_Size": [16, 32, 48]}
 
 myGRID = {"Strategy": ["MetaDiff"],
-          "Pressure": [10, 30],
-          "Walks_Per_Node": [30, 50],
-          "Window_Size": [1, 2, 3],
-          "Steps": [50000, 100000, 200000],
-          "Embd_Size": [16, 32, 48]}
+          "Pressure": [10],
+          "Walks_Per_Node": [30],
+          "Window_Size": [2],
+          "Steps": [50000],
+          "Embd_Size": [16]}
 
 # ~Number of clusters
 N_CL = 11
+SAMPLING_EXPS = 2
+# The number of experiments with the same settings for SkipGram model
+TF_EXPS = 2
 
 create_folder(CONFIG.ROOT_FOLDER)
 # 0. Loggers adding
@@ -62,14 +50,14 @@ logging.getLogger(CONFIG.MAIN_LOGGER).info("Started..")
 # 0.1 Add DataFrame to store the obtain results
 try:
     # Open file with already existing results
-    res = pd.read_excel(CONFIG.ROOT_FOLDER + RESULT_FILE, index_col=0)
+    res = pd.read_excel(PATH_GDRIVE + RESULT_FILE, index_col=0)
 except FileNotFoundError as e:
     # If could not find that file, create new empty one
     res = pd.DataFrame(
         columns=['ExperimentNum', 'Strategy', 'Pressure', 'WalkPerNode', 'WalkLength', 'WindowSize', 'EMBD size',
                  'Train steps', 'Batch size', 'Adjusted Rand index', 'Adjusted Mutual Information', 'V-measure',
                  'Fowlkes-Mallows index', 'Sampling time', 'TF time'])
-    res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
+    res.to_excel(PATH_GDRIVE + RESULT_FILE)
 print("Welcome to refactoring experiments!")
 if CONFIG.MODE == "SimulatedData":
     # 1. Upload JournaEntries into memory
@@ -105,64 +93,70 @@ for cur_parameters in get_GRID(myGRID):
     # Update CONFIG file according to the given arguments
     for key, value in cur_parameters.items():
         setattr(CONFIG, key, value)
-    for tf_exp in [1, 2]:
-        print(f'-------------- Experiment {(None, tf_exp)} --------------')
-        logging.getLogger(CONFIG.MAIN_LOGGER).info(
-            f'-------------- Experiment {(None, tf_exp)} --------------')
-        CONFIG.EXPERIMENT[1] = tf_exp
-        # 4. Update CONFIG file w.r.t. the new arguments if applicable
-        try:
-            updateCONFIG()
-        except TypeError as e:
-            logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
-            raise TypeError("Critical error during CONFIG update. Stop execution!")
-        except IOError as e:
-            logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
-            raise IOError("Critical error during CONFIG update. Stop execution!")
-        cur_params = {"ExperimentNum": CONFIG.EXPERIMENT, "Strategy": CONFIG.STRATEGY,
-                      "Pressure": CONFIG.PRESSURE,
-                      "WalkPerNode": CONFIG.WALKS_PER_NODE,
-                      "WalkLength": CONFIG.WALKS_LENGTH, "WindowSize": CONFIG.WINDOW_SIZE,
-                      "EMBD size": CONFIG.EMBD_SIZE,
-                      "Train steps": CONFIG.STEPS, "Batch size": CONFIG.BATCH_SIZE}
-        # TODO update CONFIG values and create tmps folders
-        print("Loading Embeddings from cache... wait...")
-        try:
-            with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl",
-                      "rb") as file:
-                embeddings = pickle.load(file)
-                run_times = {"Sampling time": 0.0, "TF time": 0.0}
-        except FileNotFoundError:
-            print("File not found... Recalculate \n")
-            print("Sampling sequences... wait...")
-            # 5.  ///////// Getting embeddings \\\\\\\\\\\\
+    for sampling_exp in range(SAMPLING_EXPS):
+        for tf_exp in range(TF_EXPS):
+            print(f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
+            logging.getLogger(CONFIG.MAIN_LOGGER).info(
+                f'-------------- Experiment {(sampling_exp, tf_exp)} --------------')
+            CONFIG.EXPERIMENT = (sampling_exp, tf_exp)
+            # 4. Update CONFIG file w.r.t. the new arguments if applicable
             try:
-                embeddings, run_times = get_embs_TF(evaluate_time=True)
-            except Exception as e:
-                logging.getLogger(CONFIG.MAIN_LOGGER).error("We've got an error in get_embs_TF function... ",
-                                                            exc_info=True)
+                updateCONFIG()
+            except TypeError as e:
+                logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
+                raise TypeError("Critical error during CONFIG update. Stop execution!")
+            except IOError as e:
+                logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
+                raise IOError("Critical error during CONFIG update. Stop execution!")
+            cur_params = {"ExperimentNum": CONFIG.EXPERIMENT, "Strategy": CONFIG.STRATEGY,
+                          "Pressure": CONFIG.PRESSURE,
+                          "WalkPerNode": CONFIG.WALKS_PER_NODE,
+                          "WalkLength": CONFIG.WALKS_LENGTH, "WindowSize": CONFIG.WINDOW_SIZE,
+                          "EMBD size": CONFIG.EMBD_SIZE,
+                          "Train steps": CONFIG.STEPS, "Batch size": CONFIG.BATCH_SIZE}
+            # TODO update CONFIG values and create tmps folders
+            print("Loading Embeddings from cache... wait...")
+            try:
+                with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl",
+                          "rb") as file:
+                    embeddings = pickle.load(file)
+                    run_times = {"Sampling time": 0.0, "TF time": 0.0}
+            except FileNotFoundError:
+                print("File not found... Recalculate \n")
+                print("Sampling sequences... wait...")
+                # 5.  ///////// Getting embeddings \\\\\\\\\\\\
+                try:
+                    embeddings, run_times = get_embs_TF(evaluate_time=True)
+                except Exception as e:
+                    logging.getLogger(CONFIG.MAIN_LOGGER).error("We've got an error in get_embs_TF function... ",
+                                                                exc_info=True)
 
-            # 6. //////// Merge with GroundTruth \\\\\\\\\
-            embeddings = embeddings.merge(journal_truth, on="ID")
+                # 6. //////// Merge with GroundTruth \\\\\\\\\
+                embeddings = embeddings.merge(journal_truth, on="ID")
 
-            # 7. Dimensionality reduction for visualisation purposes
-            embeddings = dim_reduction(embeddings)
-            embeddings.to_pickle(
-                CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
+                # 7. Dimensionality reduction for visualisation purposes
+                embeddings = dim_reduction(embeddings)
+                embeddings.to_pickle(
+                    CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
 
-        #  8.  ////////// Clustering in embedding space \\\\\\\
-        cl_labs = cl_Agglomerative(embeddings, N_CL)
-        # 8.1 Plot t-SNE visualisation
-        plot_tSNE(cl_labs, "label", title="Predicted label", context="paper_full")
-        plot_tSNE(cl_labs, "GroundTruth", title="Ground Truth", context="paper_full")
-        print("Plotted required graphs!")
-        # 8.2 ////////// Evaluate clustering quality \\\\\\\
-        all_metrics = evaluate_all(cl_labs)
-        # 9. Construct one row with given parameters and obtained results
-        cur_params.update(all_metrics)
-        cur_params.update(run_times)
-        # Upload previous Results file
-        res = pd.read_excel(CONFIG.ROOT_FOLDER + RESULT_FILE, index_col=0)
-        # Append new result to DataFrame and save as Excel file
-        res = res.append(cur_params, ignore_index=True)
-        res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
+            cl_labs = cl_Agglomerative(embeddings, N_CL - 1)
+            # 8.1 Plot t-SNE visualisation
+            plot_tSNE(cl_labs, "label", title=PATH_GDRIVE + "Predicted label_N-1_10K", context="paper_full")
+
+            #  8.  ////////// Clustering in embedding space \\\\\\\
+            cl_labs = cl_Agglomerative(embeddings, N_CL)
+            # 8.1 Plot t-SNE visualisation
+            plot_tSNE(cl_labs, "label", title=PATH_GDRIVE + "Predicted label_10K", context="paper_full")
+            plot_tSNE(cl_labs, "GroundTruth", title=PATH_GDRIVE + "Ground Truth_10K", context="paper_full")
+            print("Plotted required graphs!")
+            # 8.2 ////////// Evaluate clustering quality \\\\\\\
+            all_metrics = evaluate_all(cl_labs)
+            # 9. Construct one row with given parameters and obtained results
+            cur_params.update(all_metrics)
+            cur_params.update(run_times)
+            # Upload previous Results file
+            res = pd.read_excel(PATH_GDRIVE + RESULT_FILE, index_col=0)
+            # Append new result to DataFrame and save as Excel file
+            res = res.append(cur_params, ignore_index=True)
+            res.to_excel(PATH_GDRIVE + RESULT_FILE)
+            clear_output()

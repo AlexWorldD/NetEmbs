@@ -17,7 +17,7 @@ import pickle
 DB_NAME = "FSN_Data_5k.db"
 CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 
-RESULT_FILE = "ResultsBatch64.xlsx"
+RESULT_FILE = "ResultsBoth.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 
@@ -31,12 +31,24 @@ CONFIG.WINDOW_SIZE = 2
 CONFIG.WALKS_PER_NODE = 10
 CONFIG.WALKS_LENGTH = 10
 # .2 TF parameters
-CONFIG.STEPS = 100000
+CONFIG.STEPS = 50000
 CONFIG.EMBD_SIZE = 16
 CONFIG.LOSS_FUNCTION = "NegativeSampling"  # or "NCE"
 CONFIG.BATCH_SIZE = 256
 CONFIG.NEGATIVE_SAMPLES = 512
 # ---------------------------------------------
+
+map_gt = {'Fixed Assets': 'Fixed Assets',
+          'Sales 21 btw': 'Sales',
+          'Goods delivery': 'Goods delivery',
+          'Payroll': 'Payroll',
+          'Sales tax': 'Sales tax',
+          'Disbursement': 'Disbursement',
+          'Payroll Disbursement': 'Payroll Disbursement',
+          'Sales 6 btw': 'Sales',
+          'Purchase': 'Purchase',
+          'Depreciation': 'Depreciation',
+          'Collections': 'Collections'}
 
 # myGRID_big = {"Strategy": ["MetaDiff"],
 #               "Pressure": [1, 10, 30],
@@ -46,12 +58,13 @@ CONFIG.NEGATIVE_SAMPLES = 512
 #               "Embd_Size": [16, 32, 48]}
 
 myGRID = {"Strategy": ["MetaDiff"],
-          "Pressure": [10],
-          "Walks_Per_Node": [30]}
+          "Window_Size": [2],
+          "Pressure": [1, 10, 20, 30],
+          "Walks_Per_Node": [10, 20, 30]}
 # The number of experiments with the same settings for sampling
 SAMPLING_EXPS = 2
 # The number of experiments with the same settings for SkipGram model
-TF_EXPS = 1
+TF_EXPS = 2
 # ~Number of clusters
 N_CL = 11
 
@@ -68,7 +81,9 @@ if __name__ == '__main__':
         # If could not find that file, create new empty one
         res = pd.DataFrame(
             columns=['ExperimentNum', 'Strategy', 'Pressure', 'WalkPerNode', 'WalkLength', 'WindowSize', 'EMBD size',
-                     'Train steps', 'Batch size', 'Adjusted Rand index', 'Adjusted Mutual Information', 'V-measure',
+                     'Train steps', 'Batch size', 'Adjusted Rand indexN-1', 'Adjusted Mutual InformationN-1',
+                     'V-measureN-1',
+                     'Fowlkes-Mallows indexN-1', 'Adjusted Rand index', 'Adjusted Mutual Information', 'V-measure',
                      'Fowlkes-Mallows index', 'Sampling time', 'TF time'])
         res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
     print("Welcome to refactoring experiments!")
@@ -154,7 +169,10 @@ if __name__ == '__main__':
                         CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
 
                 #  8.  ////////// Clustering in embedding space, for N-1 number of cluster, expected output: all sales into one group \\\\\\\
+                embeddings["GroundTruth2"] = embeddings["GroundTruth"].apply(lambda x: map_gt[x])
                 cl_labs = cl_Agglomerative(embeddings, N_CL - 1)
+                all_metrics = evaluate_all(cl_labs, column_true="GroundTruth2", postfix="N-1")
+                cur_params.update(all_metrics)
                 # 8.1 Plot t-SNE visualisation
                 plot_tSNE(cl_labs, "label",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],

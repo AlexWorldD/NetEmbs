@@ -217,7 +217,7 @@ def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_
         else:
             fig.savefig(folder + "img/" + title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
                         pad_inches=0.05)
-    plt.close(fig)
+        plt.close(fig)
 
 
 def plot_PCA(fsn_embs, title="PCA", folder="", legend_title="GroundTruth", rand_state=1):
