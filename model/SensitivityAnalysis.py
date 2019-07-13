@@ -11,13 +11,13 @@ import logging
 import pandas as pd
 import pickle
 
-# TODO Marcel, replace here ROOT_FOLDER to folder, where you would like to store all tmps and final Results
+# TODO Marcel: replace here ROOT_FOLDER to folder, where you would like to store all tmps and final Results
 # CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
 # DB_NAME = "FSN_Data.db"
 DB_NAME = "FSN_Data_5k.db"
 CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 
-RESULT_FILE = "ResultsBoth.xlsx"
+RESULT_FILE = "ResultsSensitivity.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 
@@ -32,12 +32,18 @@ CONFIG.WALKS_PER_NODE = 10
 CONFIG.WALKS_LENGTH = 10
 # .2 TF parameters
 CONFIG.STEPS = 50000
-CONFIG.EMBD_SIZE = 16
+# TODO Marcel: According to my experiment, even 8 is fine.
+#  Plus that number is fit to formula from Google for embeddings size, see here - https://developers.googleblog.com/2017/11/introducing-tensorflow-feature-columns.html
+CONFIG.EMBD_SIZE = 8
 CONFIG.LOSS_FUNCTION = "NegativeSampling"  # or "NCE"
 CONFIG.BATCH_SIZE = 256
 CONFIG.NEGATIVE_SAMPLES = 512
 # ---------------------------------------------
 
+# -----------
+# TODO Marcel: specify here the dict map for N-1 GroundTruth.
+#  It's stupid to do it in that way, but for a few runs it should be fine.
+# E.g. in my case I replace 'Sales 21 btw'/'Sales 6 btw' -> 'Sales'
 map_gt = {'Fixed Assets': 'Fixed Assets',
           'Sales 21 btw': 'Sales',
           'Goods delivery': 'Goods delivery',
@@ -49,7 +55,11 @@ map_gt = {'Fixed Assets': 'Fixed Assets',
           'Purchase': 'Purchase',
           'Depreciation': 'Depreciation',
           'Collections': 'Collections'}
-
+# TODO Marcel: specify here the GroundTruth values which should be used for local evaluation
+#  the ones that from one group in general, but with different rates etc.
+#  I guess, it's something like BR4.1, BR4.2 etc. with common first digital?
+local_titles = ['Sales 6 btw', 'Sales 21 btw']
+# -----------
 # myGRID_big = {"Strategy": ["MetaDiff"],
 #               "Pressure": [1, 10, 30],
 #               "Walks_Per_Node": [10, 30, 50],
@@ -57,14 +67,24 @@ map_gt = {'Fixed Assets': 'Fixed Assets',
 #               "Steps": [50000, 100000],
 #               "Embd_Size": [16, 32, 48]}
 
+# TODO Marcel: Try that grid: 90 combinations X 4 experiment, 360 in total. BUT, for Embedding size 16 you should have cache
+#  as well as for the majority of sampling parameters, hence, it definitely should be faster that your prev runs :)
+#  or if your prev run has already finished, you could repeat it here, get new Excel file with new metrics. It also could be good :)
+
 myGRID = {"Strategy": ["MetaDiff"],
-          "Window_Size": [2],
-          "Pressure": [1, 10, 20, 30],
-          "Walks_Per_Node": [10, 20, 30]}
+          "Window_Size": [1, 2, 3],
+          "Pressure": [1, 10, 20, 30, 50],
+          "Walks_Per_Node": [10, 20, 30],
+          "Embd_Size": [8, 16],
+          "Steps": [100000]}
+
 # The number of experiments with the same settings for sampling
 SAMPLING_EXPS = 2
 # The number of experiments with the same settings for SkipGram model
 TF_EXPS = 2
+# TODO Marcel: I guess here you have to set the number of unique values in GroundTruth for your dataset
+#  or prior to execution try manually leave only important GroundTruth in dataset...
+#  Because if we have quite uncertain method and test it with quite uncertain dataset - it is hard to justify the results.
 # ~Number of clusters
 N_CL = 11
 
@@ -73,19 +93,7 @@ if __name__ == '__main__':
     # 0. Loggers adding
     log_me(name=CONFIG.MAIN_LOGGER, folder=CONFIG.ROOT_FOLDER, file_name="GlobalLogs")
     logging.getLogger(CONFIG.MAIN_LOGGER).info("Started..")
-    # 0.1 Add DataFrame to store the obtain results
-    try:
-        # Open file with already existing results
-        res = pd.read_excel(CONFIG.ROOT_FOLDER + RESULT_FILE, index_col=0)
-    except FileNotFoundError as e:
-        # If could not find that file, create new empty one
-        res = pd.DataFrame(
-            columns=['ExperimentNum', 'Strategy', 'Pressure', 'WalkPerNode', 'WalkLength', 'WindowSize', 'EMBD size',
-                     'Train steps', 'Batch size', 'Adjusted Rand indexN-1', 'Adjusted Mutual InformationN-1',
-                     'V-measureN-1',
-                     'Fowlkes-Mallows indexN-1', 'Adjusted Rand index', 'Adjusted Mutual Information', 'V-measure',
-                     'Fowlkes-Mallows index', 'Sampling time', 'TF time'])
-        res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
+
     print("Welcome to refactoring experiments!")
     if CONFIG.MODE == "SimulatedData":
         # 1. Upload JournaEntries into memory
@@ -136,12 +144,12 @@ if __name__ == '__main__':
                 except IOError as e:
                     logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
                     raise IOError("Critical error during CONFIG update. Stop execution!")
-                cur_params = {"ExperimentNum": CONFIG.EXPERIMENT, "Strategy": CONFIG.STRATEGY,
-                              "Pressure": CONFIG.PRESSURE,
-                              "WalkPerNode": CONFIG.WALKS_PER_NODE,
-                              "WalkLength": CONFIG.WALKS_LENGTH, "WindowSize": CONFIG.WINDOW_SIZE,
-                              "EMBD size": CONFIG.EMBD_SIZE,
-                              "Train steps": CONFIG.STEPS, "Batch size": CONFIG.BATCH_SIZE}
+                cur_row = {"ExperimentNum": str(CONFIG.EXPERIMENT), "Strategy": CONFIG.STRATEGY,
+                           "Pressure": CONFIG.PRESSURE,
+                           "Walks per node": CONFIG.WALKS_PER_NODE,
+                           "Walk length": CONFIG.WALKS_LENGTH, "Window size": CONFIG.WINDOW_SIZE,
+                           "Embedding size": CONFIG.EMBD_SIZE,
+                           "Train steps": CONFIG.STEPS, "Batch size": CONFIG.BATCH_SIZE}
                 # TODO update CONFIG values and create tmps folders
                 print("Loading Embeddings from cache... wait...")
                 try:
@@ -169,16 +177,22 @@ if __name__ == '__main__':
                         CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
 
                 #  8.  ////////// Clustering in embedding space, for N-1 number of cluster, expected output: all sales into one group \\\\\\\
-                embeddings["GroundTruth2"] = embeddings["GroundTruth"].apply(lambda x: map_gt[x])
+                # TODO Marcel: here we cluster into N-1 group
+                embeddings["GroundTruthN-1"] = embeddings["GroundTruth"].apply(lambda x: map_gt[x])
                 cl_labs = cl_Agglomerative(embeddings, N_CL - 1)
-                all_metrics = evaluate_all(cl_labs, column_true="GroundTruth2", postfix="N-1")
-                cur_params.update(all_metrics)
+                cur_row.update(
+                    evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(local_titles)], column_true="GroundTruthN-1",
+                                 postfix="_N-1_global"))
+                cur_row.update(
+                    evaluate_all(cl_labs[cl_labs.GroundTruth.isin(local_titles)], column_true="GroundTruthN-1",
+                                 postfix="_N-1_local"))
                 # 8.1 Plot t-SNE visualisation
                 plot_tSNE(cl_labs, "label",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                           title="Predicted label_N-1",
                           context="paper_full")
                 #  8.  ////////// Clustering in embedding space \\\\\\\
+                # TODO Marcel: clustering into N group and again evaluation
                 cl_labs = cl_Agglomerative(embeddings, N_CL)
                 # 8.1 Plot t-SNE visualisation
                 plot_tSNE(cl_labs, "label",
@@ -191,12 +205,21 @@ if __name__ == '__main__':
                           context="paper_full")
                 print("Plotted required graphs!")
                 # 8.2 ////////// Evaluate clustering quality \\\\\\\
-                all_metrics = evaluate_all(cl_labs)
+                cur_row.update(
+                    evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(local_titles)], column_true="GroundTruth",
+                                 postfix="_N_global"))
+                cur_row.update(
+                    evaluate_all(cl_labs[cl_labs.GroundTruth.isin(local_titles)], column_true="GroundTruth",
+                                 postfix="_N_local"))
                 # 9. Construct one row with given parameters and obtained results
-                cur_params.update(all_metrics)
-                cur_params.update(run_times)
-                # Upload previous Results file
-                res = pd.read_excel(CONFIG.ROOT_FOLDER + RESULT_FILE, index_col=0)
-                # Append new result to DataFrame and save as Excel file
-                res = res.append(cur_params, ignore_index=True)
-                res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
+                cur_row.update(run_times)
+                try:
+                    # Upload previous Results file
+                    res = pd.read_excel(CONFIG.ROOT_FOLDER + RESULT_FILE, index_col=0)
+                    # Append new result to DataFrame and save as Excel file
+                    res = res.append(cur_row, ignore_index=True)
+                    res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
+                except FileNotFoundError:
+                    # Create new Results file if not exist
+                    res = pd.DataFrame(cur_row, index=[0])
+                    res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)

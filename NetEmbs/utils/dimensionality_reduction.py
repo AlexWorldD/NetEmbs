@@ -22,7 +22,10 @@ def dim_reduction(df, n_dim=2, rand_state=1):
                 f"Currently only reduction into 2D/3D space is supported, while was given {n_dim} as number of components!")
         tsne = TSNE(n_components=n_dim, random_state=rand_state)
         embdf = pd.DataFrame(list(map(np.ravel, df["Emb"])))
-        embed_tsne = tsne.fit_transform(embdf)
+        if embdf.shape[1] > 2:
+            embed_tsne = tsne.fit_transform(embdf)
+        else:
+            embed_tsne = embdf.values
         if n_dim == 2:
             #             2D output space, then set column names as X and Y for visualization purpose
             df["x"] = pd.Series(embed_tsne[:, 0])

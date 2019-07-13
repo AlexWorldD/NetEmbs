@@ -770,11 +770,15 @@ def get_SkipGrams_raw(df, version="MetaDiff", walk_length=10, walks_per_node=10,
 
     CONFIG.GLOBAL_FSN = FSN()
     CONFIG.GLOBAL_FSN.build(df, left_title="FA_Name")
-    # Update CONFIG parameters w.r.t the given arguments
-    CONFIG.WALKS_LENGTH = walk_length
-    CONFIG.WALKS_PER_NODE = walks_per_node
-    CONFIG.DIRECTION = direction
-    CONFIG.STRATEGY = version
+    # //////// UPDATE CONFIG IF NEEDED w.r.t the given arguments \\\\\\\\\\\
+    if walks_per_node is not None:
+        CONFIG.WALKS_PER_NODE = walks_per_node
+    if walk_length is not None:
+        CONFIG.WALKS_LENGTH = walk_length
+    if direction is not None:
+        CONFIG.DIRECTION = direction
+    if version is not None:
+        CONFIG.STRATEGY = version
 
     if not use_cache:
         print("Start sampling... wait...")
@@ -821,6 +825,9 @@ class TransformationBPs:
 
     def encode_pairs(self, original_pairs):
         return [(self.encoder[item[0]], self.encoder[item[1]]) for item in original_pairs]
+
+    def decode_pairs(self, encoded_pairs):
+        return [(self.decoder[item[0]], self.decoder[item[1]]) for item in encoded_pairs]
 
 
 def find_similar(df, top_n=3, version="MetaDiff", walk_length=10, walks_per_node=10, direction="IN",
