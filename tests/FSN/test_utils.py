@@ -9,12 +9,16 @@ Created by lex at 2019-04-12.
 class TestUtils:
     def test_make_pairs(self):
         from NetEmbs.FSN.utils import make_pairs
+        from NetEmbs import CONFIG
         t = [1, 2, 3, 1, 2]
-        out = make_pairs(t, window=0)
+        CONFIG.WINDOW_SIZE = 0
+        out = make_pairs(t)
         assert out == []
-        out = make_pairs(t, window=1)
+        CONFIG.WINDOW_SIZE = 1
+        out = make_pairs(t)
         assert out == [(1, 2), (2, 1), (2, 3), (3, 2), (3, 1), (1, 3), (1, 2), (2, 1)]
-        out = make_pairs(t, window=2)
+        CONFIG.WINDOW_SIZE = 2
+        out = make_pairs(t)
         assert out[:2] == [(1, 2), (1, 3)]
 
     def test_get_top_similar(self):
