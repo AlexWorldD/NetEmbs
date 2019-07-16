@@ -172,7 +172,9 @@ if __name__ == '__main__':
                 #  8.  ////////// Clustering in embedding space, for N-1 number of cluster, expected output: all sales into one group \\\\\\\
                 # TODO Marcel: here we cluster into N-P group
                 # Number of collapsed clusters
+                map_gt = {title: map_gt.get(title) for title in embeddings.GroundTruth.unique()}
                 P = len(set(map_gt.keys())) - len(set(map_gt.values()))
+                print(f"You are going to cluster with {N_CL}-{P}")
                 # Column title for new ground truth
                 N_P_GroundTruth = "GroundTruthN-" + str(P)
                 embeddings[N_P_GroundTruth] = embeddings["GroundTruth"]
@@ -189,7 +191,7 @@ if __name__ == '__main__':
                 # 8.1 Plot t-SNE visualisation
                 plot_tSNE(cl_labs, "label",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
-                          title="Predicted label_N-"+str(P),
+                          title="Predicted label_N-" + str(P),
                           context="paper_full")
                 #  8.  ////////// Clustering in embedding space \\\\\\\
                 # TODO Marcel: clustering into N group and again evaluation
