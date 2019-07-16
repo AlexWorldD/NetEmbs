@@ -206,10 +206,10 @@ if __name__ == '__main__':
                 print("Plotted required graphs!")
                 # 8.2 ////////// Evaluate clustering quality \\\\\\\
                 cur_row.update(
-                    evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(local_titles)], column_true="GroundTruth",
+                    evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))], column_true="GroundTruth",
                                  postfix="_N_global"))
                 cur_row.update(
-                    evaluate_all(cl_labs[cl_labs.GroundTruth.isin(local_titles)], column_true="GroundTruth",
+                    evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))], column_true="GroundTruth",
                                  postfix="_N_local"))
                 # 9. Construct one row with given parameters and obtained results
                 cur_row.update(run_times)
