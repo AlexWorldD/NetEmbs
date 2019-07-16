@@ -7,6 +7,10 @@ Created by lex at 2019-07-08.
 from sklearn.metrics import v_measure_score, adjusted_mutual_info_score, adjusted_rand_score, fowlkes_mallows_score
 
 
+def overall_score(df, column_true="GroundTruth", column_pred="label"):
+    return list(evaluate_all(df, column_true=column_true, column_pred=column_pred).values())
+
+
 def evaluate_all(df, column_true="GroundTruth", column_pred="label", postfix="", full_names=False):
     """
     Evaluate all possible metrics for clustering on the given DataFrame

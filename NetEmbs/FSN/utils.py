@@ -398,8 +398,13 @@ def randomWalk(G, vertex=None, length=10, direction="IN", pressure=30, version="
                     if debug: print("Cannot continue walking... Termination.")
                     break
             elif version == "MetaUniform":
-                new_v = step(G, cur_v, direction, pressure=pressure, mode=0, return_full_step=return_full_path,
-                             debug=debug)
+                if direction == "COMBI":
+                    new_v = step(G, cur_v, direction, pressure=pressure, mode=0, return_full_step=return_full_path,
+                                 debug=debug)
+                    cur_direction = mask[cur_direction]
+                else:
+                    new_v = step(G, cur_v, direction, pressure=pressure, mode=0, return_full_step=return_full_path,
+                                 debug=debug)
             elif version == "MetaWeighted":
                 new_v = step(G, cur_v, direction, pressure=pressure, mode=1, return_full_step=return_full_path,
                              debug=debug)

@@ -17,7 +17,7 @@ import pickle
 DB_NAME = "FSN_Data_5k.db"
 CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 
-RESULT_FILE = "ResultsSensitivity.xlsx"
+RESULT_FILE = "ResultsSensitivityMarcel.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 
@@ -44,17 +44,10 @@ CONFIG.NEGATIVE_SAMPLES = 512
 # TODO Marcel: specify here the dict map for N-1 GroundTruth.
 #  It's stupid to do it in that way, but for a few runs it should be fine.
 # E.g. in my case I replace 'Sales 21 btw'/'Sales 6 btw' -> 'Sales'
-map_gt = {'Fixed Assets': 'Fixed Assets',
-          'Sales 21 btw': 'Sales',
-          'Goods delivery': 'Goods delivery',
-          'Payroll': 'Payroll',
-          'Sales tax': 'Sales tax',
-          'Disbursement': 'Disbursement',
-          'Payroll Disbursement': 'Payroll Disbursement',
+map_gt = {'Sales 21 btw': 'Sales',
           'Sales 6 btw': 'Sales',
-          'Purchase': 'Purchase',
-          'Depreciation': 'Depreciation',
-          'Collections': 'Collections'}
+          'Fixed Assets': "None",
+          'Disbursement': "None"}
 # TODO Marcel: specify here the GroundTruth values which should be used for local evaluation
 #  the ones that from one group in general, but with different rates etc.
 #  I guess, it's something like BR4.1, BR4.2 etc. with common first digital?
@@ -72,10 +65,10 @@ local_titles = ['Sales 6 btw', 'Sales 21 btw']
 #  or if your prev run has already finished, you could repeat it here, get new Excel file with new metrics. It also could be good :)
 
 myGRID = {"Strategy": ["MetaDiff"],
-          "Window_Size": [1, 2, 3],
-          "Pressure": [1, 10, 20, 30, 50],
-          "Walks_Per_Node": [10, 20, 30],
-          "Embd_Size": [8, 16],
+          "Window_Size": [2],
+          "Pressure": [10],
+          "Walks_Per_Node": [30],
+          "Embd_Size": [8],
           "Steps": [100000]}
 
 # The number of experiments with the same settings for sampling
@@ -177,19 +170,26 @@ if __name__ == '__main__':
                         CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
 
                 #  8.  ////////// Clustering in embedding space, for N-1 number of cluster, expected output: all sales into one group \\\\\\\
-                # TODO Marcel: here we cluster into N-1 group
-                embeddings["GroundTruthN-1"] = embeddings["GroundTruth"].apply(lambda x: map_gt[x])
-                cl_labs = cl_Agglomerative(embeddings, N_CL - 1)
+                # TODO Marcel: here we cluster into N-P group
+                # Number of collapsed clusters
+                P = len(set(map_gt.keys())) - len(set(map_gt.values()))
+                # Column title for new ground truth
+                N_P_GroundTruth = "GroundTruthN-" + str(P)
+                embeddings[N_P_GroundTruth] = embeddings["GroundTruth"]
+                embeddings[N_P_GroundTruth] = embeddings[N_P_GroundTruth].apply(
+                    lambda x: map_gt.get(x) if map_gt.get(x) is not None else x)
+                cl_labs = cl_Agglomerative(embeddings, N_CL - P)
                 cur_row.update(
-                    evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(local_titles)], column_true="GroundTruthN-1",
-                                 postfix="_N-1_global"))
+                    evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                 column_true=N_P_GroundTruth,
+                                 postfix="_N-" + str(P) + "_global"))
                 cur_row.update(
-                    evaluate_all(cl_labs[cl_labs.GroundTruth.isin(local_titles)], column_true="GroundTruthN-1",
-                                 postfix="_N-1_local"))
+                    evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))], column_true=N_P_GroundTruth,
+                                 postfix="_N-" + str(P) + "_local"))
                 # 8.1 Plot t-SNE visualisation
                 plot_tSNE(cl_labs, "label",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
-                          title="Predicted label_N-1",
+                          title="Predicted label_N-"+str(P),
                           context="paper_full")
                 #  8.  ////////// Clustering in embedding space \\\\\\\
                 # TODO Marcel: clustering into N group and again evaluation

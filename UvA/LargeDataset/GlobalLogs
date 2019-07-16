@@ -1,128 +1,28 @@
-2019-07-14 00:44:58,674 - GlobalLogs - INFO - Started..
-2019-07-14 00:44:58,674 - GlobalLogs.UploadData - INFO - Connection to DataBase
-2019-07-14 00:44:58,841 - GlobalLogs.UploadData - INFO - Data has been uploaded
-2019-07-14 00:44:58,898 - GlobalLogs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (30382, 4)
-2019-07-14 00:44:58,919 - GlobalLogs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (30382, 4)
-2019-07-14 00:44:58,942 - GlobalLogs.DataProcessing.prepare_data - INFO - Split Values column into Credit and Debit ones: ['ID', 'Name', 'FA_Name', 'Value', 'Debit', 'Credit']
-2019-07-14 00:44:58,961 - GlobalLogs.DataProcessing.prepare_data - INFO - After merging FAs columns titles are: ['ID', 'FA_Name', 'Credit', 'Debit', 'Name', 'Value'] shape is (30282, 6)
-2019-07-14 00:44:59,506 - GlobalLogs.DataProcessing.prepare_data - INFO - After normalization shape of DataFrame is (30096, 8)
-2019-07-14 00:45:10,834 - GlobalLogs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is (29239, 9)
-2019-07-14 00:45:14,037 - GlobalLogs - INFO - FSN successfully constructed: 
+2019-07-16 11:58:03,452 - GlobalLogs - INFO - Started..
+2019-07-16 11:58:03,452 - GlobalLogs.UploadData - INFO - Connection to DataBase
+2019-07-16 11:58:03,692 - GlobalLogs.UploadData - INFO - Data has been uploaded
+2019-07-16 11:58:03,740 - GlobalLogs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (30382, 4)
+2019-07-16 11:58:03,760 - GlobalLogs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (30382, 4)
+2019-07-16 11:58:03,778 - GlobalLogs.DataProcessing.prepare_data - INFO - Split Values column into Credit and Debit ones: ['ID', 'Name', 'FA_Name', 'Value', 'Debit', 'Credit']
+2019-07-16 11:58:03,795 - GlobalLogs.DataProcessing.prepare_data - INFO - After merging FAs columns titles are: ['ID', 'FA_Name', 'Credit', 'Debit', 'Name', 'Value'] shape is (30282, 6)
+2019-07-16 11:58:04,329 - GlobalLogs.DataProcessing.prepare_data - INFO - After normalization shape of DataFrame is (30096, 8)
+2019-07-16 11:58:14,819 - GlobalLogs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is (29239, 9)
+2019-07-16 11:58:17,957 - GlobalLogs - INFO - FSN successfully constructed: 
 , {'left_title': 'FA_Name', 'right_title': 'ID', 'BPs': 5109, 'FAs': 663, 'Total size': 14969202}
-2019-07-14 00:45:14,038 - GlobalLogs - INFO - ---------------------------- Current parameters {'STRATEGY': 'MetaDiff', 'WINDOW_SIZE': 2, 'PRESSURE': 10, 'WALKS_PER_NODE': 30, 'EMBD_SIZE': 2, 'STEPS': 50000} ----------------------------
-2019-07-14 00:45:14,038 - GlobalLogs - INFO - -------------- Experiment (0, 0) --------------
-2019-07-14 00:45:14,038 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:45:14,038 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB2_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 00:45:20,973 - GlobalLogs - INFO - -------------- Experiment (0, 1) --------------
-2019-07-14 00:45:20,973 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:45:20,973 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB2_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 00:45:27,586 - GlobalLogs - INFO - -------------- Experiment (1, 0) --------------
-2019-07-14 00:45:27,586 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:45:27,586 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB2_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 00:45:33,408 - GlobalLogs - INFO - -------------- Experiment (1, 1) --------------
-2019-07-14 00:45:33,408 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:45:33,408 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB2_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 00:45:39,355 - GlobalLogs - INFO - ---------------------------- Current parameters {'STRATEGY': 'MetaDiff', 'WINDOW_SIZE': 2, 'PRESSURE': 10, 'WALKS_PER_NODE': 30, 'EMBD_SIZE': 4, 'STEPS': 50000} ----------------------------
-2019-07-14 00:45:39,355 - GlobalLogs - INFO - -------------- Experiment (0, 0) --------------
-2019-07-14 00:45:39,355 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:45:39,355 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB4_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 00:45:45,773 - GlobalLogs - INFO - -------------- Experiment (0, 1) --------------
-2019-07-14 00:45:45,773 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:45:45,773 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB4_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 00:45:52,523 - GlobalLogs - INFO - -------------- Experiment (1, 0) --------------
-2019-07-14 00:45:52,523 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:45:52,524 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB4_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 00:46:00,340 - GlobalLogs - INFO - -------------- Experiment (1, 1) --------------
-2019-07-14 00:46:00,340 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:46:00,340 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB4_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 00:46:06,805 - GlobalLogs - INFO - ---------------------------- Current parameters {'STRATEGY': 'MetaDiff', 'WINDOW_SIZE': 2, 'PRESSURE': 10, 'WALKS_PER_NODE': 30, 'EMBD_SIZE': 8, 'STEPS': 50000} ----------------------------
-2019-07-14 00:46:06,806 - GlobalLogs - INFO - -------------- Experiment (0, 0) --------------
-2019-07-14 00:46:06,806 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:46:06,806 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB8_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 00:46:13,315 - GlobalLogs - INFO - -------------- Experiment (0, 1) --------------
-2019-07-14 00:46:13,315 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:46:13,315 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB8_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 00:46:19,977 - GlobalLogs - INFO - -------------- Experiment (1, 0) --------------
-2019-07-14 00:46:19,977 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:46:19,977 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB8_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 00:46:26,464 - GlobalLogs - INFO - -------------- Experiment (1, 1) --------------
-2019-07-14 00:46:26,464 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:46:26,464 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB8_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 00:46:33,954 - GlobalLogs - INFO - ---------------------------- Current parameters {'STRATEGY': 'MetaDiff', 'WINDOW_SIZE': 2, 'PRESSURE': 10, 'WALKS_PER_NODE': 30, 'EMBD_SIZE': 12, 'STEPS': 50000} ----------------------------
-2019-07-14 00:46:33,954 - GlobalLogs - INFO - -------------- Experiment (0, 0) --------------
-2019-07-14 00:46:33,954 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:46:33,955 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB12_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 00:46:33,958 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
- WindowSize:  2 
- Pressure:  10
- Strategy:  MetaDiff
-2019-07-14 00:46:35,291 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
- Embedding size:  12 
- Steps:  50000
- Batch size:  256
-2019-07-14 00:50:07,708 - GlobalLogs - INFO - -------------- Experiment (0, 1) --------------
-2019-07-14 00:50:07,708 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:50:07,708 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB12_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 00:50:07,712 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
- WindowSize:  2 
- Pressure:  10
- Strategy:  MetaDiff
-2019-07-14 00:50:08,997 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
- Embedding size:  12 
- Steps:  50000
- Batch size:  256
-2019-07-14 00:54:05,795 - GlobalLogs - INFO - -------------- Experiment (1, 0) --------------
-2019-07-14 00:54:05,796 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:54:05,797 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB12_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 00:54:05,804 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
- WindowSize:  2 
- Pressure:  10
- Strategy:  MetaDiff
-2019-07-14 00:54:07,252 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
- Embedding size:  12 
- Steps:  50000
- Batch size:  256
-2019-07-14 00:58:25,862 - GlobalLogs - INFO - -------------- Experiment (1, 1) --------------
-2019-07-14 00:58:25,863 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 00:58:25,863 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB12_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 00:58:25,866 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
- WindowSize:  2 
- Pressure:  10
- Strategy:  MetaDiff
-2019-07-14 00:58:26,782 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
- Embedding size:  12 
- Steps:  50000
- Batch size:  256
-2019-07-14 01:02:35,260 - GlobalLogs - INFO - ---------------------------- Current parameters {'STRATEGY': 'MetaDiff', 'WINDOW_SIZE': 2, 'PRESSURE': 10, 'WALKS_PER_NODE': 30, 'EMBD_SIZE': 16, 'STEPS': 50000} ----------------------------
-2019-07-14 01:02:35,263 - GlobalLogs - INFO - -------------- Experiment (0, 0) --------------
-2019-07-14 01:02:35,263 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 01:02:35,263 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB16_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 01:02:41,681 - GlobalLogs - INFO - -------------- Experiment (0, 1) --------------
-2019-07-14 01:02:41,681 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 01:02:41,681 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB16_batch256_NegSamples512_TFsteps50000_1/')
-2019-07-14 01:02:48,648 - GlobalLogs - INFO - -------------- Experiment (1, 0) --------------
-2019-07-14 01:02:48,649 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 01:02:48,649 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB16_batch256_NegSamples512_TFsteps50000_0/')
-2019-07-14 01:02:55,109 - GlobalLogs - INFO - -------------- Experiment (1, 1) --------------
-2019-07-14 01:02:55,109 - GlobalLogs.CONFIG - INFO - Config file has been updated!
-2019-07-14 01:02:55,109 - GlobalLogs.CONFIG - INFO - Working folder is 
- ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB16_batch256_NegSamples512_TFsteps50000_1/')
+2019-07-16 11:58:17,957 - GlobalLogs - INFO - ---------------------------- Current parameters {'STRATEGY': 'MetaDiff', 'WINDOW_SIZE': 2, 'PRESSURE': 10, 'WALKS_PER_NODE': 30, 'EMBD_SIZE': 8, 'STEPS': 100000} ----------------------------
+2019-07-16 11:58:17,957 - GlobalLogs - INFO - -------------- Experiment (0, 0) --------------
+2019-07-16 11:58:17,957 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-16 11:58:17,958 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB8_batch256_NegSamples512_TFsteps100000_0/')
+2019-07-16 11:58:25,428 - GlobalLogs - INFO - -------------- Experiment (0, 1) --------------
+2019-07-16 11:58:25,428 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-16 11:58:25,428 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_0/', 'windowSize2/', 'EMB8_batch256_NegSamples512_TFsteps100000_1/')
+2019-07-16 11:58:32,800 - GlobalLogs - INFO - -------------- Experiment (1, 0) --------------
+2019-07-16 11:58:32,800 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-16 11:58:32,800 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB8_batch256_NegSamples512_TFsteps100000_0/')
+2019-07-16 11:58:39,476 - GlobalLogs - INFO - -------------- Experiment (1, 1) --------------
+2019-07-16 11:58:39,476 - GlobalLogs.CONFIG - INFO - Config file has been updated!
+2019-07-16 11:58:39,476 - GlobalLogs.CONFIG - INFO - Working folder is 
+ ('../UvA/LargeDataset/verMetaDiff_dirCOMBI_walks30_pressure10_1hopFraction0_1/', 'windowSize2/', 'EMB8_batch256_NegSamples512_TFsteps100000_1/')
