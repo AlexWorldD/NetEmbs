@@ -15,9 +15,9 @@ import pickle
 # CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
 # DB_NAME = "FSN_Data.db"
 DB_NAME = "FSN_Data_5k.db"
-CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
+CONFIG.ROOT_FOLDER = "../UvA/LargeDataset_noBack2/"
 
-RESULT_FILE = "ResultsSensitivityMarcel.xlsx"
+RESULT_FILE = "ResultsSensitivity.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 
@@ -45,13 +45,8 @@ CONFIG.NEGATIVE_SAMPLES = 512
 #  It's stupid to do it in that way, but for a few runs it should be fine.
 # E.g. in my case I replace 'Sales 21 btw'/'Sales 6 btw' -> 'Sales'
 map_gt = {'Sales 21 btw': 'Sales',
-          'Sales 6 btw': 'Sales',
-          'Fixed Assets': "None",
-          'Disbursement': "None"}
-# TODO Marcel: specify here the GroundTruth values which should be used for local evaluation
-#  the ones that from one group in general, but with different rates etc.
-#  I guess, it's something like BR4.1, BR4.2 etc. with common first digital?
-local_titles = ['Sales 6 btw', 'Sales 21 btw']
+          'Sales 6 btw': 'Sales'}
+
 # -----------
 # myGRID_big = {"Strategy": ["MetaDiff"],
 #               "Pressure": [1, 10, 30],
@@ -60,24 +55,18 @@ local_titles = ['Sales 6 btw', 'Sales 21 btw']
 #               "Steps": [50000, 100000],
 #               "Embd_Size": [16, 32, 48]}
 
-# TODO Marcel: Try that grid: 90 combinations X 4 experiment, 360 in total. BUT, for Embedding size 16 you should have cache
-#  as well as for the majority of sampling parameters, hence, it definitely should be faster that your prev runs :)
-#  or if your prev run has already finished, you could repeat it here, get new Excel file with new metrics. It also could be good :)
 
 myGRID = {"Strategy": ["MetaDiff"],
-          "Window_Size": [2],
-          "Pressure": [10],
-          "Walks_Per_Node": [30],
+          "Window_Size": [3],
+          "Pressure": [1, 5, 10, 20, 30],
+          "Walks_Per_Node": [10, 20, 30],
           "Embd_Size": [8],
-          "Steps": [100000]}
+          "Steps": [50000]}
 
 # The number of experiments with the same settings for sampling
 SAMPLING_EXPS = 2
 # The number of experiments with the same settings for SkipGram model
 TF_EXPS = 2
-# TODO Marcel: I guess here you have to set the number of unique values in GroundTruth for your dataset
-#  or prior to execution try manually leave only important GroundTruth in dataset...
-#  Because if we have quite uncertain method and test it with quite uncertain dataset - it is hard to justify the results.
 # ~Number of clusters
 N_CL = 11
 
@@ -173,6 +162,7 @@ if __name__ == '__main__':
                 # TODO Marcel: here we cluster into N-P group
                 # Number of collapsed clusters
                 map_gt = {title: map_gt.get(title) for title in embeddings.GroundTruth.unique()}
+                map_gt = {key: item for key, item in map_gt.items() if item is not None}
                 P = len(set(map_gt.keys())) - len(set(map_gt.values()))
                 print(f"You are going to cluster with {N_CL}-{P}")
                 # Column title for new ground truth
@@ -189,6 +179,10 @@ if __name__ == '__main__':
                     evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))], column_true=N_P_GroundTruth,
                                  postfix="_N-" + str(P) + "_local"))
                 # 8.1 Plot t-SNE visualisation
+                plot_tSNE(cl_labs, N_P_GroundTruth,
+                          folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+                          title="GroundTruth_N-" + str(P),
+                          context="paper_full")
                 plot_tSNE(cl_labs, "label",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                           title="Predicted label_N-" + str(P),

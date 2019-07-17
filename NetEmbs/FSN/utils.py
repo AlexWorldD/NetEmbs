@@ -227,7 +227,8 @@ def diff_function(prev_edge, new_edges, pressure):
     return softmax((1.0 - abs(new_edges - prev_edge)) * pressure)
 
 
-def step(G, vertex, direction="IN", mode=2, allow_back=True, return_full_step=False, pressure=30,
+# TODO fix allow_back argument
+def step(G, vertex, direction="IN", mode=2, allow_back=False, return_full_step=False, pressure=30,
          debug=False):
     """
      Meta-Random step with changing direction.
@@ -490,7 +491,7 @@ def graph_sampling(n_jobs=4, direction=None):
     """
     if direction is None:
         direction = CONFIG.DIRECTION
-    max_processes = min(n_jobs, os.cpu_count())
+    max_processes = max(n_jobs, os.cpu_count())
     pool = ProcessPool(nodes=max_processes)
     # required to restart pool to update CONFIG inside the parallel part
     pool.terminate()
@@ -632,7 +633,7 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
                 pickle.dump(sequences, file)
     if PRINT_STATUS:
         print("--------- Ended the SAMPLING the sequences from FSN ---------")
-    max_processes = min(n_jobs, os.cpu_count())
+    max_processes = max(n_jobs, os.cpu_count())
     pool_pairs = ProcessPool(nodes=max_processes)
     pool_pairs.terminate()
     pool_pairs.restart()
@@ -645,6 +646,7 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
         pairs = [item for sublist in pairs for item in sublist]
+    pairs = [item for item in pairs if (item[0]!=-3) & (item[1]!=-3)]
     pool_pairs.terminate()
     pool_pairs.restart()
     return pairs
