@@ -48,6 +48,7 @@ MAIN_LOGGER = "GlobalLogs"
 LOG = True
 
 # /////// Clustering configuration \\\\\\\
+CL_ALGORITHM = "Agglomerative" # or "KMeans"
 NUM_CL_MAX = 11
 GLOBAL_FSN = None
 

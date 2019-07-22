@@ -15,9 +15,9 @@ import pickle
 # CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
 # DB_NAME = "FSN_Data.db"
 DB_NAME = "FSN_Data_5k.db"
-CONFIG.ROOT_FOLDER = "../UvA/LargeDataset_noBack2/"
+CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 
-RESULT_FILE = "ResultsSensitivity.xlsx"
+RESULT_FILE = "ResultsComparisonExistingOnes.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 
@@ -56,10 +56,10 @@ map_gt = {'Sales 21 btw': 'Sales',
 #               "Embd_Size": [16, 32, 48]}
 
 
-myGRID = {"Strategy": ["MetaDiff"],
-          "Window_Size": [3],
-          "Pressure": [1, 5, 10, 20, 30],
-          "Walks_Per_Node": [10, 20, 30],
+myGRID = {"Strategy": ["MetaUniform"],
+          "Window_Size": [2],
+          "Pressure": [10],
+          "Walks_Per_Node": [30],
           "Embd_Size": [8],
           "Steps": [50000]}
 
@@ -163,6 +163,7 @@ if __name__ == '__main__':
                 # Number of collapsed clusters
                 map_gt = {title: map_gt.get(title) for title in embeddings.GroundTruth.unique()}
                 map_gt = {key: item for key, item in map_gt.items() if item is not None}
+                cur_score_to_show = list()
                 P = len(set(map_gt.keys())) - len(set(map_gt.values()))
                 print(f"You are going to cluster with {N_CL}-{P}")
                 # Column title for new ground truth
@@ -171,42 +172,54 @@ if __name__ == '__main__':
                 embeddings[N_P_GroundTruth] = embeddings[N_P_GroundTruth].apply(
                     lambda x: map_gt.get(x) if map_gt.get(x) is not None else x)
                 cl_labs = cl_Agglomerative(embeddings, N_CL - P)
-                cur_row.update(
-                    evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))],
-                                 column_true=N_P_GroundTruth,
-                                 postfix="_N-" + str(P) + "_global"))
-                cur_row.update(
-                    evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))], column_true=N_P_GroundTruth,
-                                 postfix="_N-" + str(P) + "_local"))
+                # Global for N-P scale
+                cur_eval_results = evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                                column_true=N_P_GroundTruth,
+                                                postfix="_N-" + str(P) + "_global")
+                cur_row.update(cur_eval_results)
+                cur_score_to_show.append(cur_eval_results["V-M_N-" + str(P) + "_global"])
+                # Local for N-P scale
+                cur_eval_results = evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                                column_true=N_P_GroundTruth,
+                                                postfix="_N-" + str(P) + "_local")
+                cur_row.update(cur_eval_results)
+                cur_score_to_show.append(cur_eval_results["V-M_N-" + str(P) + "_local"])
                 # 8.1 Plot t-SNE visualisation
                 plot_tSNE(cl_labs, N_P_GroundTruth,
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                           title="GroundTruth_N-" + str(P),
-                          context="paper_full")
+                          context="talk_half")
                 plot_tSNE(cl_labs, "label",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                           title="Predicted label_N-" + str(P),
-                          context="paper_full")
+                          context="talk_half", score=cur_score_to_show)
                 #  8.  ////////// Clustering in embedding space \\\\\\\
                 # TODO Marcel: clustering into N group and again evaluation
                 cl_labs = cl_Agglomerative(embeddings, N_CL)
+                cur_score_to_show = list()
+                # 8.2 ////////// Evaluate clustering quality \\\\\\\
+                # Global for N scale
+                cur_eval_results = evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                                column_true="GroundTruth",
+                                                postfix="_N_global")
+                cur_row.update(cur_eval_results)
+                cur_score_to_show.append(cur_eval_results["V-M_N_global"])
+                # Local for N scale
+                cur_eval_results = evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                                column_true="GroundTruth",
+                                                postfix="_N_local")
+                cur_row.update(cur_eval_results)
+                cur_score_to_show.append(cur_eval_results["V-M_N_local"])
                 # 8.1 Plot t-SNE visualisation
                 plot_tSNE(cl_labs, "label",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                           title="Predicted label_N",
-                          context="paper_full")
+                          context="talk_half", score=cur_score_to_show)
                 plot_tSNE(cl_labs, "GroundTruth",
                           folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                           title="Ground Truth",
-                          context="paper_full")
+                          context="talk_half")
                 print("Plotted required graphs!")
-                # 8.2 ////////// Evaluate clustering quality \\\\\\\
-                cur_row.update(
-                    evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))], column_true="GroundTruth",
-                                 postfix="_N_global"))
-                cur_row.update(
-                    evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))], column_true="GroundTruth",
-                                 postfix="_N_local"))
                 # 9. Construct one row with given parameters and obtained results
                 cur_row.update(run_times)
                 try:

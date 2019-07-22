@@ -400,7 +400,7 @@ def randomWalk(G, vertex=None, length=10, direction="IN", pressure=30, version="
                     break
             elif version == "MetaUniform":
                 if direction == "COMBI":
-                    new_v = step(G, cur_v, direction, pressure=pressure, mode=0, return_full_step=return_full_path,
+                    new_v = step(G, cur_v, cur_direction, pressure=pressure, mode=0, return_full_step=return_full_path,
                                  debug=debug)
                     cur_direction = mask[cur_direction]
                 else:
@@ -640,6 +640,7 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
     if PRINT_STATUS:
         print("--------- Started making pairs from the sequences ---------")
     pairs = pool_pairs.map(make_pairs, sequences)
+    logging.getLogger("NetEmbs.utils.get_pairs").info("Total number of raw sampled pairs is " + str(len(pairs)))
     if PRINT_STATUS:
         print("--------- Ended making pairs from the sequences ---------")
     if drop_duplicates:
@@ -751,7 +752,7 @@ def get_SkipGrams(df=None, version=None, walk_length=None, walks_per_node=None, 
     else:
         raise ValueError(
             "Use True or False for skip_gr argument! {!s}!".format(use_cache) + " was given")
-    logging.getLogger("NetEmbs.utils.get_SkipGrams").info("Total number of raw sampled pairs is " + str(len(skip_gr)))
+    logging.getLogger("NetEmbs.utils.get_SkipGrams").info("Total number of GOOD sampled pairs is " + str(len(skip_gr)))
     return skip_gr, CONFIG.GLOBAL_FSN, tr
 
 

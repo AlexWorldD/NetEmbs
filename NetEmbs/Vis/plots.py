@@ -165,7 +165,7 @@ def plot_tSNE_old(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth",
     # plt.show()
 
 
-def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_full"):
+def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_full", score=None):
     cmap, mmap = getColors_Markers(df[legend_title].unique(), n_colors=10, markers=["o", "v", "s"])
     dpi = 140
     fig_size = (13, 10)
@@ -202,8 +202,15 @@ def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_
         ax.set_title("t-SNE visualisation with coloring based on Ground Truth", y=1.08)
     elif legend_title == "label":
         v_score = ""
-        if "GroundTruth" in list(df):
-            v_score = ", V-Score is " + str(v_measure(df).round(3))
+        if context == "talk_half" or context == "paper_half":
+            v_score = ", \n"
+        else:
+            v_score = ", "
+        if score is None:
+            if "GroundTruth" in list(df):
+                v_score += "V-Score is " + str(v_measure(df).round(3))
+        else:
+            v_score += "V-Score is " + str(np.mean(score).round(3))
         ax.set_title("t-SNE visualisation with coloring based on predicted labels" + v_score, y=1.08)
     if title is not None and isinstance(title, str):
         postfix = "_" + str(CONFIG.STRATEGY) \
