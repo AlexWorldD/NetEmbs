@@ -56,7 +56,7 @@ map_gt = {'Sales 21 btw': 'Sales',
 #               "Embd_Size": [16, 32, 48]}
 
 
-myGRID = {"Strategy": ["MetaUniform"],
+myGRID = {"Strategy": ["MetaUniform", "OriginalRandomWalk", "DefUniform", "MetaDiff"],
           "Window_Size": [2],
           "Pressure": [10],
           "Walks_Per_Node": [30],
