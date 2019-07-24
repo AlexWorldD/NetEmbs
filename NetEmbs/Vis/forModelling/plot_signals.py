@@ -78,7 +78,7 @@ legend_postfix = {"W": ", weekly", "D": ", daily", "M": ", monthly", "2D": ", 2 
 
 
 def constructSignals_v2(df_all, shift=(0, 0), query=[{"select": [2], "_with": None}, {"select": [4], "_with": None}],
-                        on="label", agg_period="W", title=None, legend=None, metric="MSE", scale_data=True):
+                        on="label", agg_period="W", title=None, legend=None, scale_data=True):
     # Predicted labels
     agg_title = "Aggregated signals"
     left, right = filterData_v3(df_all, query=query, on=on)
