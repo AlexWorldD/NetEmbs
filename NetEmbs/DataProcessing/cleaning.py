@@ -5,58 +5,26 @@ cleaning.py
 Created by lex at 2019-05-04.
 """
 
-
-# Helper function to understand the source of errors
-def countStrings(df, col=["Credit", "Debit"]):
-    output = dict()
-    for title in col:
-        output[title] = df[title].map(lambda x: 1 if type(x) == str else 0).sum()
-    return output
+import pandas as pd
+from typing import List
 
 
-def countNaN(df, col=["Credit", "Debit"]):
-    output = dict()
-    for title in col:
-        output[title] = df[title].isnull().sum()
-    return output
+def del_strings(df: pd.DataFrame, cols: List[str] = "Value") -> pd.DataFrame:
+    """
+    Delete all string values from the given columns
+    Parameters
+    ----------
+    df : Original DataFrame
+    cols : str, default is "Value"
+            Title/s where to delete all string values
 
-
-def countDirtyData(df, col=["Credit", "Debit"]):
-    print("Strings in numeric columns: ", countStrings(df, col))
-    print("NaN in numeric columns: ", countNaN(df, col))
-    print("Zeros BPs: ", countZero(df))
-
-
-def countZero(df):
-    output = dict()
-    aggs = df.groupby("ID").agg({"Credit": sum, "Debit": sum})
-    for title in ["Credit", "Debit"]:
-        if title in list(df):
-            output[title] = aggs.loc[aggs[title] == 0.0, title].count()
-    return output
-
-
-def countZeros(df):
-    output = dict()
-    for title in ["isBadLeft", "isBadRight"]:
-        if title in list(df):
-            output[title] = df[title].sum()
-    return output
-
-
-def CreditDebit(row):
-    try:
-        row["Credit"] = abs(row["Value"]) if row["type"] == "credit" else 0.0
-        row["Debit"] = abs(row["Value"]) if row["type"] == "debit" else 0.0
-    except Exception:
-        raise KeyError("Cannot find 'Value' column in given DataFrame!")
-    return row
-
-
-def delStrings(df, col_names=["Value"]):
+    Returns
+    -------
+        DataFrame with only numeric values in the given columns
+    """
     drop_cl = list()
-    for title in col_names:
+    for title in cols:
         if title in list(df):
-            df[title] = df[title].map(lambda x: x if type(x) is not str else None)
+            df[title] = pd.to_numeric(df[title], errors="coerce")
             drop_cl.append(title)
     return df.dropna(subset=drop_cl)

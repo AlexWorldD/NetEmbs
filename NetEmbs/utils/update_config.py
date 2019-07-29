@@ -5,7 +5,7 @@ update_config.py
 Created by lex at 2019-07-07.
 """
 from NetEmbs import CONFIG
-from NetEmbs.utils.IO.create_work_folder import create_working_folder
+from NetEmbs.utils.IO.folders_creation import create_working_folder
 import logging
 from NetEmbs.utils.Logs import log_me
 

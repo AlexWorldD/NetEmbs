@@ -5,133 +5,47 @@ prepare_data.py
 Created by lex at 2019-03-28.
 """
 from NetEmbs.DataProcessing.normalize import normalize
-from NetEmbs.DataProcessing.splitting import split_to_debit_credit, add_from_column
-from NetEmbs.DataProcessing.unique_signatures import unique_BPs
+from NetEmbs.DataProcessing.splitting import split_to_debit_credit
+from NetEmbs.DataProcessing.unique_signatures import leave_unique_business_processes
 from NetEmbs.DataProcessing.merge_FAs import merge_FAs
-from NetEmbs.DataProcessing.cleaning import delStrings, CreditDebit
-from NetEmbs.CONFIG import PRINT_STATUS, LOG
+from NetEmbs.DataProcessing.cleaning import del_strings
 import logging
 
+from typing import List
+import pandas as pd
 
-def prepare_data(original_df, split=True, merge_fa=True, add_from=True, norm=True, unique=True, logger_name="NetEmbs"):
+
+def data_preprocessing(df: pd.DataFrame, cols: List[str] = "Value") -> pd.DataFrame:
     """
-    General function for data preprocessing
-    :param original_df:
-    :param split: True if Data has to be split into Credit/Debit columns
-    :param add_from: True if Data hasn't "from" column (require for FSN construction)
-    :param merge_fa: True if need to merge rows with the same affected FAs
-    :param norm: True if Data has to be normalized wrt ID
-    :param unique: True if Data has to be filtered wrt to Signatures of BPs
-    :return: Transformed DF
+    Data pre-processing function: clean, normalize and leave unique BPs only
+    Parameters
+    ----------
+    df : DataFrame
+        Original DataFrame to be processed
+    cols : list of str, default 'Value'
+        Titles of columns where delete strings
+
+    Returns
+    -------
+        DataFrame to be used for FSN construction
     """
-    if LOG:
-        local_logger = logging.getLogger(logger_name+".DataProcessing.prepare_data")
-        local_logger.info("Original shape of DataFrame is " + str(original_df.shape))
-    # Delete all NaNs and Strings values from "Value" column
-    original_df = delStrings(original_df)
-
-    if LOG:
-        local_logger.info("Deleted all NaNs and Strings values from 'Value' column: " + str(original_df.shape))
-
-    if split and "Debit" not in list(original_df):
-        original_df = split_to_debit_credit(original_df)
-        if LOG:
-            local_logger.info("Split Values column into Credit and Debit ones: " + str(list(original_df)))
-    if merge_fa:
-        original_df = merge_FAs(original_df)
-        if LOG:
-            local_logger.info(
-                "After merging FAs columns titles are: " + str(list(original_df)) + " shape is " + str(
-                    original_df.shape))
-    if add_from:
-        original_df = add_from_column(original_df)
-
-    if norm:
-        original_df = normalize(original_df)
-
-    #     Remove rows with NaN values after normalization (e.g. when all values were 0.0 -> something/zero leads to NaN)
-    original_df.dropna(subset=["Debit", "Credit"], inplace=True)
-
-    if LOG:
-        local_logger.info("After normalization shape of DataFrame is " + str(original_df.shape))
-    if unique:
-        original_df = unique_BPs(original_df)
-    print("Final shape of DataFrame is ", original_df.shape)
-    if LOG:
-        local_logger.info("Final shape of DataFrame is " + str(original_df.shape))
-    return original_df
-
-
-def prepare_dataMarcel(original_df, clean_columns=["Value"],
-                       split=True, merge_fa=True, add_from=True, norm=True, unique=True, logger_name="NetEmbs"):
-    """
-    General function for data preprocessing with given 'type' column
-    :param original_df:
-    :param clean_columns: a list of titles for columns to be cleaned
-    :param split: True if data has to be splitted into Credit/Debit columns
-    :param add_from: True if Data hasn't "from" column (require for FSN construction)
-    :param merge_fa: True if need to merge rows with the same affected FAs
-    :param norm: True if Data has to be normalized wrt ID
-    :param unique: True if Data has to be filtered wrt to Signatures of BPs
-    :return: Transformed DF
-    """
-    # TODO rewrite that all...
-    if LOG:
-        local_logger = logging.getLogger(logger_name+".DataProcessing.prepare_data")
-    if PRINT_STATUS:
-        print("Original shape of DataFrame is ", str(original_df.shape))
-    if LOG:
-        local_logger.info("Original shape of DataFrame is " + str(original_df.shape))
-
-    # Delete all NaNs and Strings values from "Value" column
-    original_df = delStrings(original_df, col_names=clean_columns)
-    if PRINT_STATUS:
-        print("Deleted all NaNs and Strings values from 'Value' column: ", str(original_df.shape))
-    if LOG:
-        local_logger.info("Deleted all NaNs and Strings values from 'Value' column: " + str(original_df.shape))
-
-    if split:
-        # Splitting into Credit and Debit columns
-        original_df = original_df.apply(CreditDebit, axis=1)
-        try:
-            original_df.drop(columns=["Value", "type"], inplace=True)
-        except KeyError:
-            raise KeyError("Cannot find 'amount' and 'type' columns in given DataFrame!")
-    if PRINT_STATUS:
-        print("Splitting into Credit and Debit columns: ", str(original_df.shape))
-    if LOG:
-        local_logger.info("Splitting into Credit and Debit columns: " + str(original_df.shape))
-    if PRINT_STATUS:
-        print("Before merging FAs columns titles are: ", list(original_df))
-    if LOG:
-        local_logger.info("Before merging FAs columns titles are: " + str(list(original_df)))
-
-    #     Simplest way to deal with NA values.
-    if merge_fa:
-        original_df = merge_FAs(original_df)
-    if PRINT_STATUS:
-        print("After merging FAs columns titles are: ", list(original_df), " shape is ", str(original_df.shape))
-    if LOG:
-        local_logger.info(
-            "After merging FAs columns titles are: " + str(list(original_df)) + " shape is " + str(original_df.shape))
-
-    if add_from:
-        original_df = add_from_column(original_df)
-
-    if norm:
-        original_df = normalize(original_df)
-    #     Remove rows with NaN values after normalization (e.g. when all values were 0.0 -> something/zero leads to NaN)
-
-    original_df.dropna(subset=["Debit", "Credit"], inplace=True)
-    if PRINT_STATUS:
-        print("After normalization shape of DataFrame is ", str(original_df.shape))
-    if LOG:
-        local_logger.info("After normalization shape of DataFrame is " + str(original_df.shape))
-
-    if unique:
-        original_df = unique_BPs(original_df)
-    if PRINT_STATUS:
-        print("Final shape of DataFrame is ", original_df.shape)
-    if LOG:
-        local_logger.info("Final shape of DataFrame is " + str(original_df.shape))
-    return original_df
+    local_logger = logging.getLogger(f"NetEmbs.{__name__}")
+    local_logger.info(f"Original shape of DataFrame is {df.shape}")
+    # 0. Delete all strings in columns which has to be numeric
+    df = del_strings(df, cols)
+    local_logger.info(f"Deleted all NaNs and Strings values from 'Value' column: {df.shape}")
+    # 1. Add if not exist the Credit/Debit columns
+    df = split_to_debit_credit(df)
+    # 2. Merge time-split transactions into one
+    df = merge_FAs(df)
+    local_logger.info(f"After merging FAs the shape is: {df.shape}")
+    # 3. Normalize
+    df = normalize(df)
+    df.dropna(subset=["Debit", "Credit"], inplace=True)
+    local_logger.info(f"After normalization the shape is: {df.shape}")
+    # 4. Delete duplicated within transactions
+    df = leave_unique_business_processes(df)
+    # 4. Add 'flow' column if not exist
+    df["flow"] = df["Credit"].apply(lambda x: "outflow" if x > 0.0 else "inflow")
+    local_logger.info(f"Final shape of DataFrame is: {df.shape}")
+    return df

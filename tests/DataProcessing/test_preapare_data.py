@@ -6,7 +6,7 @@ Created by lex at 2019-04-01.
 """
 
 from NetEmbs.DataProcessing.rename_columns import rename_columns
-from NetEmbs.DataProcessing.unique_signatures import unique_BPs
+from NetEmbs.DataProcessing.unique_signatures import leave_unique_business_processes
 from NetEmbs.DataProcessing.splitting import add_from_column
 import pandas as pd
 

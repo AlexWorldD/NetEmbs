@@ -82,23 +82,23 @@ if __name__ == '__main__':
         d = upload_data(DB_PATH, limit=LIMIT)
         journal_truth = upload_journal_entries(DB_PATH)[["ID", "GroundTruth", "Time"]]
         # 2. Data pre-processing
-        d = prepare_data(d, logger_name=CONFIG.MAIN_LOGGER)
+        d = data_preprocessing(d)
 
     if CONFIG.MODE == "RealData":
         # //////// TODO UPLOAD your data HERE \\\\\\\\\\
         # d = bData()
         # //////// END  \\\\\\\\\\
-        d = rename_columns(d, names={"transactionID": "ID", "accountID": "FA_Name", "BR": "GroundTruth",
-                                     "amount": "Value"})
+        d = d.rename(index=str, columns={"transactionID": "ID", "accountID": "FA_Name", "BR": "GroundTruth",
+                                         "amount": "Value"})
         # TODO pay attention for the split argument below!
         if "Value" in list(d):
             need_split = True
         else:
             need_split = False
-        d = prepare_dataMarcel(d, split=need_split, logger_name=CONFIG.MAIN_LOGGER)
+        d = data_preprocessing(d)
         journal_truth = d.groupby("ID", as_index=False).agg({"GroundTruth": "first"})
     # let's check it
-    countDirtyData(d, ["Debit", "Credit"])
+    count_bad_values(d, ["Debit", "Credit"])
     # 3. Create Financial Statement Network object
     CONFIG.GLOBAL_FSN = FSN()
     CONFIG.GLOBAL_FSN.build(d, left_title="FA_Name")

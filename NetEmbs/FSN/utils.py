@@ -898,8 +898,8 @@ def get_JournalEntries(df):
     :return: Journal Entries DataFrame, each row is separate business process
     """
     if "Signature" not in list(df):
-        from NetEmbs.DataProcessing.unique_signatures import unique_BPs
-        df = unique_BPs(df)
+        from NetEmbs.DataProcessing.unique_signatures import leave_unique_business_processes
+        df = leave_unique_business_processes(df)
     return df[["ID", "Signature"]].drop_duplicates("ID")
 
 
