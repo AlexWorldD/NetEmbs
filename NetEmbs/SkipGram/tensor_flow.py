@@ -13,7 +13,7 @@ from NetEmbs.FSN.utils import get_SkipGrams
 import time
 import pandas as pd
 import numpy as np
-from NetEmbs.utils.IO.db_connection import upload_JournalEntriesTruth, upload_data
+from NetEmbs.utils.IO.db_connection import upload_journal_entries, upload_data
 from NetEmbs.CONFIG import MODE, LOG_LEVEL
 from NetEmbs import CONFIG
 from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
@@ -281,5 +281,5 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
 
 
 def add_ground_truth(df, path_file="../Simulation/FSN_Data.db"):
-    journal_truth = upload_JournalEntriesTruth(path_file)[["ID", "GroundTruth", "Time"]]
+    journal_truth = upload_journal_entries(path_file)[["ID", "GroundTruth", "Time"]]
     return df.merge(journal_truth, on="ID")

@@ -10,7 +10,7 @@ import seaborn as sns
 from collections import Counter
 import numpy as np
 from sklearn import preprocessing
-from NetEmbs.DataProcessing.stats import getHistCounts
+from NetEmbs.DataProcessing.stats.count_financial_accounts import get_hist_counts
 import pandas as pd
 from NetEmbs import CONFIG
 from NetEmbs.utils.dimensionality_reduction import dim_reduction
@@ -111,7 +111,7 @@ def plotHist(df, title="Histogram", normalized=False):
     :param normalized: If True, the histogram height shows a density rather than a count.
     :return:
     """
-    stat_here = getHistCounts(df)
+    stat_here = get_hist_counts(df)
     from matplotlib.ticker import MaxNLocator
     for k, d in stat_here.items():
         ax = plt.figure().gca()

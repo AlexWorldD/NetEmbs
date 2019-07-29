@@ -29,7 +29,7 @@ def data_preprocessing(df: pd.DataFrame, cols: List[str] = "Value") -> pd.DataFr
     -------
         DataFrame to be used for FSN construction
     """
-    local_logger = logging.getLogger(f"NetEmbs.{__name__}")
+    local_logger = logging.getLogger(f"GlobalLogs.{__name__}")
     local_logger.info(f"Original shape of DataFrame is {df.shape}")
     # 0. Delete all strings in columns which has to be numeric
     df = del_strings(df, cols)

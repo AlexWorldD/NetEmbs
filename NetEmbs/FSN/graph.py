@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # encoding: utf-8
 __author__ = 'Aleksei Maliutin'
 """
@@ -8,6 +10,8 @@ import networkx as nx
 from NetEmbs.CONFIG import LOG
 import logging
 from NetEmbs.utils.get_size import get_size
+import pandas as pd
+from typing import Union, List, Dict
 
 
 class FSN(nx.DiGraph):
@@ -19,84 +23,114 @@ class FSN(nx.DiGraph):
         super().__init__()
         self.information = dict()
 
-    def build(self, df, left_title="FA_Name", right_title="ID"):
+    def build(self, df: pd.DataFrame, left_title: str = "FA_Name", right_title: str = "ID") -> None:
         """
         Construct Financial Statement Network (FSN) from DataFrame
-        :param df: DataFrame with JournalEntities
-        :param left_title: Title of column with FA names: e.g. Name or FA_Name
-        :param right_title: Title of column with BP names: e.g. ID, or after clustering Label
+
+        Use the given DataFrame to construct DiGraph object w.r.t. the Credit/Debit columns
+        Parameters
+        ----------
+        df : DataFrame with JournalEntities
+        left_title : str, default is 'FA_Name'
+                Title of column with FA names: e.g. Name or FA_Name
+        right_title : str, default is 'ID'
+                Title of column with BP names: e.g. ID, or after clustering Label
+
+        Returns
+        -------
+        None
         """
         self.add_nodes_from(df[right_title], bipartite=0)
         self.add_nodes_from(df[left_title], bipartite=1)
         self.add_weighted_edges_from(
-            [(row[left_title], row[right_title], row["Credit"]) for idx, row in df[df["from"] == True].iterrows()],
+            [(row[left_title], row[right_title], row["Credit"]) for idx, row in df[df["flow"] == "outflow"].iterrows()],
             weight='weight', type="CREDIT")
         self.add_weighted_edges_from(
-            [(row[right_title], row[left_title], row["Debit"]) for idx, row in df[df["from"] == False].iterrows()],
+            [(row[right_title], row[left_title], row["Debit"]) for idx, row in df[df["flow"] == "inflow"].iterrows()],
             weight='weight', type="DEBIT")
         self.information = {"left_title": left_title, "right_title": right_title}
         if LOG:
-            local_logger = logging.getLogger("NetEmbs.FSN.build")
+            local_logger = logging.getLogger(f"NetEmbs.{__name__}")
             local_logger.info("FSN constructed!")
-            local_logger.info("Business processes nodes are " + str(self.get_BP()))
+            local_logger.info(f"Number of Business processes nodes is {self.number_of_BP()}")
 
-    def build_default(self):
+    def build_default(self) -> None:
         """
         Construct Financial Statement Network (FSN) with example Sales-Collection business processes
-        :return:
+        Returns
+        -------
+        None
         """
         from NetEmbs.GenerateData.complex_df import sales_collections
         from NetEmbs.DataProcessing.normalize import normalize
         df = normalize(sales_collections())
         self.build(df)
 
-    def get_financial_accounts(self):
+    def get_financial_accounts(self) -> List[Union[str, int]]:
         """
-        Return the set of Financial Account (FA) nodes in network
-        :return: set of Financial Account (FA) nodes
+        Get the set of Financial Account (FA) nodes in network
+        Returns
+        -------
+        List with FA nodes in FSN
         """
         return [n for n, d in self.nodes(data=True) if d['bipartite'] == 1]
 
-    def get_FA(self):
+    def get_FAs(self) -> List[Union[str, int]]:
         """
-        Return the set of Financial Account (FA) nodes in network
-        :return: set of Financial Account (FA) nodes
+        Get the set of Financial Account (FA) nodes in network
+        Returns
+        -------
+        List with FA nodes in FSN
         """
         return self.get_financial_accounts()
 
-    def get_business_processes(self):
+    def get_business_processes(self) -> List[Union[str, int]]:
         """
-        Return the set of Business Process (BP) nodes in network
-        :return: set of Business Process (BP)  nodes
+        Get the set of Business Process (BP) nodes in network
+        Returns
+        -------
+        List with BP nodes in FSN
         """
         return [n for n, d in self.nodes(data=True) if d['bipartite'] == 0]
 
-    def get_BP(self):
+    def get_BPs(self) -> List[Union[str, int]]:
         """
-        Return the set of Business Process (BP) nodes in network
-        :return: set of Business Process (BP)  nodes
+        Get the set of Business Process (BP) nodes in network
+        Returns
+        -------
+        List with BP nodes in FSN
         """
         return self.get_business_processes()
 
-    def number_of_BP(self):
+    def number_of_BP(self) -> int:
         """
-        Return total number of Business Process (BP) nodes in network
-        :return: integer value
+        Get total number of Business Process (BP) nodes in network
+        Returns
+        -------
+        Int, number of BPs
         """
-        return len(self.get_BP())
+        return len(self.get_BPs())
 
-    def number_of_FA(self):
+    def number_of_FA(self) -> int:
         """
-        Return total number of Financial Accounts (FA) nodes in network
-        :return: integer value
+        Get total number of Financial Accounts (FA) nodes in network
+        Returns
+        -------
+        Int, number of FAs
         """
-        return len(self.get_FA())
+        return len(self.get_FAs())
 
-    def projection(self, on="BP"):
+    def projection(self, on: str = "BP") -> nx.DiGraph:
         """
-        Returns the projection of original FSN onto chosen set of nodes
-        :param on: type of nodes to project onto
-        :return: Projection
+        Get the projection of original FSN onto chosen set of nodes
+        Parameters
+        ----------
+        on str, default 'BP'
+            Type of nodes to get the projection on
+
+        Returns
+        -------
+        DiGraph object with requested projection
         """
         from networkx.algorithms import bipartite
         if on == "BP":
@@ -107,10 +141,12 @@ class FSN(nx.DiGraph):
             raise ValueError("Wrong projection argument! {!s} used while FA or BP are allowed!".format(on))
         return bipartite.weighted_projected_graph(self, project_to)
 
-    def info(self):
+    def info(self) -> Dict:
         """
-        Return available info about FSN: number of nodes, total size etc
-        :return:
+        Get available info about FSN: number of nodes, total size etc
+        Returns
+        -------
+        Dictionary with available information about FSN
         """
         out_info = self.information.copy()
         out_info.update({"BPs": self.number_of_BP(), "FAs": self.number_of_FA(), "Total size": get_size(self)})

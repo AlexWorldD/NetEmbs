@@ -17,7 +17,7 @@ import pickle
 DB_NAME = "FSN_Data_5k.db"
 CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
 
-RESULT_FILE = "ResultsComparisonExistingOnes.xlsx"
+RESULT_FILE = "ResultsRefactoring.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 

@@ -28,9 +28,9 @@ def upload_data_from(path: str, table_name: str, limit: Optional[int] = None) ->
     """
     cnx = sqlite3.connect(path)
     if limit is None:
-        db_data = pd.read_sql_query(f"SELECT * FROM {table_name}", cnx).drop(["ID"], axis=1)
+        db_data = pd.read_sql_query(f"SELECT * FROM {table_name}", cnx)
     else:
-        db_data = pd.read_sql_query(f"SELECT * FROM {table_name} LIMIT {limit}", cnx).drop(["ID"], axis=1)
+        db_data = pd.read_sql_query(f"SELECT * FROM {table_name} LIMIT {limit}", cnx)
     return db_data
 
 
@@ -49,7 +49,7 @@ def upload_data(path: str, limit: Optional[int] = None) -> pd.DataFrame:
         DataFrame
         DataFrame constructed from the passed in DataBase
     """
-    return upload_data_from(path, 'EntryRecords', limit).rename(index=str, columns={"TID": "ID"})
+    return upload_data_from(path, 'EntryRecords', limit).drop(["ID"], axis=1).rename(index=str, columns={"TID": "ID"})
 
 
 def upload_journal_entries(path: str, limit: Optional[int] = None) -> pd.DataFrame:
