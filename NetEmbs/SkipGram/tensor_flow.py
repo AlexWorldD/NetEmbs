@@ -13,7 +13,7 @@ from NetEmbs.FSN.utils import get_SkipGrams
 import time
 import pandas as pd
 import numpy as np
-from NetEmbs.utils.IO.connect_db import upload_JournalEntriesTruth, upload_data
+from NetEmbs.utils.IO.db_connection import upload_JournalEntriesTruth, upload_data
 from NetEmbs.CONFIG import MODE, LOG_LEVEL
 from NetEmbs import CONFIG
 from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
