@@ -79,8 +79,8 @@ if __name__ == '__main__':
     print("Welcome to refactoring experiments!")
     if CONFIG.MODE == "SimulatedData":
         # 1. Upload JournaEntries into memory
-        d = upload_data(DB_PATH, limit=LIMIT, logger_name=CONFIG.MAIN_LOGGER)
-        journal_truth = upload_JournalEntriesTruth(DB_PATH)[["ID", "GroundTruth", "Time"]]
+        d = upload_data(DB_PATH, limit=LIMIT)
+        journal_truth = upload_journal_entries(DB_PATH)[["ID", "GroundTruth", "Time"]]
         # 2. Data pre-processing
         d = prepare_data(d, logger_name=CONFIG.MAIN_LOGGER)
 

@@ -18,7 +18,7 @@ def upload_data_from(path: str, table_name: str, limit: Optional[int] = None) ->
             String path to the database
     table_name : str
             String name of the table to upload data
-    limit : int: None
+    limit : int, default: None
             Rows to read from table
 
     Returns
@@ -31,7 +31,6 @@ def upload_data_from(path: str, table_name: str, limit: Optional[int] = None) ->
         db_data = pd.read_sql_query(f"SELECT * FROM {table_name}", cnx).drop(["ID"], axis=1)
     else:
         db_data = pd.read_sql_query(f"SELECT * FROM {table_name} LIMIT {limit}", cnx).drop(["ID"], axis=1)
-    db_data.rename(index=str, columns={"TID": "ID"}, inplace=True)
     return db_data
 
 
@@ -42,7 +41,7 @@ def upload_data(path: str, limit: Optional[int] = None) -> pd.DataFrame:
     ----------
     path : str
             String path to the database
-    limit : int: None
+    limit : int, default: None
             Rows to read from table
 
     Returns
@@ -60,7 +59,7 @@ def upload_journal_entries(path: str, limit: Optional[int] = None) -> pd.DataFra
     ----------
     path : str
             String path to the database
-    limit : int: None
+    limit : int, default: None
             Rows to read from table
 
     Returns
