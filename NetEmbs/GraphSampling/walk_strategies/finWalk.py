@@ -42,10 +42,11 @@ def diff_function(prev_edge, new_edges, pressure):
     return softmax((1.0 - abs(new_edges - prev_edge)) * pressure)
 
 
-mask = {"IN": "OUT", "OUT": "IN"}
+class metaWalk(abstractWalk):
+    """
+    Base class for meta-family methods: the ones which follow the direction of relationships rahter than edges
+    """
 
-
-class finWalk(abstractWalk):
     def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
                  walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
                  direction: Optional[str] = "COMBI",
@@ -53,15 +54,26 @@ class finWalk(abstractWalk):
                  mode: Optional[int] = 2,
                  allow_back: Optional[bool] = False):
         super().__init__(G, walk_length, direction, allow_back)
-        self.G: FSN = G
         self.pressure: int = pressure
         self.mode: int = mode
 
     def _sub_step_one(self, vertex: Union[str, int]) \
             -> Tuple[Union[str, int], float]:
+        """
+        The 1st move, from BP to FA
+        Parameters
+        ----------
+        vertex : str or int
+                Initial vertex to make a step
+
+        Returns
+        -------
+        Tuple (node, monetary flow)
+            Sampled FA node and monetary flow from initial vertex and that FA
+        """
         if not self.G.has_node(vertex):
             raise ValueError(f"Vertex {vertex} is not in FSN!")
-        if self.move_in:
+        if self.step_direction == "IN":
             candidates = self.G.in_edges(vertex, data=True)
         else:
             candidates = self.G.out_edges(vertex, data=True)
@@ -69,7 +81,7 @@ class finWalk(abstractWalk):
             try:
                 ws = [edge[-1]["weight"] for edge in candidates]
                 p_ws = ws / np.sum(ws)
-                ins = [edge[[True, False].index(self.move_in)] for edge in candidates]
+                ins = [edge[["IN", "OUT"].index(self.step_direction)] for edge in candidates]
                 if self.mode:
                     tmp_idx = random.choices(range(len(ins)), weights=p_ws, k=1)[0]
                 else:
@@ -86,15 +98,28 @@ class finWalk(abstractWalk):
 
     def _sub_step_two(self, prev_step: Tuple[Union[str, int], float], original_vertex: Union[str, int]) -> Union[
         str, int]:
+        """
+        The 2nd move, from FA back to BP set
+        Parameters
+        ----------
+        prev_step : Tuple (node, monetary flow)
+            Result of the previous sub-step
+        original_vertex : str or int,
+            Initial vertex
+
+        Returns
+        -------
+            Sampled BP nodes w.r.t. the chosen settings
+        """
         if prev_step[0] in [-1, -3]:
             return prev_step[0]
-        if not self.move_in:
+        if self.mask[self.step_direction] == "IN":
             candidates = self.G.in_edges(prev_step[0], data=True)
         else:
             candidates = self.G.out_edges(prev_step[0], data=True)
         if len(candidates) > 0:
             ws = [edge[-1]["weight"] for edge in candidates]
-            outs = [edge[[True, False].index(not self.move_in)] for edge in candidates]
+            outs = [edge[["IN", "OUT"].index(self.mask[self.step_direction])] for edge in candidates]
             if not self.allow_back:
                 rm_idx = outs.index(original_vertex)
                 ws.pop(rm_idx)
@@ -125,11 +150,43 @@ class finWalk(abstractWalk):
         context.append(vertex)
         while len(context) < self.walk_length:
             new_node = self.step(context[-1])
-            if self.direction == "COMBI":
-                self.move_in = not self.move_in
+            if self.walk_direction == "COMBI":
+                self.step_direction = self.mask[self.step_direction]
             if new_node not in [-1, -3]:
                 context.append(new_node)
-            elif self.direction != "COMBI":
+            elif self.walk_direction != "COMBI":
                 print("Cannot continue walking... Termination.")
                 break
         return context
+
+
+class metaUniform(metaWalk):
+    def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
+                 walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
+                 direction: Optional[str] = "COMBI",
+                 allow_back: Optional[bool] = False):
+        super().__init__(G, walk_length, direction, None, 0, allow_back)
+
+
+class metaWeighted(metaWalk):
+    def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
+                 walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
+                 direction: Optional[str] = "COMBI",
+                 allow_back: Optional[bool] = False):
+        super().__init__(G, walk_length, direction, None, 1, allow_back)
+
+
+class finWalk(metaWalk):
+    """
+    finWalk implementation
+
+    finWalk method use weighted transition probability for the first move (from BP to FA)
+    and the difference dependent transition probability for the second move (back to BP)
+    """
+
+    def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
+                 walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
+                 direction: Optional[str] = "COMBI",
+                 pressure: Optional[int] = 10,
+                 allow_back: Optional[bool] = False):
+        super().__init__(G, walk_length, direction, pressure, 2, allow_back)

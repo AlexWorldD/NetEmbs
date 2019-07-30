@@ -1,4 +1,4 @@
-from __future__ import annotations
+# from __future__ import annotations
 
 # encoding: utf-8
 __author__ = 'Aleksei Maliutin'

@@ -6,7 +6,7 @@ Created by lex at 2019-07-30.
 """
 import numpy as np
 from NetEmbs.FSN.graph import FSN
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 
 np.seterr(all="raise")
 
@@ -22,9 +22,10 @@ class abstractWalk():
                  allow_back: Optional[bool] = False):
         self.G: FSN = G
         self.walk_length: int = walk_length
-        self.direction: str = direction
+        self.walk_direction: str = direction
         self.allow_back: bool = allow_back
-        self.move_in: bool = True if self.direction in ["IN", "COMBI"] else False
+        self.step_direction: str = self.walk_direction if self.walk_direction in ["IN", "OUT", "RANDOM"] else "IN"
+        self.mask: Dict[str, str] = {"IN": "OUT", "OUT": "IN"}
 
     def step(self, vertex: Union[str, int]) -> Union[str, int]:
         pass
