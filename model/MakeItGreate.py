@@ -18,7 +18,7 @@ RESULT_FILE = "ResultsRefactoring.xlsx"
 
 DB_PATH = "../Simulation/" + DB_NAME
 
-LIMIT = None
+LIMIT = 100
 
 #  ---------- CONFIG Setting HERE ------------
 # .1 Sampling parameters
@@ -81,3 +81,4 @@ if __name__ == '__main__':
     CONFIG.GLOBAL_FSN = FSN()
     CONFIG.GLOBAL_FSN.build(d, left_title="FA_Name")
     print("FSN sucessfully constructed: \n", CONFIG.GLOBAL_FSN.info())
+    sub_step_one(CONFIG.GLOBAL_FSN, 7, "IN", weighted=False)

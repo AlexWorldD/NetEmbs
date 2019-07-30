@@ -15,7 +15,7 @@ import pickle
 # CONFIG.ROOT_FOLDER = "../UvA/SensitivityAnalysis/"
 # DB_NAME = "FSN_Data.db"
 DB_NAME = "FSN_Data_5k.db"
-CONFIG.ROOT_FOLDER = "../UvA/LargeDataset/"
+CONFIG.ROOT_FOLDER = "../UvA/Refactoring/"
 
 RESULT_FILE = "ResultsRefactoring.xlsx"
 
@@ -26,9 +26,9 @@ LIMIT = None
 #  ---------- CONFIG Setting HERE ------------
 # .1 Sampling parameters
 CONFIG.STRATEGY = "MetaDiff"
-CONFIG.PRESSURE = 20
+CONFIG.PRESSURE = 10
 CONFIG.WINDOW_SIZE = 2
-CONFIG.WALKS_PER_NODE = 10
+CONFIG.WALKS_PER_NODE = 30
 CONFIG.WALKS_LENGTH = 10
 # .2 TF parameters
 CONFIG.STEPS = 50000

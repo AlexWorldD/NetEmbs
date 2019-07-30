@@ -23,6 +23,7 @@ from NetEmbs.utils.get_size import get_size
 from tqdm.auto import tqdm
 import pickle
 
+from NetEmbs.FSN import *
 np.seterr(all="raise")
 
 
@@ -413,8 +414,9 @@ def randomWalk(G, vertex=None, length=10, direction="IN", pressure=30, version="
                 if direction == "TRIPLE":
                     pass
                 elif direction == "COMBI":
-                    new_v = step(G, cur_v, cur_direction, pressure=pressure, mode=2, return_full_step=return_full_path,
-                                 debug=debug)
+                    new_v = new_step(G, cur_v, cur_direction, pressure=pressure)
+                    # new_v = step(G, cur_v, cur_direction, pressure=pressure, mode=2, return_full_step=return_full_path,
+                    #              debug=debug)
                     cur_direction = mask[cur_direction]
                 else:
                     new_v = step(G, cur_v, direction, pressure=pressure, mode=2, return_full_step=return_full_path,
@@ -496,7 +498,7 @@ def graph_sampling(n_jobs=4, direction=None):
     # required to restart pool to update CONFIG inside the parallel part
     pool.terminate()
     pool.restart()
-    BPs = CONFIG.GLOBAL_FSN.get_BP()
+    BPs = CONFIG.GLOBAL_FSN.get_BPs()
     n_BPs = len(BPs)
     sampled = list()
     if LOG:
@@ -712,7 +714,7 @@ def get_SkipGrams(df=None, version=None, walk_length=None, walks_per_node=None, 
         pass
     else:
         raise TypeError("Cound not find FSN in memory as well as construct from scratch!")
-    tr = TransformationBPs(CONFIG.GLOBAL_FSN.get_BP())
+    tr = TransformationBPs(CONFIG.GLOBAL_FSN.get_BPs())
 
     # //////// UPDATE CONFIG IF NEEDED w.r.t the given arguments \\\\\\\\\\\
     if walks_per_node is not None:

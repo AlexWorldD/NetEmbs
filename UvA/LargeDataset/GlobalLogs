@@ -1,6 +1,12 @@
-2019-07-29 22:54:48,615 - GlobalLogs - INFO - Started..
-2019-07-29 22:54:48,918 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (30382, 4)
-2019-07-29 22:54:48,926 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (30382, 4)
-2019-07-29 22:54:48,966 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - After merging FAs the shape is: (30282, 6)
-2019-07-29 22:54:49,552 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - After normalization the shape is: (30096, 7)
-2019-07-29 22:55:02,265 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is: (29239, 9)
+2019-07-30 00:13:25,927 - GlobalLogs - INFO - Started..
+2019-07-30 00:13:26,015 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (100, 4)
+2019-07-30 00:13:26,040 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (100, 4)
+2019-07-30 00:13:26,167 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - After merging FAs the shape is: (100, 6)
+2019-07-30 00:13:26,364 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - After normalization the shape is: (76, 7)
+2019-07-30 00:13:26,984 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is: (76, 9)
+2019-07-30 00:13:34,990 - GlobalLogs.NetEmbs.FSN.finWalk - ERROR - Fatal ValueError during 1st sub-step
+Traceback (most recent call last):
+  File "/Users/lex/Dev/GitHub/NetEmbs/NetEmbs/FSN/finWalk.py", line 44, in sub_step_one
+    p_ws = ws / 0.0
+FloatingPointError: divide by zero encountered in true_divide
+2019-07-30 00:13:34,991 - GlobalLogs.NetEmbs.FSN.finWalk - INFO - Snapshot{'CurrentBPNode': 7, 'NextCandidateFA': [(('NoisyLeftFA_kbfq', 7, {'type': 'CREDIT', 'weight': 0.00040599657376736933}), 0.00040599657376736933), (('NoisyLeftFA_phtv', 7, {'type': 'CREDIT', 'weight': 0.0012362755144989725}), 0.0012362755144989725), (('NoisyLeftFA_qapc', 7, {'type': 'CREDIT', 'weight': 0.0018914332386167445}), 0.0018914332386167445), (('TradePayables', 7, {'type': 'CREDIT', 'weight': 0.9964662946731169}), 0.9964662946731169)]}
