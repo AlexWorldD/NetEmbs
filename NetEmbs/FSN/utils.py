@@ -24,6 +24,7 @@ from tqdm.auto import tqdm
 import pickle
 
 from NetEmbs.FSN import *
+
 np.seterr(all="raise")
 
 
@@ -414,9 +415,8 @@ def randomWalk(G, vertex=None, length=10, direction="IN", pressure=30, version="
                 if direction == "TRIPLE":
                     pass
                 elif direction == "COMBI":
-                    new_v = new_step(G, cur_v, cur_direction, pressure=pressure)
-                    # new_v = step(G, cur_v, cur_direction, pressure=pressure, mode=2, return_full_step=return_full_path,
-                    #              debug=debug)
+                    new_v = step(G, cur_v, cur_direction, pressure=pressure, mode=2, return_full_step=return_full_path,
+                                 debug=debug)
                     cur_direction = mask[cur_direction]
                 else:
                     new_v = step(G, cur_v, direction, pressure=pressure, mode=2, return_full_step=return_full_path,
@@ -452,13 +452,19 @@ def randomWalk(G, vertex=None, length=10, direction="IN", pressure=30, version="
     return context
 
 
+from NetEmbs.GraphSampling.walk_strategies.finWalk import finWalk
+
+
 # Feed the CONFIG values into each sampling methods within Pathos multiprocessing
 def wrappedRandomWalk(node):
-    return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
-                       direction=CONFIG.DIRECTION,
-                       version=CONFIG.STRATEGY)
-            for _
-            in range(CONFIG.WALKS_PER_NODE)]
+    global fin_walk
+    # fin_walk = finWalk(CONFIG.GLOBAL_FSN, CONFIG.WALKS_LENGTH, CONFIG.DIRECTION, CONFIG.PRESSURE)
+    return [fin_walk.walk(node) for _ in range(CONFIG.WALKS_PER_NODE)]
+    # return [randomWalk(CONFIG.GLOBAL_FSN, node, length=CONFIG.WALKS_LENGTH, pressure=CONFIG.PRESSURE,
+    #                    direction=CONFIG.DIRECTION,
+    #                    version=CONFIG.STRATEGY)
+    #         for _
+    #         in range(CONFIG.WALKS_PER_NODE)]
 
 
 def wrappedRandomWalkIN(node):
@@ -484,6 +490,7 @@ def wrappedOriginalRandomWalk(node):
         in range(CONFIG.WALKS_PER_NODE)]
 
 
+
 def graph_sampling(n_jobs=4, direction=None):
     """
     Construction a sequences of nodes from given FSN
@@ -494,6 +501,8 @@ def graph_sampling(n_jobs=4, direction=None):
     if direction is None:
         direction = CONFIG.DIRECTION
     max_processes = max(n_jobs, os.cpu_count())
+    global fin_walk
+    fin_walk = finWalk(CONFIG.GLOBAL_FSN, CONFIG.WALKS_LENGTH, CONFIG.DIRECTION, CONFIG.PRESSURE)
     pool = ProcessPool(nodes=max_processes)
     # required to restart pool to update CONFIG inside the parallel part
     pool.terminate()
@@ -649,7 +658,7 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
         pairs = [item for sublist in pairs for item in sublist if item[0] != item[1]]
     else:
         pairs = [item for sublist in pairs for item in sublist]
-    pairs = [item for item in pairs if (item[0]!=-3) & (item[1]!=-3)]
+    pairs = [item for item in pairs if (item[0] != -3) & (item[1] != -3)]
     pool_pairs.terminate()
     pool_pairs.restart()
     return pairs

@@ -10,4 +10,3 @@ from NetEmbs.FSN.utils import randomWalk, make_pairs
 from NetEmbs.FSN.utils import get_SkipGrams, get_SkipGrams_raw
 from NetEmbs.FSN.utils import TransformationBPs
 
-from NetEmbs.FSN.finWalk import sub_step_one, sub_step_two, step as new_step

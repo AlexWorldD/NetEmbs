@@ -1,12 +1,29 @@
-2019-07-30 00:13:25,927 - GlobalLogs - INFO - Started..
-2019-07-30 00:13:26,015 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (100, 4)
-2019-07-30 00:13:26,040 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (100, 4)
-2019-07-30 00:13:26,167 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - After merging FAs the shape is: (100, 6)
-2019-07-30 00:13:26,364 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - After normalization the shape is: (76, 7)
-2019-07-30 00:13:26,984 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is: (76, 9)
-2019-07-30 00:13:34,990 - GlobalLogs.NetEmbs.FSN.finWalk - ERROR - Fatal ValueError during 1st sub-step
+2019-07-30 14:58:14,330 - GlobalLogs - INFO - Started..
+2019-07-30 14:58:14,351 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Original shape of DataFrame is (100, 4)
+2019-07-30 14:58:14,353 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Deleted all NaNs and Strings values from 'Value' column: (100, 4)
+2019-07-30 14:58:14,360 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - After merging FAs the shape is: (100, 6)
+2019-07-30 14:58:14,370 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - After normalization the shape is: (76, 7)
+2019-07-30 14:58:14,405 - GlobalLogs.NetEmbs.DataProcessing.prepare_data - INFO - Final shape of DataFrame is: (76, 9)
+2019-07-30 14:58:14,419 - GlobalLogs.FSN.utils - INFO - Current SAMPLING parameters: 
+ WindowSize:  2 
+ Pressure:  20
+ Strategy:  MetaDiff
+2019-07-30 14:58:15,034 - GlobalLogs.SkipGram - INFO - Current TensorFlow parameters: 
+ Embedding size:  8 
+ Steps:  50000
+ Batch size:  256
+2019-07-30 14:58:15,444 - GlobalLogs - ERROR - We've got an error in get_embs_TF function... 
 Traceback (most recent call last):
-  File "/Users/lex/Dev/GitHub/NetEmbs/NetEmbs/FSN/finWalk.py", line 44, in sub_step_one
-    p_ws = ws / 0.0
-FloatingPointError: divide by zero encountered in true_divide
-2019-07-30 00:13:34,991 - GlobalLogs.NetEmbs.FSN.finWalk - INFO - Snapshot{'CurrentBPNode': 7, 'NextCandidateFA': [(('NoisyLeftFA_kbfq', 7, {'type': 'CREDIT', 'weight': 0.00040599657376736933}), 0.00040599657376736933), (('NoisyLeftFA_phtv', 7, {'type': 'CREDIT', 'weight': 0.0012362755144989725}), 0.0012362755144989725), (('NoisyLeftFA_qapc', 7, {'type': 'CREDIT', 'weight': 0.0018914332386167445}), 0.0018914332386167445), (('TradePayables', 7, {'type': 'CREDIT', 'weight': 0.9964662946731169}), 0.9964662946731169)]}
+  File "/Users/lex/Dev/GitHub/NetEmbs/model/MakeItGreate.py", line 86, in <module>
+    embeddings, run_times = get_embs_TF(evaluate_time=True)
+  File "/Users/lex/Dev/GitHub/NetEmbs/NetEmbs/SkipGram/tensor_flow.py", line 168, in get_embs_TF
+    CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + '/train', graph)
+  File "/anaconda3/envs/DL/lib/python3.7/site-packages/tensorflow/python/summary/writer/writer.py", line 367, in __init__
+    filename_suffix)
+  File "/anaconda3/envs/DL/lib/python3.7/site-packages/tensorflow/python/summary/writer/event_file_writer.py", line 67, in __init__
+    gfile.MakeDirs(self._logdir)
+  File "/anaconda3/envs/DL/lib/python3.7/site-packages/tensorflow/python/lib/io/file_io.py", line 438, in recursive_create_dir
+    recursive_create_dir_v2(dirname)
+  File "/anaconda3/envs/DL/lib/python3.7/site-packages/tensorflow/python/lib/io/file_io.py", line 453, in recursive_create_dir_v2
+    pywrap_tensorflow.RecursivelyCreateDir(compat.as_bytes(path))
+tensorflow.python.framework.errors_impl.PermissionDeniedError: /train; Permission denied
