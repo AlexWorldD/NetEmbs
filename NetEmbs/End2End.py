@@ -136,7 +136,7 @@ for cur_parameters in get_GRID(myGRID):
             CONFIG.EXPERIMENT = (sampling_exp, tf_exp)
             # 4. Update CONFIG file w.r.t. the new arguments if applicable
             try:
-                updateCONFIG()
+                updateCONFIG_4experiments()
             except TypeError as e:
                 logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
                 raise TypeError("Critical error during CONFIG update. Stop execution!")

@@ -86,7 +86,7 @@ if __name__ == '__main__':
     logging.getLogger(CONFIG.MAIN_LOGGER).info(f"FSN successfully constructed: \n, {str(CONFIG.GLOBAL_FSN.info())}")
     # 4. Update CONFIG file w.r.t. the new arguments if applicable
     try:
-        updateCONFIG()
+        updateCONFIG_4experiments()
     except TypeError as e:
         logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
         raise TypeError("Critical error during CONFIG update. Stop execution!")

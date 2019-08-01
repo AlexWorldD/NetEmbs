@@ -66,10 +66,12 @@ def get_embs_TF(input_data=None, step_version=None, embed_size=None,
         #     User asked for additional statistics about current execution
         run_stats = dict()
         start_time = time.time()
-    skip_grams, fsn, enc_dec = get_SkipGrams(df=input_data, version=step_version,
-                                             walk_length=walk_length, walks_per_node=walks_per_node,
-                                             direction=None, use_cache=use_cached_skip_grams)
-
+    # skip_grams, fsn, enc_dec = get_SkipGrams(df=input_data, version=step_version,
+    #                                          walk_length=walk_length, walks_per_node=walks_per_node,
+    #                                          direction=None, use_cache=use_cached_skip_grams)
+    from NetEmbs.SkipGram.construct_skip_grams import get_SkipGrams
+    skip_grams, enc_dec = get_SkipGrams(graph=CONFIG.GLOBAL_FSN, use_cache=True)
+    fsn = CONFIG.GLOBAL_FSN
     local_logger = logging.getLogger("NetEmbs.SkipGram")
     local_logger.info("Initialize TF model")
     if evaluate_time:

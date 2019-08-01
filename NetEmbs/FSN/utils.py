@@ -630,7 +630,7 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
             start_time = time.time()
             # sequences = graph_sampling(n_jobs)
             from NetEmbs.GraphSampling.sampling import graph_sampling
-            sequences = graph_sampling(strategy="MetaDiff", n_jobs=n_jobs)
+            sequences = graph_sampling(CONFIG.GLOBAL_FSN, strategy="MetaDiff", n_jobs=n_jobs)
             if CONFIG.HACK:
                 #             Explicitly sample the 1-hop neighbours
                 _tmps = (CONFIG.WALKS_LENGTH, CONFIG.WALKS_PER_NODE)

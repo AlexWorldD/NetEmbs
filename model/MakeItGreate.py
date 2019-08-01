@@ -41,17 +41,13 @@ CONFIG.NEGATIVE_SAMPLES = 512
 map_gt = {'Sales 21 btw': 'Sales',
           'Sales 6 btw': 'Sales'}
 
-# The number of experiments with the same settings for sampling
-SAMPLING_EXPS = 1
-# The number of experiments with the same settings for SkipGram model
-TF_EXPS = 1
 # ~Number of clusters
 N_CL = 11
 
 if __name__ == '__main__':
     create_folder(CONFIG.ROOT_FOLDER)
     try:
-        updateCONFIG()
+        updateCONFIG_4experiments()
     except TypeError as e:
         logging.getLogger(CONFIG.MAIN_LOGGER).critical(e)
         raise TypeError("Critical error during CONFIG update. Stop execution!")
@@ -96,3 +92,67 @@ if __name__ == '__main__':
     except Exception as e:
         logging.getLogger(CONFIG.MAIN_LOGGER).error("We've got an error in get_embs_TF function... ",
                                                     exc_info=True)
+        # 6. //////// Merge with GroundTruth \\\\\\\\\
+    embeddings = embeddings.merge(journal_truth, on="ID")
+
+        # 7. Dimensionality reduction for visualisation purposes
+    embeddings = dim_reduction(embeddings)
+    embeddings.to_pickle(
+            CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
+
+        #  8.  ////////// Clustering in embedding space, for N-1 number of cluster, expected output: all sales into one group \\\\\\\
+    map_gt = {title: map_gt.get(title) for title in embeddings.GroundTruth.unique()}
+    map_gt = {key: item for key, item in map_gt.items() if item is not None}
+    cur_score_to_show = list()
+    P = len(set(map_gt.keys())) - len(set(map_gt.values()))
+    print(f"You are going to cluster with {N_CL}-{P}")
+    # Column title for new ground truth
+    N_P_GroundTruth = "GroundTruthN-" + str(P)
+    embeddings[N_P_GroundTruth] = embeddings["GroundTruth"]
+    embeddings[N_P_GroundTruth] = embeddings[N_P_GroundTruth].apply(
+        lambda x: map_gt.get(x) if map_gt.get(x) is not None else x)
+    cl_labs = cl_Agglomerative(embeddings, N_CL - P)
+    # Global for N-P scale
+    cur_eval_results = evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                    column_true=N_P_GroundTruth,
+                                    postfix="_N-" + str(P) + "_global")
+    cur_score_to_show.append(cur_eval_results["V-M_N-" + str(P) + "_global"])
+    # Local for N-P scale
+    cur_eval_results = evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                    column_true=N_P_GroundTruth,
+                                    postfix="_N-" + str(P) + "_local")
+    cur_score_to_show.append(cur_eval_results["V-M_N-" + str(P) + "_local"])
+    # 8.1 Plot t-SNE visualisation
+    plot_tSNE(cl_labs, N_P_GroundTruth,
+              folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+              title="GroundTruth_N-" + str(P),
+              context="talk_half")
+    plot_tSNE(cl_labs, "label",
+              folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+              title="Predicted label_N-" + str(P),
+              context="talk_half", score=cur_score_to_show)
+    #  8.  ////////// Clustering in embedding space \\\\\\\
+    # TODO Marcel: clustering into N group and again evaluation
+    cl_labs = cl_Agglomerative(embeddings, N_CL)
+    cur_score_to_show = list()
+    # 8.2 ////////// Evaluate clustering quality \\\\\\\
+    # Global for N scale
+    cur_eval_results = evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                    column_true="GroundTruth",
+                                    postfix="_N_global")
+    cur_score_to_show.append(cur_eval_results["V-M_N_global"])
+    # Local for N scale
+    cur_eval_results = evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                    column_true="GroundTruth",
+                                    postfix="_N_local")
+    cur_score_to_show.append(cur_eval_results["V-M_N_local"])
+    # 8.1 Plot t-SNE visualisation
+    plot_tSNE(cl_labs, "label",
+              folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+              title="Predicted label_N",
+              context="talk_half", score=cur_score_to_show)
+    plot_tSNE(cl_labs, "GroundTruth",
+              folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+              title="Ground Truth",
+              context="talk_half")
+    print("Plotted required graphs!")
