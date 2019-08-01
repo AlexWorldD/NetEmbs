@@ -39,6 +39,9 @@ def updateCONFIG_4experiments(create_folder=True):
 
 
 def set_new_config(**kwargs) -> None:
+    """
+    Set new parameters to CONFIG file for further execuiton
+    """
     changes: int = 0
     for key, value in kwargs.items():
         if value is not None and value != getattr(CONFIG, key.upper()):

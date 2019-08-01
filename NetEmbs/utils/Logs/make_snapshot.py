@@ -9,7 +9,7 @@ from NetEmbs import CONFIG
 import logging
 
 
-def log_snapshot(cur_state: Dict, logger_name: str, error: Exception) -> None:
+def log_snapshot(cur_state: Dict, logger_name: str) -> None:
     """
     Helper function to log current state of FSN during walks
     Parameters
@@ -18,8 +18,6 @@ def log_snapshot(cur_state: Dict, logger_name: str, error: Exception) -> None:
             Snapshot of the state right before the exception
     logger_name : str
             Logger's name
-    error : Exception
-            An exception happened
     Returns
     -------
     None

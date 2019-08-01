@@ -7,7 +7,7 @@ Created by lex at 2019-04-12.
 import os
 import tensorflow as tf
 import math
-from NetEmbs.SkipGram.generate_batch import generate_batch
+from NetEmbs.SkipGram.tf_model.batch_generator import generate_batch
 from NetEmbs.DataProcessing import *
 from NetEmbs.FSN.utils import get_SkipGrams
 import time

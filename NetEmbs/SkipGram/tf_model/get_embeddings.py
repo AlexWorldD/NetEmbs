@@ -7,7 +7,7 @@ Created by lex at 2019-08-01.
 import os
 import tensorflow as tf
 import math
-from NetEmbs.SkipGram.generate_batch import generate_batch
+from NetEmbs.SkipGram.tf_model.batch_generator import generate_batch
 import time
 import pandas as pd
 from NetEmbs import CONFIG
@@ -31,6 +31,25 @@ def variable_summaries(var):
 def get_embeddings(skip_grams: List[List[Union[str, int]]], tr: TransformationBPs,
                    use_cache: Optional[bool] = True, use_dim_reduction: Optional[bool] = True,
                    **kwargs):
+    """
+    Learning embeddings for the given Skip-Grams
+
+    Construct simple TF-model according to the chosen settings.
+    Parameters
+    ----------
+    skip_grams : List of tuples <cur_node, context_node>
+    tr : TransformationBPs object
+        Using for transforming the nodes ID into integers and vise versa.
+    use_cache : bool, default is True
+        To use the previously cached files
+    use_dim_reduction : bool, default if True
+        Additionally add X,Y columns to the result DataFrame for vis purposes
+    kwargs : settings for TF-model to update CONFIG file.
+
+    Returns
+    -------
+    DataFrame with ID, Emb (and X,Y if use_dim_reduction=True).
+    """
     set_new_config(**kwargs)
     local_logger = logging.getLogger(f"{__name__}")
     local_logger.info("Initialising TF model")
@@ -127,6 +146,7 @@ def get_embeddings(skip_grams: List[List[Union[str, int]]], tr: TransformationBP
     fsn_embs = pd.DataFrame(list(zip(tr.original_bps, embds)), columns=["ID", "Emb"])
     if use_dim_reduction:
         fsn_embs = dim_reduction(fsn_embs)
+    fsn_embs.to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
     print("Done with TensorFlow!")
     print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
     print(f"tensorboard --logdir={CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2]}")
