@@ -7,26 +7,12 @@ Created by lex at 2019-07-29.
 
 from NetEmbs.GraphSampling.walk_strategies.abstract import abstractWalk
 import numpy as np
-import random
 from scipy.special import softmax
 import random
-import networkx as nx
-from networkx.algorithms import bipartite
-from collections import Counter
-import pandas as pd
 from NetEmbs.FSN.graph import FSN
 from NetEmbs.utils.Logs.make_snapshot import log_snapshot
-import logging
-from NetEmbs.CONFIG import LOG, all_sampling_strategies, N_JOBS
 from NetEmbs import CONFIG
-import time
-from pathos.multiprocessing import ProcessPool
-import itertools
-import os
-from NetEmbs.utils.get_size import get_size
-from tqdm.auto import tqdm
-import pickle
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, List
 
 np.seterr(all="raise")
 
@@ -44,7 +30,10 @@ def diff_function(prev_edge, new_edges, pressure):
 
 class metaWalk(abstractWalk):
     """
-    Base class for meta-family methods: the ones which follow the direction of relationships rahter than edges
+    Base class for meta-family methods: the ones which follow the direction of relationships rather than edges
+
+    The main difference with the default ones is using a two sub-steps idea
+    where the direction for the second sup-step is inversed the direction of initial first sub-step.
     """
 
     def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
@@ -53,6 +42,25 @@ class metaWalk(abstractWalk):
                  pressure: Optional[int] = 10,
                  mode: Optional[int] = 2,
                  allow_back: Optional[bool] = False):
+        """
+        Build metaWalk class instance
+        Parameters
+        ----------
+        G : FSN object,
+            Input graph to be processed
+        walk_length : int
+            Walk length
+        direction : str
+            The direction of walk: IN, OUT, COMBI
+        pressure : int
+            Regularization term for diff function;
+                Higher pressure leads to more strict selection,
+                while lower, in contrast, tends to ignore the coefficients.
+        mode : int
+            0 - Uniform, 1 - Weighted, 2 - Difference dependent
+        allow_back : bool, default is False
+            Allow the walker to move back to the original vertex
+        """
         super().__init__(G, walk_length, direction, allow_back)
         self.pressure: int = pressure
         self.mode: int = mode
@@ -113,6 +121,7 @@ class metaWalk(abstractWalk):
         """
         if prev_step[0] in [-1, -3]:
             return prev_step[0]
+        # Instead of following the original direction, we use the opposite one to continue
         if self.mask[self.step_direction] == "IN":
             candidates = self.G.in_edges(prev_step[0], data=True)
         else:
@@ -143,9 +152,22 @@ class metaWalk(abstractWalk):
                 log_snapshot(snapshot, __name__, e)
 
     def step(self, vertex: Union[str, int]) -> Union[str, int]:
+        """
+        Step method as a sequence of two sub-steps.
+
+        From BP to BP = 1) From BP to FA, and then 2) From FA to BP
+        Parameters
+        ----------
+        vertex : str or int,
+            Initial vertex for step
+
+        Returns
+        -------
+            Sampled vertex from the graph
+        """
         return self._sub_step_two(self._sub_step_one(vertex), vertex)
 
-    def walk(self, vertex: Union[str, int]):
+    def walk(self, vertex: Union[str, int]) -> List[Union[str, int]]:
         context = list()
         context.append(vertex)
         while len(context) < self.walk_length:
@@ -161,18 +183,52 @@ class metaWalk(abstractWalk):
 
 
 class metaUniform(metaWalk):
+    """
+    metaUniform walking strategy: all transition probabilities are uniform
+    """
     def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
                  walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
                  direction: Optional[str] = "COMBI",
-                 allow_back: Optional[bool] = False):
+                 allow_back: Optional[bool] = False, **kwargs):
+        """
+
+        Parameters
+        ----------
+        G : FSN object,
+            Input graph to be processed
+        walk_length : int
+            Walk length
+        direction : str
+            The direction of walk: IN, OUT, COMBI
+        allow_back : bool, default is False
+            Allow the walker to move back to the original vertex
+        """
+        # Wrapper around the metaWalk, which default values represent the Uniform behaviour
         super().__init__(G, walk_length, direction, None, 0, allow_back)
 
 
 class metaWeighted(metaWalk):
+    """
+        metaWeighted walking strategy: use weighted transition probabilites
+    """
     def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
                  walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
                  direction: Optional[str] = "COMBI",
-                 allow_back: Optional[bool] = False):
+                 allow_back: Optional[bool] = False, **kwargs):
+        """
+
+        Parameters
+        ----------
+        G : FSN object,
+            Input graph to be processed
+        walk_length : int
+            Walk length
+        direction : str
+            The direction of walk: IN, OUT, COMBI
+        allow_back : bool, default is False
+            Allow the walker to move back to the original vertex
+        """
+        # Wrapper around the metaWalk, which default values represent the Weighted behaviour
         super().__init__(G, walk_length, direction, None, 1, allow_back)
 
 
@@ -188,5 +244,23 @@ class finWalk(metaWalk):
                  walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
                  direction: Optional[str] = "COMBI",
                  pressure: Optional[int] = 10,
-                 allow_back: Optional[bool] = False):
+                 allow_back: Optional[bool] = False, **kwargs):
+        """
+
+        Parameters
+        ----------
+        G : FSN object,
+            Input graph to be processed
+        walk_length : int
+            Walk length
+        direction : str
+            The direction of walk: IN, OUT, COMBI
+        pressure : int
+            Regularization term for diff function;
+                Higher pressure leads to more strict selection,
+                while lower, in contrast, tends to ignore the coefficients.
+        allow_back : bool, default is False
+            Allow the walker to move back to the original vertex
+        """
+        # Wrapper around the metaWalk, which default values represent the finWalk behaviour
         super().__init__(G, walk_length, direction, pressure, 2, allow_back)

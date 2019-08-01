@@ -64,9 +64,9 @@ myGRID = {"Strategy": ["MetaUniform", "OriginalRandomWalk", "DefUniform", "MetaD
           "Steps": [50000]}
 
 # The number of experiments with the same settings for sampling
-SAMPLING_EXPS = 2
+SAMPLING_EXPS = 1
 # The number of experiments with the same settings for SkipGram model
-TF_EXPS = 2
+TF_EXPS = 1
 # ~Number of clusters
 N_CL = 11
 

@@ -601,7 +601,9 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
             print("--------- Started the SAMPLING the sequences from FSN ---------")
 
         start_time = time.time()
-        sequences = graph_sampling(n_jobs)
+        # sequences = graph_sampling(n_jobs)
+        from NetEmbs.GraphSampling.sampling import graph_sampling
+        sequences = graph_sampling(strategy="MetaDiff", n_jobs=n_jobs)
         if CONFIG.HACK:
             #             Explicitly sample the 1-hop neighbours
             _tmps = (CONFIG.WALKS_LENGTH, CONFIG.WALKS_PER_NODE)
@@ -626,7 +628,9 @@ def get_pairs(n_jobs=4, direction=CONFIG.DIRECTION, drop_duplicates=True, use_ca
             print("File not found... Recalculate \n")
             print("Sampling sequences... wait...")
             start_time = time.time()
-            sequences = graph_sampling(n_jobs)
+            # sequences = graph_sampling(n_jobs)
+            from NetEmbs.GraphSampling.sampling import graph_sampling
+            sequences = graph_sampling(strategy="MetaDiff", n_jobs=n_jobs)
             if CONFIG.HACK:
                 #             Explicitly sample the 1-hop neighbours
                 _tmps = (CONFIG.WALKS_LENGTH, CONFIG.WALKS_PER_NODE)

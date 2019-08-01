@@ -11,7 +11,7 @@ import random
 from NetEmbs.FSN.graph import FSN
 from NetEmbs.utils.Logs.make_snapshot import log_snapshot
 from NetEmbs import CONFIG
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 np.seterr(all="raise")
 
@@ -56,7 +56,7 @@ class defWalk(abstractWalk):
     def step(self, vertex: Union[str, int]) -> Union[str, int]:
         return self._sub_step(self._sub_step(vertex))
 
-    def walk(self, vertex: Union[str, int]):
+    def walk(self, vertex: Union[str, int]) -> List[Union[str, int]]:
         context = list()
         context.append(vertex)
         while len(context) < self.walk_length:
@@ -75,7 +75,7 @@ class defUniform(defWalk):
     def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
                  walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
                  direction: Optional[str] = "COMBI",
-                 allow_back: Optional[bool] = False):
+                 allow_back: Optional[bool] = False, **kwargs):
         super().__init__(G, walk_length, direction, 0, allow_back)
 
 
@@ -83,5 +83,5 @@ class defWeighted(defWalk):
     def __init__(self, G: Optional[FSN] = CONFIG.GLOBAL_FSN,
                  walk_length: Optional[int] = CONFIG.WALKS_LENGTH,
                  direction: Optional[str] = "COMBI",
-                 allow_back: Optional[bool] = False):
+                 allow_back: Optional[bool] = False, **kwargs):
         super().__init__(G, walk_length, direction, 1, allow_back)

@@ -28,4 +28,28 @@ class abstractWalk():
         self.mask: Dict[str, str] = {"IN": "OUT", "OUT": "IN"}
 
     def step(self, vertex: Union[str, int]) -> Union[str, int]:
+        """
+        Abstract method to be overwritten later in the child classes
+        Parameters
+        ----------
+        vertex : str or int,
+            Initial vertex for a step
+
+        Returns
+        -------
+            Sampled vertex
+        """
         pass
+
+    def walk(self, vertex: Union[str, int]):
+        """
+        Abstract method to be overwritten later in the child classes
+        Parameters
+        ----------
+        vertex : str or int,
+            Initial vertex for walking
+
+        Returns
+        -------
+            Sampled sequences of nodes
+        """

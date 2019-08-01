@@ -35,6 +35,7 @@ PRESSURE = 10
 WINDOW_SIZE = 2
 WALKS_PER_NODE = 30
 WALKS_LENGTH = 10
+ALLOW_BACK = False
 # Inactive parameters below, under development...
 HACK = 0
 DOUBLE_NEAREST = False
