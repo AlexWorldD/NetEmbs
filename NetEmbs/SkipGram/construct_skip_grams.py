@@ -37,6 +37,9 @@ class TransformationBPs:
         self.encoder = dict(list(zip(self.original_bps, range(self.len))))
         self.decoder = dict(list(zip(range(self.len), self.original_bps)))
 
+    def number_BPs(self):
+        return len(self.original_bps)
+
     def encode(self, original_seq):
         return [self.encoder[item] for item in original_seq]
 
@@ -50,7 +53,8 @@ class TransformationBPs:
         return [(self.decoder[item[0]], self.decoder[item[1]]) for item in encoded_pairs]
 
 
-def get_SkipGrams(graph: FSN, use_cache: Optional[bool] = True, **kwargs):
+def get_SkipGrams(graph: FSN, use_cache: Optional[bool] = True, **kwargs) \
+        -> (List[List[Union[str, int]]], TransformationBPs):
     """
     Helper function to construct Skip-Grams for the given FSN object
     Parameters
@@ -63,6 +67,7 @@ def get_SkipGrams(graph: FSN, use_cache: Optional[bool] = True, **kwargs):
     Returns
     -------
     Skip-Grams as list of pairs ready to feed in TF model
+        and Transformer Encode/Decode for real values of BPs to integer ones for TF model
     """
     set_new_config(**kwargs)
     tr = TransformationBPs(graph.get_BPs())
