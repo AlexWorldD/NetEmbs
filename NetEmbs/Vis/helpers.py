@@ -130,3 +130,20 @@ def getColors_Markers(keys: List[Union[str, int]], cm: Optional[str] = "tab10",
         zip(keys,
             list(itertools.chain(*[[m] * n_colors for m in markers])) * (len(keys) // (len(markers) * n_colors) + 1)))
     return color_map, marker_map
+
+
+def triangle_axis(ax):
+    """
+    Helper function to hide top/right axis
+    Parameters
+    ----------
+    ax : Matplotlib Axes object
+
+    Returns
+    -------
+
+    """
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')

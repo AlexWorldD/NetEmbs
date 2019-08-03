@@ -7,9 +7,6 @@ Created by lex at 2019-03-15.
 import networkx as nx
 import matplotlib.pyplot as plt
 import seaborn as sns
-from collections import Counter
-import numpy as np
-from sklearn import preprocessing
 from NetEmbs.DataProcessing.stats.count_financial_accounts import get_hist_counts
 from NetEmbs.Vis.helpers import save_to_file
 import pandas as pd
@@ -17,9 +14,11 @@ from NetEmbs import CONFIG
 from NetEmbs.utils.dimensionality_reduction import dim_reduction
 from NetEmbs.Vis.plot_vectors import group_embeddings, plot_vectors
 from NetEmbs.FSN.graph import FSN
-from NetEmbs.Vis.helpers import getColors_Markers
+from NetEmbs.Vis.helpers import getColors_Markers, triangle_axis
 from NetEmbs.utils.evaluation import v_measure
 from typing import Tuple, Optional, List
+from wordcloud import WordCloud
+import datetime
 
 plt.rcParams["figure.figsize"] = CONFIG.FIG_SIZE
 
@@ -111,10 +110,7 @@ def financial_accounts_histograms(df: pd.DataFrame, axes: Optional = None, norma
         axes[i].set_xlim((0.5, 10.5))
         axes[i].xaxis.set_major_locator(MaxNLocator(integer=True))
         axes[i].set_title(to_plot[0] + "-side number of FAs")
-        axes[i].spines['right'].set_visible(False)
-        axes[i].spines['top'].set_visible(False)
-        axes[i].xaxis.set_ticks_position('bottom')
-        axes[i].yaxis.set_ticks_position('left')
+        triangle_axis(axes[i])
     return hist
 
 
@@ -163,11 +159,8 @@ def embeddings_2D(df: pd.DataFrame, ax: Optional = None, legend_title: Optional[
         alpha=0.75, linewidth=0.5,
         s=100, ax=ax
     )
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.xaxis.set_ticks_position('bottom')
+    triangle_axis(ax)
     ax.set_xlabel("Dimension X")
-    ax.yaxis.set_ticks_position('left')
     ax.set_ylabel("Dimension Y")
     ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", frameon=False, markerscale=2)
     if legend_title == "GroundTruth":
@@ -214,3 +207,84 @@ def embeddings_as_heatmap(df: pd.DataFrame, title: Optional[str] = None, folder:
     """
     plot_vectors(group_embeddings(df, how=how, by=by, subset=subset, samples_per_group=samples_per_group),
                  title=title, folder=folder)
+
+
+def descriptor_for_cluster(df: pd.DataFrame, grouping_column: Optional[str] = "label",
+                           words_column: Optional[str] = "FA_Name", amount_column: Optional[str] = "amount",
+                           sort_mode: Optional[str] = "freq",
+                           n_top: Optional[int] = 4, save: Optional[bool] = False):
+    """
+    Show as words cloud the descriptor for the given Journal entries w.r.t. label
+
+    Parameters
+    ----------
+    df : DataFrame
+    grouping_column : str, optional, default is 'label'
+    words_column : str, optional, default is 'FA_Name'
+        Title of column with information to be used for WordCloud construction
+    amount_column : str, optional, default is 'amount'
+    sort_mode : str, either 'freq' or 'amount'. Default is 'freq'
+    n_top : int, optional, default is 4
+        TOP N items to be used for WordCloud construction.
+    save : bool, optional, default is False
+        Save WordClouds and Histograms to file
+
+    Returns
+    -------
+
+    """
+    selected_size = df.ID.nunique()
+
+    sns.set_context("paper", font_scale=2.3)
+    if grouping_column not in list(df):
+        raise KeyError(
+            f"Given column name {grouping_column} is not presented in the given DataFrame! Only allows: {list(df)}!")
+    if "flow" not in list(df):
+        raise KeyError(f"Please ensure that column 'flow' is presented in your DataFrame!")
+    if sort_mode not in ["freq", "amount"]:
+        raise ValueError(f"Given sort mode is not yet supported. Please use either 'freq' or 'amount' instead!")
+    for name, group in df.groupby(grouping_column):
+        print(f"Current cluster label is {name}, in selected zone it's "
+              f"{round(group.ID.nunique() / selected_size, ) * 100}% of all samples")
+        gr = group.groupby([words_column, "flow"])
+        counts = gr.size().to_frame(name='counts')
+        all_stat = counts.join(gr.agg({amount_column: sum, 'Debit': lambda x: list(x), 'Credit': lambda x: list(x)})
+            .rename(
+            columns={amount_column: 'amount_sum', 'Debit': 'Debit_list', 'Credit': 'Credit_list'})) \
+            .reset_index()
+        if sort_mode == "freq":
+            all_stat.sort_values(['counts', words_column], ascending=False, inplace=True)
+        elif sort_mode == "amount":
+            all_stat.sort_values(['amount_sum', words_column], ascending=False, inplace=True)
+        #             Store all statistict for N_TOP values as dictionary for further visualization
+        text = {"Left": [(x[0], x[2], x[3], x[5]) for x in all_stat[all_stat["flow"] == "outflow"].values[:n_top]],
+                "Right": [(x[0], x[2], x[3], x[4]) for x in all_stat[all_stat["flow"] == "inflow"].values[:n_top]]}
+        i = 0
+        fig, axes = plt.subplots(2, 2)
+        for key, data in text.items():
+            if sort_mode == "freq":
+                # Take the most frequent FA names
+                to_vis = [(str(item[0]), item[1]) for item in data]
+            elif sort_mode == "amount":
+                # Take FA with the highest sum amounts
+                to_vis = [(str(item[0]), item[2]) for item in data]
+            axes[0, i].set_title(key, size=24)
+            wc = WordCloud(background_color="white", width=800, height=400, max_font_size=84, min_font_size=14,
+                           repeat=False, relative_scaling=0.8, max_words=100)
+            if len(to_vis) > 0:
+                wc.generate_from_frequencies(dict(to_vis))
+            else:
+                continue
+            axes[0, i].axis("off")
+            axes[0, i].imshow(wc, interpolation="bilinear")
+            # Histogram
+            [sns.distplot(item[3], label=item[0], kde=False, bins=50, ax=axes[1, i], hist_kws={"range": (0, 1.0)})
+             for item in data if len(item[3]) > 10]
+            axes[1, i].legend(frameon=False)
+            triangle_axis(axes[1, i])
+            axes[1, i].set_xlim((0, 1.0))
+            i += 1
+        if save:
+            plt.tight_layout()
+            plt.savefig(f"img/WordClouds/Descriptor_for_{grouping_column}={name}_{datetime.datetime.now()}.png",
+                        dpi=140, pad_inches=0.01)

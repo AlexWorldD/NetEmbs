@@ -6,13 +6,13 @@ Created by lex at 2019-07-14.
 """
 import matplotlib.pyplot as plt
 import seaborn as sns
-from collections import Counter
 from wordcloud import WordCloud
 
 
 # Count most frequent FA names in the given DataFrame OR FA names with the highest amount
-def findMostCommonFAs_v2(df, labels_column="label", words_column="FA_Name", amount_column="amount", sort_mode="freq",
-                         n_top=4, vis=False, folder=""):
+def descriptor_as_words_cloud(df, labels_column="label", words_column="FA_Name", amount_column="amount",
+                              sort_mode="freq",
+                              n_top=4, vis=False, folder=""):
     selected_size = df.ID.nunique()
 
     sns.set_context("paper", font_scale=2.3)
@@ -23,7 +23,7 @@ def findMostCommonFAs_v2(df, labels_column="label", words_column="FA_Name", amou
         raise KeyError(f"Please ensure that column 'from' is presented in your DataFrame!")
     for name, group in df.groupby(labels_column):
         print(f"Current cluster label is {name}, in selected zone it's "
-              f"{round(group.ID.nunique() / selected_size,3) * 100}% of all samples")
+              f"{round(group.ID.nunique() / selected_size, ) * 100}% of all samples")
         gr = group.groupby([words_column, "from"])
         counts = gr.size().to_frame(name='counts')
         all_stat = counts.join(gr.agg({amount_column: sum, 'Debit': lambda x: list(x), 'Credit': lambda x: list(x)})
@@ -71,5 +71,6 @@ def findMostCommonFAs_v2(df, labels_column="label", words_column="FA_Name", amou
         if vis:
             import datetime
             plt.tight_layout()
-            # plt.savefig("img/WordClouds/" + labels_column + str(list(df[labels_column].unique())) + str(datetime.datetime.now()) + ".png", dpi=140, pad_inches=0.01)
+            plt.savefig("img/WordClouds/" + labels_column + str(list(df[labels_column].unique())) + str(
+                datetime.datetime.now()) + ".png", dpi=140, pad_inches=0.01)
             plt.show()
