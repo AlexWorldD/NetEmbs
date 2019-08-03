@@ -10,6 +10,41 @@ import seaborn as sns
 import itertools
 import matplotlib
 import numpy as np
+from typing import Optional
+from NetEmbs import CONFIG
+
+
+def save_to_file(ax, title: Optional[str] = None, folder: Optional[str] = None, **kwargs) -> None:
+    """
+    Wrapper around default savefig to tackle with different config settings
+    Parameters
+    ----------
+    ax : Matplotlib Axes object
+        The specified Matplotlib axes to be saved in file
+    title : str, optional, default if None
+        File name
+    folder : str, optional, default is None
+        Path to folder to used for file saving
+    kwargs
+
+    Returns
+    -------
+    None
+    """
+    dpi = kwargs.get("dpi") or 140
+    fig_size = kwargs.get("fig_size") or (13, 10)
+    if title is not None:
+        postfix = "_" + str(CONFIG.STRATEGY) \
+                  + "_walks" + str(CONFIG.WALKS_PER_NODE) \
+                  + "_pressure" + str(CONFIG.PRESSURE) \
+                  + "_EMB" + str(CONFIG.EMBD_SIZE) \
+                  + "_TFsteps" + str(CONFIG.STEPS)
+        if folder is None:
+            plt.savefig(title + "_for_" + postfix + ".png", bbox_inches="tight", dpi=dpi,
+                        pad_inches=0.05)
+        else:
+            plt.savefig(folder + "img/" + title + "_for_" + postfix + ".png", bbox_inches="tight", dpi=dpi,
+                        pad_inches=0.05)
 
 
 def set_font(s=16, reset=False):

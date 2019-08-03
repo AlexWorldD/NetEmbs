@@ -16,8 +16,8 @@ EXPERIMENT = ["", ""]
 N_JOBS = 8
 
 # /////// Skip-Gram parameters \\\\\\\
-EMBD_SIZE = 16
-STEPS = 100000
+EMBD_SIZE = 8
+STEPS = 50000
 BATCH_SIZE = 256
 NEGATIVE_SAMPLES = 512
 LOSS_FUNCTION = "NegativeSampling"
@@ -49,7 +49,7 @@ MAIN_LOGGER = "GlobalLogs"
 LOG = True
 
 # /////// Clustering configuration \\\\\\\
-CL_ALGORITHM = "Agglomerative" # or "KMeans"
+CL_ALGORITHM = "Agglomerative"  # or "KMeans"
 NUM_CL_MAX = 11
 GLOBAL_FSN = None
 

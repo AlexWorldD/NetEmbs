@@ -22,7 +22,7 @@ def get_left_right(df: pd.DataFrame) -> pd.Series:
     -------
         Series with counters
     """
-    return pd.Series({"Left": df[df["from"] == True].count()[0], "Right": df[df["from"] == False].count()[0]})
+    return pd.Series({"Left": df[df["flow"] == "inflow"].count()[0], "Right": df[df["flow"] == "outflow"].count()[0]})
 
 
 def get_hist_counts(df: pd.DataFrame) -> Dict:
