@@ -100,7 +100,7 @@ class metaWalk(abstractWalk):
             except Exception as e:
                 snapshot = {"CurrentBPNode": vertex,
                             "NextCandidateFA": list(zip(candidates, ws))}
-                log_snapshot(snapshot, __name__, e)
+                log_snapshot(snapshot, __name__)
         else:
             return -1, -1
 
@@ -149,7 +149,7 @@ class metaWalk(abstractWalk):
             except Exception as e:
                 snapshot = {"CurrentFANode": prev_step[0],
                             "NextCandidateFA": list(zip(candidates, ws))}
-                log_snapshot(snapshot, __name__, e)
+                log_snapshot(snapshot, __name__)
 
     def step(self, vertex: Union[str, int]) -> Union[str, int]:
         """

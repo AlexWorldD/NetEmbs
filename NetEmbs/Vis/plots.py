@@ -17,65 +17,58 @@ from NetEmbs.utils.dimensionality_reduction import dim_reduction
 from NetEmbs.FSN.graph import FSN
 from NetEmbs.Vis.helpers import getColors_Markers
 from NetEmbs.utils.evaluation import v_measure
+from typing import Tuple, Optional
 
 plt.rcParams["figure.figsize"] = CONFIG.FIG_SIZE
 
 
-def plotFSN(input_data, colors=("Red", "Blue"), edge_labels=False, node_labels=True, title=None, text_size=16):
+def draw_fsn(fsn: FSN, ax=None, colors: Optional[Tuple[str, str]] = ("Red", "Blue"),
+             add_edge_labels: Optional[bool] = False,
+             add_node_labels: Optional[bool] = True,
+             text_size: Optional[int] = 12):
     """
-    Plot FSN with matplotlib library
-    :param fsn: FSN to be visualize
-    :param colors: array of colors for FA and BP respectively
-    :param edge_labels: True: Show the weights of edges, False: Without the weights of edges, string "NodeName" - only part of edges from that NodeName
-    :param title: Title for file to be saved in /img folder. None: no savings
+    Draw FSN object as bipartite networks with matplotlib
+    Parameters
+    ----------
+    fsn : FSN
+        Input FSn object
+    ax : Matplotlib Axes object, optional, default is None
+        Draw the graph in the specified Matplotlib axes
+    colors : Tuple of colors to fill FA and BP nodes, optional, default is ("Red", "Blue")
+    add_edge_labels : bool, optional, default is False
+        Add labels for edges to the plot
+    add_node_labels : bool, optional, default is True
+        Add nodes labels to the plot
+    text_size : int, optional, default is 12
+        Explicit size for all labels
+
+    Returns
+    -------
+
     """
-    # Check the input argument type: FSN or DataFrame
-    if isinstance(input_data, pd.DataFrame):
-        # #     Construct FSN object from the given df
-        fsn = FSN()
-        fsn.build(input_data, left_title="FA_Name")
-        fsn.nodes()
-    elif isinstance(input_data, FSN):
-        fsn = input_data
-    else:
-        raise ValueError(
-            "Plotting is possible only for DataFrame with journal entries of FSN object! Was given {!s}!".format(
-                type(input_data)))
-    left = fsn.get_FA()
+    if ax is None:
+        ax = plt.gca()
+    left = fsn.get_FAs()
     pos = nx.bipartite_layout(fsn, left)
     arc_weight = nx.get_edge_attributes(fsn, 'weight')
-    node_col = [colors[d['bipartite']] for n, d in fsn.nodes(data=True)]
-    BPs = [node for node, d in fsn.nodes(data=True) if d["bipartite"] == 0]
-    FAs = [node for node, d in fsn.nodes(data=True) if d["bipartite"] == 1]
-    nx.draw_networkx_nodes(fsn, pos, nodelist=BPs, node_shape="D", node_color=colors[1], with_labels=False,
-                           node_size=250)
-    nx.draw_networkx_nodes(fsn, pos, nodelist=FAs, node_color=colors[0], with_labels=False, node_size=250)
-    #     nx.draw_networkx_nodes(fsn, pos, node_color=node_col, with_labels=False, node_size=250)
-    debit = {(u, v) for u, v, d in fsn.edges(data=True) if d['type'] == "DEBIT"}
-    credit = {(u, v) for u, v, d in fsn.edges(data=True) if d['type'] == "CREDIT"}
-    nx.draw_networkx_edges(fsn, pos, edgelist=debit, edge_color="forestgreen", arrowsize=30)
-    nx.draw_networkx_edges(fsn, pos, edgelist=credit, edge_color="salmon", arrowsize=30)
-    if isinstance(edge_labels, str):
-        lbls = {(u, v) for u, v, d in fsn.edges(data=True) if u == edge_labels}
-        wei = {item: arc_weight[item] for item in lbls}
-        nx.draw_networkx_edge_labels(fsn, pos, node_size=250, edge_labels=wei, font_size=16)
-    if edge_labels and isinstance(edge_labels, bool):
-        nx.draw_networkx_edge_labels(fsn, pos, node_size=250, edge_labels=arc_weight, font_size=16)
-    if node_labels:
-        #     TODO add relative align for labels
+    nx.draw_networkx_nodes(fsn, pos, ax=ax, nodelist=fsn.get_BPs(), node_shape="D", node_color=colors[1],
+                           with_labels=False,
+                           node_size=10*min(5, int(1000/fsn.number_of_BP())))
+    nx.draw_networkx_nodes(fsn, pos, ax=ax, nodelist=fsn.get_FAs(), node_color=colors[0], with_labels=False,
+                           node_size=10*min(5, int(1000/fsn.number_of_BP())))
+
+    nx.draw_networkx_edges(fsn, pos, edgelist=fsn.get_debit_flows(), edge_color="forestgreen", arrowsize=20)
+    nx.draw_networkx_edges(fsn, pos, edgelist=fsn.get_credit_flows(), edge_color="salmon", arrowsize=20)
+
+    if add_edge_labels:
+        nx.draw_networkx_edge_labels(fsn, pos, node_size=250, edge_labels=arc_weight, font_size=text_size)
+    if add_node_labels:
         label_pos = pos.copy()
-        for p in label_pos:  # raise text positions
-            label_pos[p][1] += 0.05
+        if max(fsn.number_of_FA(), fsn.number_of_BP()) < 8:
+            for p in label_pos:  # raise text positions
+                label_pos[p][1] += 0.05
         nx.draw_networkx_labels(fsn, label_pos, font_size=text_size)
-    ax = plt.gca()
     ax.set_axis_off()
-    if title is not None and isinstance(title, str):
-        plt.tight_layout()
-        try:
-            plt.savefig("img/" + title, dpi=140, pad_inches=0.01)
-        except FileNotFoundError:
-            plt.savefig("../img/" + title, dpi=140, pad_inches=0.01)
-    # plt.show()
 
 
 def plotHeatMap(pairs, title="HeatMap", size=6, norm="col", return_hm=False, absolute_vals=False, debug=False):
@@ -128,42 +121,6 @@ def plotHist(df, title="Histogram", normalized=False):
             plt.savefig("img/" + title + k, dpi=140, pad_inches=0.01)
 
 
-def plot_tSNE_old(fsn_embs, title="tSNE", folder="", legend_title="GroundTruth", rand_state=1, legend_shift=1.3):
-    import matplotlib.pyplot as plt
-    from NetEmbs.Vis.helpers import set_font
-    set_font(14)
-
-    fsn_embs = dim_reduction(fsn_embs, rand_state=rand_state)
-    markers = ["o", "v", "s"]
-    cur_m = 0
-    plt.clf()
-    n_gr = 0
-    for name, group in fsn_embs.groupby(legend_title):
-        n_gr += 1
-        if n_gr > 3:
-            cur_m = cur_m + 1 if len(markers) - 1 > cur_m else 0
-            n_gr = 0
-        plt.scatter(group["x"].values, group["y"].values, s=150, marker=markers[cur_m], label=name)
-    plt.legend(bbox_to_anchor=(legend_shift, 1), loc="upper right", frameon=False, markerscale=1)
-    if legend_title == "GroundTruth":
-        plt.title("Embeddings visualisation with t-SNE, Ground Truth")
-    elif legend_title == "label":
-        v_score = ""
-        if "GroundTruth" in list(fsn_embs):
-            v_score = ", V-Score is " + str(v_measure(fsn_embs).round(3))
-        plt.title("Embeddings visualisation with t-SNE, predicted labels" + v_score)
-
-    if title is not None and isinstance(title, str):
-        plt.tight_layout()
-        postfix = ""
-        if folder == "":
-            postfix = "_" + "batch" + str(CONFIG.BATCH_SIZE) \
-                      + "_emb" + str(CONFIG.EMBD_SIZE) \
-                      + "_walks" + str(CONFIG.WALKS_PER_NODE) \
-                      + "_TFsteps" + str(CONFIG.STEPS)
-        plt.savefig(folder + "img/" + title + postfix, dpi=140, pad_inches=0.01)
-    # plt.show()
-
 
 def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_full", score=None):
     cmap, mmap = getColors_Markers(df[legend_title].unique(), n_colors=10, markers=["o", "v", "s"])
@@ -214,13 +171,13 @@ def plot_tSNE(df, legend_title="label", title="tSNE", folder="", context="paper_
         ax.set_title("t-SNE visualisation with coloring based on predicted labels" + v_score, y=1.08)
     if title is not None and isinstance(title, str):
         postfix = "_" + str(CONFIG.STRATEGY) \
-                      + "_walks" + str(CONFIG.WALKS_PER_NODE) \
-                      + "_pressure" + str(CONFIG.PRESSURE) \
-                      + "_EMB" + str(CONFIG.EMBD_SIZE) \
-                      + "_TFsteps" + str(CONFIG.STEPS) + "_" + str(CONFIG.EXPERIMENT[0])+str(CONFIG.EXPERIMENT[1])
+                  + "_walks" + str(CONFIG.WALKS_PER_NODE) \
+                  + "_pressure" + str(CONFIG.PRESSURE) \
+                  + "_EMB" + str(CONFIG.EMBD_SIZE) \
+                  + "_TFsteps" + str(CONFIG.STEPS) + "_" + str(CONFIG.EXPERIMENT[0]) + str(CONFIG.EXPERIMENT[1])
         if folder == "":
             fig.savefig(title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
-                                pad_inches=0.05)
+                        pad_inches=0.05)
         else:
             fig.savefig(folder + "img/" + title + "_for_" + context + postfix + ".png", bbox_inches="tight", dpi=dpi,
                         pad_inches=0.05)

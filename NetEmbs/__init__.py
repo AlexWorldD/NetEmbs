@@ -12,4 +12,4 @@ from NetEmbs.Vis import *
 from NetEmbs.CONFIG import *
 from NetEmbs.Analysis import *
 from NetEmbs.utils import *
-
+from NetEmbs.GraphSampling import *

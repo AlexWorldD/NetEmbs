@@ -33,10 +33,10 @@ class originalRandomWalk(abstractWalk):
                 candidates = [edge[0] for edge in candidates]
                 tmp_vertex = random.choice(candidates)
                 return tmp_vertex
-            except Exception as e:
+            except Exception:
                 snapshot = {"CurrentBPNode": vertex,
                             "NextCandidateFA": candidates}
-                log_snapshot(snapshot, __name__, e)
+                log_snapshot(snapshot, __name__)
         else:
             return -1
 

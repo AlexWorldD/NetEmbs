@@ -49,7 +49,7 @@ class defWalk(abstractWalk):
             except Exception as e:
                 snapshot = {"CurrentBPNode": vertex,
                             "NextCandidateFA": candidates}
-                log_snapshot(snapshot, __name__, e)
+                log_snapshot(snapshot, __name__)
         else:
             return -1
 

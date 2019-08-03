@@ -11,7 +11,7 @@ from NetEmbs.CONFIG import LOG
 import logging
 from NetEmbs.utils.get_size import get_size
 import pandas as pd
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Tuple, Optional
 
 
 class FSN(nx.DiGraph):
@@ -102,6 +102,12 @@ class FSN(nx.DiGraph):
         """
         return self.get_business_processes()
 
+    def get_credit_flows(self) -> List[Tuple[Union[str, int], Union[str, int]]]:
+        return [(u, v) for u, v, d in self.edges(data=True) if d['type'] == "CREDIT"]
+
+    def get_debit_flows(self) -> List[Tuple[Union[str, int], Union[str, int]]]:
+        return [(u, v) for u, v, d in self.edges(data=True) if d['type'] == "DEBIT"]
+
     def number_of_BP(self) -> int:
         """
         Get total number of Business Process (BP) nodes in network
@@ -151,3 +157,17 @@ class FSN(nx.DiGraph):
         out_info = self.information.copy()
         out_info.update({"BPs": self.number_of_BP(), "FAs": self.number_of_FA(), "Total size": get_size(self)})
         return out_info
+
+    def draw(self, ax: Optional = None) -> None:
+        """
+        Draw FSN with matplotlib
+        Parameters
+        ----------
+        ax : Matplotlib Axes object, optional, default is None
+            Draw the graph in the specified Matplotlib axes
+        Returns
+        -------
+        None
+        """
+        from NetEmbs.Vis.plots import draw_fsn
+        draw_fsn(self, ax=ax)
