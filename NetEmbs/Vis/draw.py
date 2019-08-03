@@ -15,10 +15,11 @@ from NetEmbs.Vis.helpers import save_to_file
 import pandas as pd
 from NetEmbs import CONFIG
 from NetEmbs.utils.dimensionality_reduction import dim_reduction
+from NetEmbs.Vis.plot_vectors import group_embeddings, plot_vectors
 from NetEmbs.FSN.graph import FSN
 from NetEmbs.Vis.helpers import getColors_Markers
 from NetEmbs.utils.evaluation import v_measure
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 plt.rcParams["figure.figsize"] = CONFIG.FIG_SIZE
 
@@ -28,16 +29,16 @@ context_settings = {"paper_half": dict(context="paper", font_scale=1.5),
                     "talk_full": dict(context="talk", font_scale=2)}
 
 
-def draw_fsn(fsn: FSN, ax=None, colors: Optional[Tuple[str, str]] = ("Red", "Blue"),
-             add_edge_labels: Optional[bool] = False,
-             add_node_labels: Optional[bool] = True,
-             text_size: Optional[int] = 12):
+def fsn(fsn_object: FSN, ax=None, colors: Optional[Tuple[str, str]] = ("Red", "Blue"),
+        add_edge_labels: Optional[bool] = False,
+        add_node_labels: Optional[bool] = True,
+        text_size: Optional[int] = 12):
     """
     Draw FSN object as bipartite networks with matplotlib
 
     Parameters
     ----------
-    fsn : FSN
+    fsn_object : FSN
         Input FSn object
     ax : Matplotlib Axes object, optional, default is None
         Draw the graph in the specified Matplotlib axes
@@ -55,30 +56,32 @@ def draw_fsn(fsn: FSN, ax=None, colors: Optional[Tuple[str, str]] = ("Red", "Blu
     """
     if ax is None:
         ax = plt.gca()
-    left = fsn.get_FAs()
-    pos = nx.bipartite_layout(fsn, left)
-    arc_weight = nx.get_edge_attributes(fsn, 'weight')
-    nx.draw_networkx_nodes(fsn, pos, ax=ax, nodelist=fsn.get_BPs(), node_shape="D", node_color=colors[1],
+    left = fsn_object.get_FAs()
+    pos = nx.bipartite_layout(fsn_object, left)
+    arc_weight = nx.get_edge_attributes(fsn_object, 'weight')
+    nx.draw_networkx_nodes(fsn_object, pos, ax=ax, nodelist=fsn_object.get_BPs(), node_shape="D", node_color=colors[1],
                            with_labels=False,
-                           node_size=10 * min(5, int(1000 / fsn.number_of_BP())))
-    nx.draw_networkx_nodes(fsn, pos, ax=ax, nodelist=fsn.get_FAs(), node_color=colors[0], with_labels=False,
-                           node_size=10 * min(5, int(1000 / fsn.number_of_BP())))
+                           node_size=10 * min(5, int(1000 / fsn_object.number_of_BP())))
+    nx.draw_networkx_nodes(fsn_object, pos, ax=ax, nodelist=fsn_object.get_FAs(), node_color=colors[0],
+                           with_labels=False,
+                           node_size=10 * min(5, int(1000 / fsn_object.number_of_BP())))
 
-    nx.draw_networkx_edges(fsn, pos, edgelist=fsn.get_debit_flows(), edge_color="forestgreen", arrowsize=20)
-    nx.draw_networkx_edges(fsn, pos, edgelist=fsn.get_credit_flows(), edge_color="salmon", arrowsize=20)
+    nx.draw_networkx_edges(fsn_object, pos, edgelist=fsn_object.get_debit_flows(), edge_color="forestgreen",
+                           arrowsize=20)
+    nx.draw_networkx_edges(fsn_object, pos, edgelist=fsn_object.get_credit_flows(), edge_color="salmon", arrowsize=20)
 
     if add_edge_labels:
-        nx.draw_networkx_edge_labels(fsn, pos, node_size=250, edge_labels=arc_weight, font_size=text_size)
+        nx.draw_networkx_edge_labels(fsn_object, pos, node_size=250, edge_labels=arc_weight, font_size=text_size)
     if add_node_labels:
         label_pos = pos.copy()
-        if max(fsn.number_of_FA(), fsn.number_of_BP()) < 8:
+        if max(fsn_object.number_of_FA(), fsn_object.number_of_BP()) < 8:
             for p in label_pos:  # raise text positions
                 label_pos[p][1] += 0.05
-        nx.draw_networkx_labels(fsn, label_pos, font_size=text_size)
+        nx.draw_networkx_labels(fsn_object, label_pos, font_size=text_size)
     ax.set_axis_off()
 
 
-def plot_financial_accounts_histograms(df: pd.DataFrame, axes: Optional = None, normalized: Optional[bool] = False):
+def financial_accounts_histograms(df: pd.DataFrame, axes: Optional = None, normalized: Optional[bool] = False):
     """
     Plot the distributions of Left/Right-sided Financial accounts in dataset
 
@@ -115,8 +118,8 @@ def plot_financial_accounts_histograms(df: pd.DataFrame, axes: Optional = None, 
     return hist
 
 
-def draw_embeddings(df: pd.DataFrame, ax: Optional = None, legend_title: Optional[str] = "label",
-                    context: Optional[str] = "paper_full", save: Optional[bool] = False, **kwargs):
+def embeddings_2D(df: pd.DataFrame, ax: Optional = None, legend_title: Optional[str] = "label",
+                  context: Optional[str] = "paper_full", save: Optional[bool] = False, **kwargs):
     """
     Draw embeddings as 2D-scatter plot.
 
@@ -179,3 +182,35 @@ def draw_embeddings(df: pd.DataFrame, ax: Optional = None, legend_title: Optiona
     if save:
         save_to_file(ax, **kwargs)
     return emb_vis
+
+
+def embeddings_as_heatmap(df: pd.DataFrame, title: Optional[str] = None, folder: Optional[str] = None,
+                          how: Optional[str] = "median",
+                          by: Optional[str] = "GroundTruth", subset: Optional[List[str]] = None,
+                          samples_per_group: Optional[int] = 11) -> None:
+    """
+    Visualise embeddings as heatmap.
+
+    Wrapper around two separate functions: 1) Grouping Embeddings and 2) Vectors visualisation.
+    Parameters
+    ----------
+    df : DataFrame with 'Emb' column
+    title : str, optional, default if None
+        File name
+    folder : str, optional, default is None
+        Path to folder to used for file saving
+    how : str, optional, default is "median'
+        Method to find the center of each group in the embedding space
+    by : str, optional, default is GroundTruth
+        Column title to be used for grouping
+    subset : list of str/int, optional, default is None
+        Consider only a subset of values within the chosen column
+    samples_per_group : int, optional, default is 11
+        Number of samples per group to leave in the output DataFrame
+
+    Returns
+    -------
+    None
+    """
+    plot_vectors(group_embeddings(df, how=how, by=by, subset=subset, samples_per_group=samples_per_group),
+                 title=title, folder=folder)

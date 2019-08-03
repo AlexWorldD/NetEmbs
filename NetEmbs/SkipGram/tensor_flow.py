@@ -16,7 +16,7 @@ import numpy as np
 from NetEmbs.utils.IO.db_connection import upload_journal_entries, upload_data
 from NetEmbs.CONFIG import MODE, LOG_LEVEL
 from NetEmbs import CONFIG
-from NetEmbs.Vis.plots import plot_tSNE, plot_PCA
+from NetEmbs.Vis.draw import plot_tSNE, plot_PCA
 import logging
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'

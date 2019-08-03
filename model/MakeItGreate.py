@@ -91,14 +91,14 @@ def refactoring():
     #  7.  ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(embeddings, N_CL)
     # 7.1 Plot t-SNE visualisation
-    plot_tSNE(cl_labs, "label",
-              folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
-              title="Predicted label_N",
-              context="talk_full")
-    plot_tSNE(cl_labs, "GroundTruth",
-              folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
-              title="Ground Truth",
-              context="talk_full")
+    draw.embeddings_2D(cl_labs, "label",
+                    folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+                    title="Predicted label_N",
+                    context="talk_full")
+    draw.embeddings_2D(cl_labs, "GroundTruth",
+                    folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
+                    title="Ground Truth",
+                    context="talk_full")
     print("Plotted required graphs!")
 
 

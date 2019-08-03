@@ -169,5 +169,5 @@ class FSN(nx.DiGraph):
         -------
         None
         """
-        from NetEmbs.Vis.plots import draw_fsn
+        from NetEmbs.Vis.draw import draw_fsn
         draw_fsn(self, ax=ax)
