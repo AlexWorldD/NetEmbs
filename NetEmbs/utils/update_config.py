@@ -8,6 +8,7 @@ from NetEmbs import CONFIG
 from NetEmbs.utils.IO.folders_creation import create_working_folder
 import logging
 from NetEmbs.utils.Logs import log_me
+from typing import Optional
 
 
 def updateCONFIG_4experiments(create_folder=True):
@@ -38,7 +39,7 @@ def updateCONFIG_4experiments(create_folder=True):
     return
 
 
-def set_new_config(**kwargs) -> None:
+def set_new_config(create_folder: Optional[bool] = True, **kwargs) -> None:
     """
     Set new parameters to CONFIG file for further execuiton
     """
@@ -47,7 +48,7 @@ def set_new_config(**kwargs) -> None:
         if value is not None and value != getattr(CONFIG, key.upper()):
             changes += 1
             setattr(CONFIG, key.upper(), value)
-    if changes:
+    if changes and create_folder:
         CONFIG.path_postfix_samplings = "ver" + str(CONFIG.STRATEGY) \
                                         + "_dir" + str(CONFIG.DIRECTION) \
                                         + "_walks" + str(CONFIG.WALKS_PER_NODE) \

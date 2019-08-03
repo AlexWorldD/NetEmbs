@@ -130,7 +130,7 @@ def _make_pairs(sampled_seq):
 
 def pairs_construction(seqs: List[List[Union[str, int]]], window_size: int = 2,
                        drop_duplicates: bool = True,
-                       n_jobs: int = 4):
+                       n_jobs: int = 4, **kwargs):
     """
     Helper function to make pairs from sequences in parallel
     Parameters
@@ -146,7 +146,7 @@ def pairs_construction(seqs: List[List[Union[str, int]]], window_size: int = 2,
     -------
     List of pairs of nodes as <cur_vertex, context_vertex>
     """
-    set_new_config(window_size=window_size)
+    set_new_config(window_size=window_size, **kwargs)
     local_logger = logging.getLogger(f"{__name__}")
     max_processes = max(n_jobs, os.cpu_count())
     pairs_pool = ProcessPool(nodes=max_processes)
