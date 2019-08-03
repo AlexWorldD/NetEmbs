@@ -54,18 +54,6 @@ class FSN(nx.DiGraph):
             local_logger.info("FSN constructed!")
             local_logger.info(f"Number of Business processes nodes is {self.number_of_BP()}")
 
-    def build_default(self) -> None:
-        """
-        Construct Financial Statement Network (FSN) with example Sales-Collection business processes
-        Returns
-        -------
-        None
-        """
-        from NetEmbs.GenerateData.complex_df import sales_collections
-        from NetEmbs.DataProcessing.normalize import normalize
-        df = normalize(sales_collections())
-        self.build(df)
-
     def get_financial_accounts(self) -> List[Union[str, int]]:
         """
         Get the set of Financial Account (FA) nodes in network

@@ -6,9 +6,27 @@ Created by lex at 2019-04-12.
 """
 import logging
 from NetEmbs import CONFIG
+from typing import Optional
 
 
-def log_me(name="NetEmbs", folder=None, file_name="logs.log", level=logging.INFO):
+def log_me(name: str = "NetEmbs", folder: Optional[str] = None, file_name: Optional[str] = "logs.log",
+           level: Optional[int] = logging.INFO) -> logging.Logger:
+    """
+    Attach logger to specific file and location
+
+    Parameters
+    ----------
+    name : str, default is 'NetEmbs'
+        The logger name.
+    folder : str, optional, default is None
+        Folder where to store the log file.
+    file_name : str, optional, default is 'logs.log'
+    level : int, optional, default is INFO (=20)
+
+    Returns
+    -------
+    Logger with chosen name and chosen location.
+    """
     logger = logging.getLogger(name)
     logger.setLevel(level)
     if folder is not None:

@@ -33,7 +33,8 @@ def dim_reduction(df: pd.DataFrame, n_dim: int = 2, rand_state: int = 1):
         logging.getLogger(f"{__name__}").info("Dimensionality reduction for visualisation purposes")
         if n_dim > 3:
             raise ValueError(
-                f"Currently only reduction into 2D/3D space is supported, while was given {n_dim} as number of components!")
+                f"Currently only reduction into 2D/3D space is supported, "
+                f"while was given {n_dim} as number of components!")
         tsne = TSNE(n_components=n_dim, random_state=rand_state)
         embdf = pd.DataFrame(list(map(np.ravel, df["Emb"])))
         if embdf.shape[1] > 2:

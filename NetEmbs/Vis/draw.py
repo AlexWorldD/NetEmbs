@@ -144,6 +144,7 @@ def embeddings_2D(df: pd.DataFrame, ax: Optional = None, legend_title: Optional[
             raise ValueError(f"Did not find embeddings column (or X, Y) in the given DataFrame!")
     #     Drawing
     cmap, mmap = getColors_Markers(df[legend_title].unique(), n_colors=10, markers=["o", "v", "s"])
+    plt.rcParams["figure.figsize"] = kwargs.get("fig_size") or [20, 10]
     sns.set_context(**context_settings.get(context))
 
     if ax is None:
@@ -288,3 +289,4 @@ def descriptor_for_cluster(df: pd.DataFrame, grouping_column: Optional[str] = "l
             plt.tight_layout()
             plt.savefig(f"img/WordClouds/Descriptor_for_{grouping_column}={name}_{datetime.datetime.now()}.png",
                         dpi=140, pad_inches=0.01)
+        plt.show()
