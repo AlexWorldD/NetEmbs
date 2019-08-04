@@ -13,10 +13,10 @@ import logging
 import pandas as pd
 
 CONFIG.MODE = "SimulatedData"
-CONFIG.ROOT_FOLDER = "../UvA/Refactoring/"
+CONFIG.ROOT_FOLDER = "results/"
 
 DB_NAME = "FSN_Data_5k.db"
-DB_PATH = "../Simulation/" + DB_NAME
+DB_PATH = "data/" + DB_NAME
 RESULT_FILE = "Results.xlsx"
 
 LIMIT = 3000
@@ -28,7 +28,7 @@ CONFIG.WINDOW_SIZE = 2
 CONFIG.WALKS_PER_NODE = 30
 CONFIG.WALKS_LENGTH = 10
 # .2 TF parameters
-CONFIG.STEPS = 50000
+CONFIG.STEPS = 10000
 
 CONFIG.EMBD_SIZE = 8
 CONFIG.LOSS_FUNCTION = "NegativeSampling"  # or "NCE"

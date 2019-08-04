@@ -118,3 +118,7 @@ Archive\.zip
 img/
 UvA/
 RealData*.*
+
+examples/results/GlobalLogs
+
+examples/results/verMetaDiff_dirCOMBI_walks30_pressure10_/
