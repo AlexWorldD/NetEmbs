@@ -36,7 +36,6 @@ CONFIG.BATCH_SIZE = 256
 CONFIG.NEGATIVE_SAMPLES = 512
 # ---------------------------------------------
 
-# -----------
 # E.g. in my case I replace 'Sales 21 btw'/'Sales 6 btw' -> 'Sales'
 map_gt = {'Sales 21 btw': 'Sales',
           'Sales 6 btw': 'Sales'}
