@@ -4,7 +4,7 @@ networkx>=2.2
 sklearn
 scipy>=1.2
 # Additional package for Data Simulation
-simpy>=3.0.11
+#simpy>=3.0.11
 # Multiprocessing
 pathos>=0.2.3
 tqdm
@@ -14,7 +14,6 @@ tensorflow>=1.12.0
 matplotlib
 seaborn
 plotly>=3.10.0
-cufflinks==0.15
 ipywidgets>=7.4.2
 wordcloud
 # For I/O Excel files in pandas
