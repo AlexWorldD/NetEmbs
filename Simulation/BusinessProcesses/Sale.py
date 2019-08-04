@@ -11,6 +11,7 @@ from Abstract.Process import Process
 from Simulation.CONFIG import *
 
 
+
 class SalesTransaction(Transaction):
     def __init__(self, name, tax_rate, env):
         super().__init__(name, env)

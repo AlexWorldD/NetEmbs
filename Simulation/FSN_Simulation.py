@@ -9,6 +9,9 @@ from Simulation.CreateDB import *
 from Simulation.Abstract.Transaction import *
 from Simulation.BusinessProcesses import *
 from Simulation.FinancialAccounts import *
+from Simulation.utils import getNoisyFAs
+from Simulation import CONFIG
+from Simulation.BusinessProcesses.BadTransaction import BadTransaction
 
 
 class PayrollDisbursementEvent:
@@ -173,7 +176,9 @@ class stockToLowEvent:
 
 class FSN_Simulation(object):
 
-    def simulate(self):
+    def simulate(self, SalesNum=(1000, 1000), until=1000):
+        CONFIG.noisy_left = getNoisyFAs("NoisyLeft", SalesNum[0] * 0.8)
+        CONFIG.noisy_right = getNoisyFAs("NoisyRight", SalesNum[0] * 0.5)
         env = simpy.Environment()
 
         revenueAccount = RevenueAccount(env, "Revenue")
@@ -196,14 +201,14 @@ class FSN_Simulation(object):
         salesTransactionHigh = SalesTransaction("Sales 21 btw", 0.21, env)  # Sales with high tax percentage
         salesTransactionLow = SalesTransaction("Sales 6 btw", 0.06, env)  # sales with low tax percentage
 
-        disbursementTransactionTax = TaxDisbursementsTransaction("Tax disbursement", env, taxPayablesAccount)
+        disbursementTransactionTax = TaxDisbursementsTransaction("Sales tax", env, taxPayablesAccount)
 
-        cosTransaction = GoodsDeliveryTransaction("Cost of Sales", env)
+        cosTransaction = GoodsDeliveryTransaction("Goods delivery", env)
         collectionTransaction = CollectionsTransaction("Collections", env)
         payrollTransaction = PayrollTransaction("Payroll", env, 1500)
         payrollDisbursementTransaction = PayrollDisbursementsTransaction("Payroll Disbursement", env, EBPayableAccount)
         purchaseTransaction = PurchaseTransaction("Purchase", env)
-        disbursementTransaction = PayrollDisbursementsTransaction("Disbursement", env, tradePayablesAccount)
+        disbursementTransaction = DisbursementsTransaction("Disbursement", env, tradePayablesAccount)
         fixesAssetsTransaction = AddFixedAssetsTransaction("Fixed Assets", env)
         depreciationTransaction = DepreciationTransaction("Depreciation", env)
 
@@ -331,9 +336,13 @@ class FSN_Simulation(object):
         # statement.addAccount(prepaidExpensesAccount)
         # statement.addAccount(fixedAssetsAccount)
         # statement.addAccount(deprExpenseAccount)
+        # Adding transaction with zero values
+        for bad_type in ["both", "left", "right"]:
+            for _ in range(2):
+                BadTransaction(name=bad_type, env=env, tax_rate=0.1).newTransaction()
 
-        env.process(salesHigh.getTransactions(1000))
-        env.process(salesLow.getTransactions(1000))
+        env.process(salesHigh.getTransactions(SalesNum[0]))
+        env.process(salesLow.getTransactions(SalesNum[1]))
         # env.process(manualOrderEvent.start()) #generate random periodic orders
         env.process(collectionsEvent.start())  # payment received
         env.process(salesTaxDisbur.start())  # collect periodically all the taxes
@@ -344,6 +353,6 @@ class FSN_Simulation(object):
         env.process(fixedAssetsProcess.start())
         env.process(depreciationProcess.start())
 
-        env.run(until=100)
+        env.run(until=until)
 
         return True

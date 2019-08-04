@@ -1,8 +1,22 @@
+pytest
 numpy
 pandas
-networkx
+networkx>=2.2
+sklearn
+scipy>=1.2
+# Additional package for Data Simulation
+#simpy>=3.0.11
+# Multiprocessing
+pathos>=0.2.3
+tqdm
+# For Skip-Gram model
+tensorflow>=1.12.0
+# For visualisation
 matplotlib
 seaborn
-sklearn
-scipy
-simpy
+plotly>=3.10.0
+ipywidgets>=7.4.2
+wordcloud
+# For I/O Excel files in pandas
+openpyxl
+xlrd
