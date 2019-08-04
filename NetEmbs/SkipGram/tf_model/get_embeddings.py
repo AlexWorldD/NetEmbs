@@ -146,7 +146,8 @@ def get_embeddings(skip_grams: List[List[Union[str, int]]], tr: TransformationBP
     fsn_embs = pd.DataFrame(list(zip(tr.original_bps, embds)), columns=["ID", "Emb"])
     if use_dim_reduction:
         fsn_embs = dim_reduction(fsn_embs)
-    fsn_embs.to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
+    if use_cache:
+        fsn_embs.to_pickle(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2] + "Embeddings.pkl")
     print("Done with TensorFlow!")
     print("Use the following command to see the Tensorboard with all collected stats during last running: \n")
     print(f"tensorboard --logdir={CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2]}")

@@ -2,7 +2,5 @@
 __author__ = 'Aleksei Maliutin'
 """
 __init__.py.py
-Last modified by lex at 2019-03-14.
+Created by lex at 2019-08-04.
 """
-from NetEmbs.FSN.graph import FSN
-

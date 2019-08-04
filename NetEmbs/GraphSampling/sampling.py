@@ -102,8 +102,9 @@ def graph_sampling(graph: FSN, strategy: Optional[str] = "MetaDiff",
     sampling_pool.terminate()
     sampling_pool.restart()
     local_logger.info("Cashing sampled sequences!")
-    with open(CONFIG.WORK_FOLDER[0] + "sampled_sequences_cached.pkl", "wb") as file:
-        pickle.dump(res, file)
+    if use_cache:
+        with open(CONFIG.WORK_FOLDER[0] + "sampled_sequences_cached.pkl", "wb") as file:
+            pickle.dump(res, file)
     local_logger.info(f"Total number of raw sampled sequences is {len(res)}")
     local_logger.info(f"Average length of sequences is {sum(map(len, res)) / float(len(res))}")
     return res

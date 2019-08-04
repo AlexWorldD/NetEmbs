@@ -10,16 +10,16 @@ from NetEmbs.utils import *
 from NetEmbs.SkipGram.construct_skip_grams import get_SkipGrams
 from NetEmbs.SkipGram.tf_model.get_embeddings import get_embeddings
 import logging
+import pandas as pd
 
-DB_NAME = "FSN_Data_5k.db"
+CONFIG.MODE = "SimulatedData"
 CONFIG.ROOT_FOLDER = "../UvA/Refactoring/"
 
-RESULT_FILE = "ResultsRefactoring.xlsx"
-
+DB_NAME = "FSN_Data_5k.db"
 DB_PATH = "../Simulation/" + DB_NAME
+RESULT_FILE = "Results.xlsx"
 
-LIMIT = None
-
+LIMIT = 3000
 #  ---------- CONFIG Setting HERE ------------
 # .1 Sampling parameters
 CONFIG.STRATEGY = "MetaDiff"
@@ -70,7 +70,7 @@ def refactoring():
 
     if CONFIG.MODE == "RealData":
         # //////// TODO UPLOAD your data HERE \\\\\\\\\\
-        # d = bData()
+        # d =
         # //////// END  \\\\\\\\\\
         d = d.rename(index=str, columns={"transactionID": "ID", "accountID": "FA_Name", "BR": "GroundTruth",
                                          "amount": "Value"})
@@ -91,15 +91,40 @@ def refactoring():
     #  7.  ////////// Clustering in embedding space \\\\\\\
     cl_labs = cl_Agglomerative(embeddings, N_CL)
     # 7.1 Plot t-SNE visualisation
-    draw.embeddings_2D(cl_labs, "label",
+    draw.embeddings_2D(cl_labs, legend_title="label",
                        folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                        title="Predicted label_N",
-                       context="talk_full")
-    draw.embeddings_2D(cl_labs, "GroundTruth",
+                       context="talk_full", save=True)
+    draw.embeddings_2D(cl_labs, legend_title="GroundTruth",
                        folder=CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + CONFIG.WORK_FOLDER[2],
                        title="Ground Truth",
-                       context="talk_full")
+                       context="talk_full", save=True)
     print("Plotted required graphs!")
+    # 7.2 Evaluate the clustering
+    cur_row = {"Strategy": CONFIG.STRATEGY,
+               "Pressure": CONFIG.PRESSURE,
+               "Walks per node": CONFIG.WALKS_PER_NODE, "Window size": CONFIG.WINDOW_SIZE,
+               "Embedding size": CONFIG.EMBD_SIZE, "Train steps": CONFIG.STEPS}
+    # Global for N scale
+    cur_eval_results = evaluate_all(cl_labs[~cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                    column_true="GroundTruth",
+                                    postfix="_N_global")
+    cur_row.update(cur_eval_results)
+    # Local for N scale
+    cur_eval_results = evaluate_all(cl_labs[cl_labs.GroundTruth.isin(list(map_gt.keys()))],
+                                    column_true="GroundTruth",
+                                    postfix="_N_local")
+    cur_row.update(cur_eval_results)
+    try:
+        # Upload previous Results file
+        res = pd.read_excel(CONFIG.ROOT_FOLDER + RESULT_FILE, index_col=0)
+        # Append new result to DataFrame and save as Excel file
+        res = res.append(cur_row, ignore_index=True)
+        res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
+    except FileNotFoundError:
+        # Create new Results file if not exist
+        res = pd.DataFrame(cur_row, index=[0])
+        res.to_excel(CONFIG.ROOT_FOLDER + RESULT_FILE)
 
 
 if __name__ == '__main__':

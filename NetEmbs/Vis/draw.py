@@ -19,13 +19,9 @@ from NetEmbs.utils.evaluation import v_measure
 from typing import Tuple, Optional, List
 from wordcloud import WordCloud
 import datetime
+from NetEmbs.Vis.forModelling.draw import time_series, regression_plot
 
 plt.rcParams["figure.figsize"] = CONFIG.FIG_SIZE
-
-context_settings = {"paper_half": dict(context="paper", font_scale=1.5),
-                    "paper_full": dict(context="paper", font_scale=1.8),
-                    "talk_half": dict(context="paper", font_scale=3.5),
-                    "talk_full": dict(context="talk", font_scale=2)}
 
 
 def fsn(fsn_object: FSN, ax=None, colors: Optional[Tuple[str, str]] = ("Red", "Blue"),
@@ -144,11 +140,13 @@ def embeddings_2D(df: pd.DataFrame, ax: Optional = None, legend_title: Optional[
             raise ValueError(f"Did not find embeddings column (or X, Y) in the given DataFrame!")
     #     Drawing
     cmap, mmap = getColors_Markers(df[legend_title].unique(), n_colors=10, markers=["o", "v", "s"])
-    plt.rcParams["figure.figsize"] = kwargs.get("fig_size") or [20, 10]
-    sns.set_context(**context_settings.get(context))
+    # plt.rcParams["figure.figsize"] = kwargs.get("fig_size") or [20, 10]
+    sns.set_context(**CONFIG.context_settings.get(context))
 
     if ax is None:
-        ax = plt.gca()
+        # ax = plt.gca()
+        fig = plt.figure(figsize=(kwargs.get("fig_size") or [20, 10]))
+        ax = fig.add_subplot(111)
 
     emb_vis = sns.scatterplot(
         x="x", y="y",
@@ -167,8 +165,10 @@ def embeddings_2D(df: pd.DataFrame, ax: Optional = None, legend_title: Optional[
     if legend_title == "GroundTruth":
         ax.set_title("t-SNE visualisation with coloring based on Ground Truth", y=1.08)
     elif legend_title == "label":
-        if "GroundTruth" in list(df):
-            v_score = ", \n" if context == "talk_half" or context == "paper_half" else ", "
+        v_score = ", \n" if context == "talk_half" or context == "paper_half" else ", "
+        if kwargs.get("set_score") is not None:
+            v_score += "V-Score is " + str(kwargs.get("set_score").round(3))
+        elif "GroundTruth" in list(df):
             v_score += "V-Score is " + str(v_measure(df).round(3))
         else:
             v_score = ""
@@ -290,3 +290,25 @@ def descriptor_for_cluster(df: pd.DataFrame, grouping_column: Optional[str] = "l
             plt.savefig(f"img/WordClouds/Descriptor_for_{grouping_column}={name}_{datetime.datetime.now()}.png",
                         dpi=140, pad_inches=0.01)
         plt.show()
+
+
+def GroundTruth_histogram(df: pd.DataFrame, context: Optional[str] = "paper_full",
+                          axis_labels: Optional[Tuple[str, str]] = ("Ground Truth", "Number of processes"),
+                          save: Optional[bool] = False, **kwargs):
+    if 'GroundTruth' not in df.columns:
+        raise ValueError(f"Could not find 'GroundTruth column in the given dataset!")
+    df_vis = df.groupby(["GroundTruth"])[['ID']].count().rename({"ID": "Number of processes"}, axis=1)
+    dpi = 140
+    fig_size = (13, 10)
+    sns.set_context(**CONFIG.context_settings.get(context))
+    fig = plt.figure(figsize=fig_size)
+    ax = fig.add_subplot(111)
+    df_vis.plot.bar(ax=ax, legend=False)
+    triangle_axis(ax)
+    ax.set_xlabel(axis_labels[0])
+    ax.set_ylabel(axis_labels[1])
+    if save:
+        fig.savefig(f"img/Modelling/{kwargs.get('file_name') or ''}_{axis_labels[0]}{axis_labels[1]}.png",
+                    bbox_inches="tight", dpi=dpi, pad_inches=0.05)
+    plt.show(fig)
+    plt.close(fig)

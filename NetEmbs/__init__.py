@@ -9,6 +9,6 @@ from NetEmbs.Clustering import *
 from NetEmbs.FSN import *
 from NetEmbs.SkipGram import *
 from NetEmbs.Vis import *
-from NetEmbs.CONFIG import *
+from NetEmbs import CONFIG
 from NetEmbs.utils import *
 from NetEmbs.GraphSampling import *

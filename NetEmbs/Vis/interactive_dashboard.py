@@ -13,9 +13,9 @@ from NetEmbs.Vis.helpers import getColors_Markers
 from NetEmbs.Vis.draw import descriptor_for_cluster
 from typing import Optional, Dict
 import pandas as pd
-import cufflinks
-
-cufflinks.go_offline(connected=True)
+# import cufflinks
+#
+# cufflinks.go_offline(connected=True)
 init_notebook_mode(connected=True)
 
 # For selection via multiple traces... stupid way.

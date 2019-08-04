@@ -92,7 +92,8 @@ def get_SkipGrams(graph: FSN, use_cache: Optional[bool] = True, **kwargs) \
     sampled_seq = graph_sampling(graph, use_cache=use_cache, **kwargs)
     local_logger.info("Start sampling... wait...")
     skip_gr = tr.encode_pairs(pairs_construction(sampled_seq, window_size=kwargs.get("window_size")))
-    with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "skip_grams_cached.pkl", "wb") as file:
-        pickle.dump(skip_gr, file)
+    if use_cache:
+        with open(CONFIG.WORK_FOLDER[0] + CONFIG.WORK_FOLDER[1] + "skip_grams_cached.pkl", "wb") as file:
+            pickle.dump(skip_gr, file)
     local_logger.info(f"Total number of GOOD sampled pairs is  {len(skip_gr)}")
     return skip_gr, tr

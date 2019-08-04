@@ -7,9 +7,7 @@ graph.py
 Last modified by lex at 2019-03-14.
 """
 import networkx as nx
-from NetEmbs.CONFIG import LOG
 import logging
-from NetEmbs.utils.get_size import get_size
 import pandas as pd
 from typing import Union, List, Dict, Tuple, Optional
 
@@ -49,10 +47,9 @@ class FSN(nx.DiGraph):
             [(row[right_title], row[left_title], row["Debit"]) for idx, row in df[df["flow"] == "inflow"].iterrows()],
             weight='weight', type="DEBIT")
         self.information = {"left_title": left_title, "right_title": right_title}
-        if LOG:
-            local_logger = logging.getLogger(f"NetEmbs.{__name__}")
-            local_logger.info("FSN constructed!")
-            local_logger.info(f"Number of Business processes nodes is {self.number_of_BP()}")
+        local_logger = logging.getLogger(f"NetEmbs.{__name__}")
+        local_logger.info("FSN constructed!")
+        local_logger.info(f"Number of Business processes nodes is {self.number_of_BP()}")
 
     def get_financial_accounts(self) -> List[Union[str, int]]:
         """
@@ -142,6 +139,7 @@ class FSN(nx.DiGraph):
         -------
         Dictionary with available information about FSN
         """
+        from NetEmbs.utils.get_size import get_size
         out_info = self.information.copy()
         out_info.update({"BPs": self.number_of_BP(), "FAs": self.number_of_FA(), "Total size": get_size(self)})
         return out_info
@@ -157,5 +155,5 @@ class FSN(nx.DiGraph):
         -------
         None
         """
-        from NetEmbs.Vis.draw import draw_fsn
-        draw_fsn(self, ax=ax)
+        from NetEmbs.Vis import draw
+        draw.fsn(self, ax=ax)

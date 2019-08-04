@@ -9,3 +9,4 @@ from NetEmbs.DataProcessing.splitting import split_to_debit_credit
 from NetEmbs.DataProcessing.unique_signatures import leave_unique_business_processes
 from NetEmbs.DataProcessing.prepare_data import data_preprocessing
 from NetEmbs.DataProcessing.stats.count_bad_values import count_bad_values
+from NetEmbs.DataProcessing.add_time_index import addDateTimeIndex

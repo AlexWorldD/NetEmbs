@@ -4,7 +4,6 @@ __author__ = 'Aleksei Maliutin'
 CONFIG.py
 Created by lex at 2019-03-26.
 """
-FIG_SIZE = [20, 10]
 PRINT_STATUS = True
 # TODO here you can select with what kind of data you are going to work: Simulated or Real one
 MODE = "SimulatedData"
@@ -21,11 +20,6 @@ STEPS = 50000
 BATCH_SIZE = 256
 NEGATIVE_SAMPLES = 512
 LOSS_FUNCTION = "NegativeSampling"
-
-# What save for TensorBoard during model training: "full" includes min/max/mean/std for weights/biases, but very expensive
-# LOG_LEVEL = "full"
-# "cost" includes only the cost values
-LOG_LEVEL = "cost"
 
 # /////// Sampling parameters \\\\\\\
 # STEP configuration
@@ -66,3 +60,10 @@ path_postfix_tf = "TFsteps" + str(STEPS) \
                   + "_emb" + str(EMBD_SIZE) + "/"
 
 WORK_FOLDER = ("", "", "")
+
+# Visualisation settings
+FIG_SIZE = [20, 10]
+context_settings = {"paper_half": dict(context="paper", font_scale=1.5),
+                    "paper_full": dict(context="paper", font_scale=1.8),
+                    "talk_half": dict(context="paper", font_scale=3.5),
+                    "talk_full": dict(context="talk", font_scale=2)}
