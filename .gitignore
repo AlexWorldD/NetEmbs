@@ -115,10 +115,5 @@ model/*/
 
 Archive\.zip
 
-July5/
-
-tmp_embs\.pkl
-oldExperiments/
-UvA/
-
+img/
 RealData*.*

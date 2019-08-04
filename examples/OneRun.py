@@ -45,7 +45,7 @@ map_gt = {'Sales 21 btw': 'Sales',
 N_CL = 11
 
 
-def refactoring():
+def one_run():
     create_folder(CONFIG.ROOT_FOLDER)
     try:
         updateCONFIG_4experiments()
@@ -128,4 +128,4 @@ def refactoring():
 
 
 if __name__ == '__main__':
-    refactoring()
+    one_run()
