@@ -1,6 +1,7 @@
 # NetEmbs
 [![Build Status](https://travis-ci.com/AlexWorldD/NetEmbs.svg?token=KxxnGy2fzypoq5mv4Y2J&branch=master)](https://travis-ci.com/AlexWorldD/NetEmbs) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
+As a part of the Master's thesis at the [University of Amsterdam](http://scriptiesonline.uba.uva.nl/ru/scriptie/694710) and ITMO University.
 ### Framework for Representation Learning on Financial Statement Networks.
 
 Keywords – REPRESENTATION LEARNING, FINANCIAL STATEMENTS, NETWORKS, AUDIT, SAMPLING STRATEGY, SKIP-GRAM MODEL, TRANSACTION DATA
