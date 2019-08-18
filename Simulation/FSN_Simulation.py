@@ -1,5 +1,5 @@
 # encoding: utf-8
-__author__ = 'Aleksei Maliutin'
+__author__ = ['Aleksei Maliutin', 'Marcel Boersma']
 """
 FSN_Simulation.py
 Created by lex at 2019-03-26.
