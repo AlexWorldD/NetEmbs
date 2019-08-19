@@ -9,10 +9,10 @@ import pandas as pd
 
 test_dataset = {'ID': {0: 1, 1: 1, 2: 1, 3: 2, 4: 2},
                 'FA_Name': {0: 'Trade Receivables',
-                         1: 'Revenue',
-                         2: 'Tax',
-                         3: 'Cost of Sales',
-                         4: 'Inventories'},
+                            1: 'Revenue',
+                            2: 'Tax',
+                            3: 'Cost of Sales',
+                            4: 'Inventories'},
                 'Journal': {0: 'Sales ledger',
                             1: 'Sales ledger',
                             2: 'Sales ledger',
@@ -35,8 +35,14 @@ class TestFSN:
         self.fsn = FSN()
         self.fsn.build(self.df)
         assert len(self.fsn.nodes()) == (self.df['FA_Name'].nunique() + self.df['ID'].nunique())
+        assert self.fsn.number_of_BP() == self.df['ID'].nunique()
+        assert self.fsn.number_of_FA() == self.df['FA_Name'].nunique()
         assert set(self.fsn.get_FAs()) == set(self.df['FA_Name'].unique())
         assert set(self.fsn.get_BPs()) == set(self.df['ID'].unique())
+        fsn_info = self.fsn.info()
+        assert fsn_info.get("BPs") == self.df['ID'].nunique()
+        assert fsn_info.get("FAs") == self.df['FA_Name'].nunique()
+        self.fsn.draw()
 
     def test_projection(self):
         from NetEmbs.FSN.graph import FSN
